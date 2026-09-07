@@ -284,6 +284,235 @@ Two smaller questions attached to the inventory:
   in full. A short identifying fragment would let a host match a row back to their store
   without exposing the whole key.
 
+#### Correction to the first pass: Q2 and Q4 are coupled
+
+The five questions above were originally recorded as independent. Two of them are not.
+
+R2's site-wide inventory is only possible over a **shared** store. Under per-vendor stores, a
+package can only see its own vendor's keys, so "the collection of identified products" becomes
+N disjoint per-vendor lists, and Q4's product view ("Commerce: no license found") cannot be
+rendered by anyone except Commerce's own package.
+
+```
+   PER-VENDOR STORES                    SHARED STORE
+   +-------------+ +-------------+      +---------------------------+
+   | vendor A    | | vendor B    |      | all keys, all vendors     |
+   |  forms key  | |  seo key    |      |  forms, seo, commerce     |
+   +-------------+ +-------------+      +---------------------------+
+         |               |                    |      |      |
+         v               v                    v      v      v
+    A sees only     B sees only          any package can see the
+    its own         its own              whole site's licensing
+```
+
+Answer Q2 "per-vendor" and Q4 largely resolves itself as "store view, scoped to one vendor".
+
+Two further notes on Q2:
+
+- **Choosing "shared" makes the store shape a permanent compatibility surface.** Once two
+  vendors ship against it, a single site can run one package built on library v1 and another
+  on v2, both reading the same store. The format can then only ever be extended, never
+  changed. This is a heavier long-term commitment than any decision in ADR-0001, because
+  those are internal to a library version while this one is a contract *between* versions.
+- **The "vendor A can read vendor B's keys" objection is not a real cost.** Any package running
+  in the site can already read the whole configuration; a shared store introduces no exposure
+  that was not already there. Recorded so it is not weighed as a downside it is not.
+
+---
+
+### Further scope raised in exploration (second pass, 2026-09-07)
+
+**Status: open. Not yet reflected in `proposal.md` or any spec.** A second round of
+requirements from the Product Owner, recorded on the same basis as the first pass above.
+
+#### Background
+
+The first pass reshaped a single key into a collection. This pass changes what a license
+fundamentally *is*:
+
+```
+  BEFORE                          AFTER
+  license = boolean               license = entitlement set
+
+  "is Forms Pro licensed?"        "is Forms Pro licensed,
+       yes / no                    until when,
+                                   for which Umbraco versions,
+                                   with which features enabled,
+                                   and where do I go to change that?"
+```
+
+Every requirement specced so far answers a yes/no question. R3-R5 turn a license into a
+description of what the customer bought, which is a different thing to model and a different
+thing to display.
+
+#### Requirement R3: backoffice UI for managing license keys
+
+An Umbraco backoffice screen for working with the configured collection - viewing each entry's
+expiry, the products it permits, and its state, and managing the keys themselves.
+
+#### Requirement R4: per-key renewal / upgrade link
+
+Each key can surface a link that takes the customer to the vendor, to renew an expiring license
+or to buy additional features.
+
+#### Requirement R5: feature flags
+
+A license can permit a subset of a product's features, so functionality can be gated per
+customer rather than the whole product being all-or-nothing.
+
+#### Q6. Is the backoffice manager view-only, or read-write?
+
+The word "manage" conflicts with the sourcing model already specced. All three planned sources
+are effectively read-only at runtime:
+
+```
+  appsettings.json   -> often read-only in production (containers,
+                        source-controlled, deployed rather than edited)
+  environment var    -> not writable at runtime in any meaningful sense
+  Key Vault          -> writable in principle, but needs a write permission
+                        most hosts will not grant the application
+```
+
+A view-only screen fits this perfectly. An editing screen requires a **writable store the site
+owns** - a source that does not exist in the current proposal. Adding one creates a precedence
+problem:
+
+```
+   appsettings.json:  forms.pro = eyJ...OLD
+   UI-managed store:  forms.pro = eyJ...NEW
+                              |
+                        which one wins?
+```
+
+Underneath that sits a genuine split in how a site is operated:
+
+- **Config-sourced keys are deployed.** They flow through the pipeline, sit in source control,
+  and keep environments in step.
+- **UI-managed keys are runtime state.** They live in one environment's data; a key added on
+  staging does not exist in production.
+
+Supporting both means choosing a precedence rule and accepting the resulting confusion. A
+view-only manager that reports status and points the host at *where* to edit sidesteps the
+entire question, at the cost of not being a manager in the fullest sense.
+
+#### Q7. Who ships the UI, and what may it display?
+
+If the UI lives in the core library and five vendors each ship packages built on it, five
+copies attempt to register the same backoffice section:
+
+```
+   [Forms Pro] --+
+   [SEO Toolkit]-+--> core lib --> registers "Licenses" section  x5 ?
+   [Commerce] ---+
+```
+
+The licensing screen is a **host-level concern, not a per-package one** - a site has one
+licensing screen, not one per vendor. That argues for a third shipped package that the host
+installs once, alongside the core and Key Vault packages split in ADR-0002. It also reinforces
+the shared-store reading of Q2: a single UI over per-vendor stores cannot work.
+
+Separately, the UI is where Q5's "do not reproduce raw keys" rule earns its keep. License keys
+are bearer tokens - anyone who can read one can license another site with it. A screen that
+displays them in full turns "can log into the backoffice" into "can walk off with the
+licenses". Needs a decision on what the screen shows and which backoffice users may see it.
+
+#### Q8. Where does the renewal link come from, and is renewal one link or two?
+
+This is Q1's host-versus-issuer tension again, but it resolves the opposite way, because URLs
+decay and names do not.
+
+| Source | Problem |
+|---|---|
+| Baked into the signed key at mint | **URLs rot.** A vendor rebrands or moves their store and every key ever issued points at a dead link, unfixable without reissuing. |
+| Configured by the host | The host does not know the vendor's renewal URL. Wrong party. |
+| Declared by the package at runtime | Always current, ships with the vendor's own release, no staleness. |
+
+Package-declared links need the same **package self-registration** mechanism that Q4's product
+view requires. Two requirements converging on one missing piece suggests that piece is real and
+should be designed deliberately rather than twice.
+
+Two attached points:
+
+- **Do not put the license key in the renewal URL.** It would land in browser history, referrer
+  headers and proxy logs. If the renewal page needs to identify the license, the token should
+  carry a separate **opaque license reference** (an order or license ID that is safe to expose)
+  distinct from the key itself. This is a new claim - cheap to add now, expensive later.
+- **Renew and upgrade may be different destinations.** "Another year of what I have" and "sell
+  me the tier above" are usually different pages. Decide whether this is one link or two.
+
+#### Q9. Feature model: explicit list or named tier?
+
+```
+  A) EXPLICIT FEATURE LIST          B) NAMED TIER
+     features: [reports, export,       tier: "pro"
+                api, whitelabel]
+
+  + bespoke per-customer deals      + compact
+  + no vendor-side mapping needed   + tier->features mapping lives in the
+                                      package and ships with releases
+  - key grows with each feature     - bespoke deals require inventing tiers
+  - ADDING A FEATURE TO A TIER      - less granular
+    MEANS REISSUING EVERY KEY
+```
+
+The capitalised line is the heaviest consideration. Under an explicit list, the day a vendor
+adds a capability to their Pro offering, every existing Pro customer's key lacks it - the
+vendor must mint and redistribute keys to their entire customer base to deliver a feature
+customers believe they already bought. Under a tier name, a package release does it.
+
+But the tier model forces a **commercial** question that no technical choice can answer:
+
+> When a customer buys "Pro" today, are they buying today's Pro features, or Pro forever,
+> including everything added later?
+
+```
+   key minted 2026  --> tier: pro
+                            |
+   package 2028 adds "ai-assist" to Pro
+                            |
+                    is this customer entitled?
+```
+
+Answer yes and a tier name suffices. Answer no and the entitlement must be pinned to what the
+tier meant at issue time - pushing back toward an explicit list, or toward using the existing
+version-range claim as the boundary (see Q10).
+
+Smaller attached questions: who namespaces feature identifiers across independent vendors, and
+does an unrecognised feature name fail open or closed?
+
+#### Q10. Do feature flags and the supported-version range overlap?
+
+The supported-version-range claim was designed to express "which Umbraco versions this license
+covers". If new capabilities arrive in new package releases, a version bound already gates
+access to future features implicitly. Features plus version range risks being **two overlapping
+controls** over the same commercial question, with no defined answer for which governs when
+they disagree. Resolve whether they are orthogonal (versions gate compatibility, features gate
+entitlement) or redundant.
+
+#### Sequencing: what cannot be deferred
+
+R3-R5 roughly triple the size of this change, but the pieces are not equally urgent:
+
+```
+   token claims      <-- MUST be decided now. Changing the payload later
+                        breaks every key already issued.
+
+   validation API    <-- can grow
+   inventory         <-- can grow
+   backoffice UI     <-- can ship later, as a separate package
+   renewal links     <-- can ship later, if package-declared
+```
+
+Whatever is decided about features, references and links, the **claims** must be settled before
+any key is minted in anger. The surfaces built on top can arrive over several releases. This is
+the strongest argument for resolving Q8's license-reference claim and Q9's feature model now,
+even if the UI becomes a separate change entirely.
+
 #### Suggested order of discussion
 
-Q2 and Q3 first - they change existing spec text. Q1, Q4 and Q5 mostly add to it.
+1. **Q2 with Q4** - coupled (see correction above), and the shared-store answer is the most
+   irreversible decision on the list.
+2. **Q9 with Q10, and Q8's license-reference claim** - these determine the token payload, which
+   cannot be changed after keys are issued.
+3. **Q3** - routing and duplicates; changes existing spec text.
+4. **Q1, Q5, Q6, Q7** - largely additive, and Q6/Q7 can plausibly become a separate change.
