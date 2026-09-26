@@ -2,6 +2,8 @@
 
 Provides a pluggable provider abstraction for supplying the raw license key string to a host application from .NET configuration, environment variables, or Azure Key Vault.
 
+Serves the **implementor**, who installs the keys a site owner supplies. Personas are defined in `docs/personas.md`.
+
 ## ADDED Requirements
 
 ### Requirement: Common provider abstraction

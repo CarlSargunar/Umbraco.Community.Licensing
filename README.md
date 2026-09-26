@@ -10,20 +10,45 @@ core version range, with key rotation supported from the start.
 
 Targets .NET 10, for consumption by Umbraco 17+ packages.
 
+Built primarily for the **site owner** who buys licenses, with the vendor, implementor,
+backoffice editor and site visitor also considered. See [`docs/personas.md`](docs/personas.md).
+
 ## Status
 
 **Design in progress - no implementation yet.**
 
 The active change, `license-key-management`, has a complete proposal, design, delta specs and
-task breakdown, but zero code. The scope is also still moving: two requirements raised during
-exploration - a **named collection** of license keys rather than a single key, and **inventory
-reporting** across all of them - are not yet reflected in the proposal or the specs.
+task breakdown, but no code. The specs cover a single license key. Exploration has since added
+further requirements, none of them yet reflected in the proposal or the specs:
 
-Five decisions must be settled before those specs are revised. They are written up with full
-background in the *"Unresolved scope raised in exploration"* section of
-[`openspec/changes/license-key-management/design.md`](openspec/changes/license-key-management/design.md).
+| Requirement | State |
+|---|---|
+| R1 named collection of license keys | open |
+| R2 inventory reporting across the collection | open |
+| R3 backoffice UI for license keys | open |
+| R4 per-key renewal / upgrade link | open |
+| R7 product features: named, typed values, e.g. `max-orders: 500` | agreed, pending design.md Q11 |
+| R6 kind of license (trial / standard) | dropped |
+| R8 release-date gating | dropped |
+| Primary customer | decided: site owner |
+| Licenses combining (full product, add-on, extra capacity) | open, design.md Q13 |
 
-Read that section before assuming the current specs are settled.
+Open questions Q1-Q8 and Q11-Q13 must be settled before the specs are revised. They are
+written up in four exploration passes at the end of
+[`openspec/changes/license-key-management/design.md`](openspec/changes/license-key-management/design.md),
+which also records why R6 and R8 were dropped, and a comparison with the Standard.Licensing
+library. The *"Updated order of discussion"* at the end of that file says where to resume.
+
+Read those sections before assuming the current specs are settled.
+
+## Not yet specified
+
+Work that needs a change of its own, not yet explored or proposed:
+
+- **Sample app for testing the library.** A host application for exercising the library by
+  hand across scenarios (valid, expired, tampered, wrong product, wrong Umbraco version,
+  missing, duplicate keys) and across multiple products with different features. Scope,
+  shape and relationship to the automated tests are undecided.
 
 ## How this repository works
 
@@ -38,6 +63,7 @@ code - work is specified, discussed and agreed before it is implemented.
       design.md                     decisions, alternatives, risks, open questions
       tasks.md                      verifiable implementation steps
       specs/<capability>/spec.md    requirements and scenarios (behaviour, not design)
+  docs/personas.md                  who the library serves; primary customer
   docs/adrs/                        architecture decision records
 ```
 

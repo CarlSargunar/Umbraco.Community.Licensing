@@ -2,6 +2,8 @@
 
 Provides the issuer-side API for constructing and cryptographically signing license keys that encode a mandatory product ID and optional expiry / supported-version claims.
 
+Serves the **vendor**, who issues keys to site owners. Personas are defined in `docs/personas.md`.
+
 ## ADDED Requirements
 
 ### Requirement: Generate a license key from claims

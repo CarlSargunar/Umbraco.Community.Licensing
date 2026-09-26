@@ -2,6 +2,8 @@
 
 Provides the consumer-side API for verifying a license key's signature and evaluating its claims against the running product and Umbraco core version.
 
+Serves the **vendor**, whose package checks its license at runtime, and the **implementor** and **site owner**, who act on the result. Personas are defined in `docs/personas.md`.
+
 ## ADDED Requirements
 
 ### Requirement: Verify signature against trusted public keys

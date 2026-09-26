@@ -1,3 +1,11 @@
+# Personas
+
+Personas are defined in `docs/personas.md`. Consider them in every phase: exploring
+requirements, making technology decisions, writing specs and implementing. For each requirement
+or design choice, name which persona it serves and check it does not harm another. The site
+owner is the primary customer. When personas' interests conflict, prefer the site owner, then
+the implementor, then the vendor. The site visitor must never be exposed to licensing.
+
 # Roles & Workflow
 
 ## Product Owner

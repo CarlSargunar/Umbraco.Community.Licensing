@@ -1,6 +1,8 @@
 ## Why
 
-Umbraco marketplace vendors currently have no shared, trustworthy way to license paid packages: each vendor either rolls its own ad-hoc key scheme or ships unprotected. A common licensing library lets any Umbraco package enforce a product-specific, time-bound, version-scoped license using a key that can be validated entirely offline (no phone-home dependency), while giving hosts a familiar, idiomatic way to supply the key via configuration, environment variables, or Azure Key Vault.
+Umbraco marketplace vendors currently have no shared, trustworthy way to license paid packages: each vendor either rolls its own ad-hoc key scheme or ships unprotected. A common licensing library lets any Umbraco package enforce a product-specific, time-bound, version-scoped license using a key that can be validated entirely offline (no phone-home dependency), while giving implementors a familiar, idiomatic way to supply the key via configuration, environment variables, or Azure Key Vault.
+
+The primary customer is the **site owner** who buys licenses; the vendor, implementor, backoffice editor and site visitor are also considered. See `docs/personas.md`.
 
 ## What Changes
 
@@ -9,8 +11,8 @@ Umbraco marketplace vendors currently have no shared, trustworthy way to license
   - **Optional**: expiry date (absence means perpetual).
   - **Optional**: supported Umbraco core version range (absence means unrestricted).
   - A key ID identifying which trusted public key was used to sign, to support future key rotation without invalidating already-issued licenses.
-- Provide a key **generation** API (issuer-side; used by vendors/marketplace tooling to mint keys, not intended for redistribution inside the licensed product itself) that takes the above claims and a private signing key, and produces a compact, transmissible license key string.
-- Provide a key **validation** API (consumer-side; used inside the licensed Umbraco package at runtime) that:
+- Provide a key **generation** API (issuer-side; used by the vendor or its store tooling to mint keys, not intended for redistribution inside the licensed product itself) that takes the above claims and a private signing key, and produces a compact, transmissible license key string.
+- Provide a key **validation** API (consumer-side; used inside the vendor's licensed Umbraco package at runtime) that:
   - Verifies the signature against one or more trusted public keys (selected via the embedded key ID).
   - Checks the product ID matches the expected product.
   - Checks the expiry, if present, against current time.

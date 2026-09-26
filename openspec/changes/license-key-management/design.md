@@ -6,6 +6,8 @@ See `proposal.md` - Why / What Changes for motivation and scope. This is a green
 - Machine/domain binding and revocation-before-expiry are explicitly out of scope.
 - Target: .NET 10, consumed by Umbraco 17+ packages.
 
+Personas are defined in [`docs/personas.md`](../../../docs/personas.md); the site owner is the primary customer. Terms used below: **issuer** is the vendor in its license-issuing role; **consumer** is the vendor's package calling the library at runtime; **host application** is the Umbraco site as software, which the implementor configures.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -67,7 +69,7 @@ Recorded as [ADR-0002](../../../docs/adrs/0002-package-split-for-keyvault-depend
 ## Risks / Trade-offs
 
 - **[Risk] No revocation before expiry** (pure offline signed tokens can't be revoked once issued) → **Mitigation:** Document this as an accepted limitation; issuers wanting revocation should favor shorter expiry windows plus a renewal flow. Out of scope per the proposal.
-- **[Risk] Clock rollback can defeat expiry** (host controls its own system clock) → **Mitigation:** Documented, accepted limitation common to all offline-licensing schemes; not otherwise mitigated in this change.
+- **[Risk] Clock rollback can defeat expiry** (whoever runs the server controls its clock) → **Mitigation:** Documented, accepted limitation common to all offline-licensing schemes; not otherwise mitigated in this change.
 - **[Risk] Private key compromise invalidates trust in every license signed with it** → **Mitigation:** Key rotation (key ID) lets an issuer stop trusting a compromised key going forward, but existing licenses signed with it remain cryptographically valid until they individually expire or the issuer explicitly stops trusting that key ID (accepting that this also invalidates any still-valid legitimate licenses under that key). This trade-off is inherent to offline verification and is documented rather than solved here.
 - **[Risk] No machine/domain binding** → **Mitigation:** Explicitly out of scope per the proposal; a valid key can be reused across installs until this is addressed in a future change.
 
@@ -105,15 +107,15 @@ Nothing is implemented yet (0/27 tasks), so this is a clean revision, not a migr
 
 #### Requirement R1: a named collection of license keys
 
-The host supplies **1..N license key entries** rather than one. Each entry is fully
+The implementor supplies **1..N license key entries** rather than one. Each entry is fully
 independent - its own product, its own expiry, its own supported version range, its own
 validity. One expired entry must not affect the evaluation of any other.
 
 Each entry additionally carries a **human-readable name**, so that when a key needs replacing
-the host can tell which entry to edit.
+the implementor can tell which entry to edit.
 
 ```
-  HOST'S LICENSE STORE
+  SITE'S LICENSE STORE
   +---------------------------------------------------------+
   | name: "Forms Pro - renewed Mar 2026"   key: eyJr...abc   |
   | name: "SEO Toolkit (Acme)"             key: eyJr...def   |
@@ -132,7 +134,7 @@ product), `tasks.md` (new work).
 
 `license-validation` should be able to return **the whole set of identified products** with
 their expiry, version range and state - not only a per-product verdict. This is what lets a
-site admin answer "what am I licensed for, and what is about to break?" before it breaks.
+site owner or implementor answer "what am I licensed for, and what is about to break?" before it breaks.
 
 ```
   +----------------------------------------------------------------+
@@ -150,7 +152,7 @@ Two structural points fell out of discussing it:
 - **Authenticity and usability are independent axes.** A key can be perfectly authentic and
   expired; another can be forged. Collapsing these into a single status word loses the
   difference between "someone tampered with this" and "you need to renew" - very different
-  admin actions.
+  actions for the implementor.
 
 ```
                           AUTHENTIC?
@@ -164,7 +166,7 @@ Two structural points fell out of discussing it:
 ```
 
 - **Listing an entry means reading claims out of a key that may not verify.** An inventory
-  that silently drops unverifiable entries omits exactly the rows the admin needs. One that
+  that silently drops unverifiable entries omits exactly the rows the implementor needs. One that
   includes them unmarked presents a forger's numbers as fact. See Q5.
 
 Touches: `license-validation` (substantial addition, possibly its own capability),
@@ -172,55 +174,55 @@ Touches: `license-validation` (substantial addition, possibly its own capability
 
 #### Q1. Where does the human-readable name live?
 
-A name can sit **outside** the key, written by the host, or **inside** the signed payload,
+A name can sit **outside** the key, written by the implementor, or **inside** the signed payload,
 written by the vendor at mint time. These look like the same field but answer different
 questions:
 
-- **Host label = an address.** "Which slot do I edit?" Authored by the person who will edit it.
-- **Issuer name = an identity.** "What is this thing?" Bound to the other claims by the signature.
+- **Site label = an address.** "Which slot do I edit?" Authored by the implementor, who will edit it.
+- **Vendor name = an identity.** "What is this thing?" Bound to the other claims by the signature.
 
 Four scenarios discriminate the options, and no single field covers all four:
 
-| # | Scenario | Host label | Issuer name |
+| # | Scenario | Site label | Vendor name |
 |---|---|---|---|
 | A | **Mangled paste** - key truncated on copy, nothing inside it is readable | works - the only thing that can name a broken entry | fails - gone with the key |
-| B | **Mis-paste** - a valid Commerce key sits in the slot labelled "Forms Pro" | fails - confidently wrong, admin scans past it | works - row can flag the contradiction |
+| B | **Mis-paste** - a valid Commerce key sits in the slot labelled "Forms Pro" | fails - confidently wrong, implementor scans past it | works - row can flag the contradiction |
 | C | **Renewal drift** - label reads "expires Mar 2026", key was renewed a year ago | fails - hand-written metadata decays | works - regenerated with each key |
-| D | **Host's own scheme** - same product across prod/staging, or two sites | works - "prod, renewed by Jane" | fails - every key says "Forms Pro" |
+| D | **Implementor's own scheme** - same product across prod/staging, or two sites | works - "prod, renewed by Jane" | fails - every key says "Forms Pro" |
 
 Options:
-- **(a) Host label only** - covers A and D, exposed to B and C.
-- **(b) Issuer name only** - covers B and C, cannot name an unreadable entry (A) and denies
-  the host any naming scheme of their own (D).
+- **(a) Site label only** - covers A and D, exposed to B and C.
+- **(b) Vendor name only** - covers B and C, cannot name an unreadable entry (A) and denies
+  the implementor any naming scheme of their own (D).
 - **(c) Both** - the only option that catches a mis-paste ("this slot is labelled Forms Pro
   but contains a key for Commerce"), at the cost of two name fields to display and explain,
   a new claim in the token, and a mismatch-reporting rule.
 
 Complications to weigh:
-- A host label is natural in a structured configuration file, but there is **no obvious place
+- A site label is natural in a structured configuration file, but there is **no obvious place
   for it in an environment variable** (one variable, one string - the name would have to live
   in the variable's name or be encoded into its value) or in a vault secret (though a secret's
   own name is a plausible label). The label concept must survive all three sourcing providers.
-- An issuer name is **baked in permanently**: a wrong or ugly one cannot be corrected without
+- A vendor name is **baked in permanently**: a wrong or ugly one cannot be corrected without
   reissuing the key.
-- If an issuer name is added, decide what it contains - product name only, or also the
+- If a vendor name is added, decide what it contains - product name only, or also the
   licensee ("Acme Ltd"). Licensee names are useful for support, but bake organizational data
   into a string that gets pasted into config and may be logged.
 - **Third option, for completeness:** no name at all - identity comes from the product ID
   inside the key. Stable and machine-routable, but fails A (unreadable entries) and D
   (multiple keys for one product), and reads poorly to a human.
 
-Touches: `license-key-sourcing` for a host label; `license-generation` and ADR-0001's payload
-shape for an issuer name.
+Touches: `license-key-sourcing` for a site label; `license-generation` and ADR-0001's payload
+shape for a vendor name.
 
 #### Q2. Is the store shared across vendors, or per-vendor?
 
 Every package built on this library reads its key from somewhere.
 
-- **Shared store** - the host pastes all keys into one place regardless of vendor. Much better
-  for the host, but the store's shape becomes a marketplace-wide contract every vendor must
+- **Shared store** - the implementor pastes all keys into one place regardless of vendor. Much better
+  for the site owner and implementor, but the store's shape becomes a marketplace-wide contract every vendor must
   agree on and none can change unilaterally.
-- **Per-vendor sections** - no coordination needed between vendors, but the host maintains N
+- **Per-vendor sections** - no coordination needed between vendors, but the implementor maintains N
   separate lists and learns a different arrangement per package.
 
 This is the decision most likely to be irreversible once packages ship against it.
@@ -228,14 +230,14 @@ This is the decision most likely to be irreversible once packages ship against i
 #### Q3. How does a package find its key, and what wins on a duplicate?
 
 Two models for resolution:
-- **Host assigns** - the host declares which entry belongs to which product. More host work,
+- **Implementor assigns** - the implementor declares which entry belongs to which product. More work,
   one more thing to get wrong.
-- **System routes** - the host drops every key in, in any order, and each package finds its
+- **System routes** - the implementor drops every key in, in any order, and each package finds its
   own by matching product ID. Better experience, but it implies each key's product ID is read
   **before** the signature is trusted, purely for routing. That is acceptable, but it should
   be an explicit requirement rather than an accident of implementation.
 
-Duplicates are near-certain at renewal, when the host pastes the new key and leaves the old
+Duplicates are near-certain at renewal, when the implementor pastes the new key and leaves the old
 one in place:
 
 ```
@@ -244,12 +246,12 @@ one in place:
 ```
 
 Candidate rules: prefer the entry that validates; prefer the longest expiry; reject the
-ambiguity outright. The worst outcome is silently choosing the stale one - the host renews
+ambiguity outright. The worst outcome is silently choosing the stale one - the site owner renews
 and the system still reports expired.
 
 #### Q4. Is the inventory a view of the store, or a view of the products?
 
-- **Store view** - one row per key the host supplied. Shows what is present. Cannot say
+- **Store view** - one row per key the implementor supplied. Shows what is present. Cannot say
   "Commerce has no license" because it does not know Commerce exists.
 - **Product view** - one row per product that expects a license. Shows what is present *and
   what is missing*; "Commerce: no license found" is arguably the most important row on the
@@ -265,7 +267,7 @@ a product view it must also *declare* itself.
 Rows fall into three tiers:
 
 ```
-  tier 1  unreadable         -> only the host's label is knowable
+  tier 1  unreadable         -> only the site label is knowable
   tier 2  readable, not      -> claims exist but are ASSERTIONS, not facts.
           authentic             "Expires 2099" on a forged key must never
                                 be displayed as truth.
@@ -281,7 +283,7 @@ Two smaller questions attached to the inventory:
   on it. Without it, every consumer recomputes it.
 - **Raw key values** - license keys are bearer tokens; anyone holding one is licensed. An
   inventory destined for a backoffice screen or a log file probably should not reproduce them
-  in full. A short identifying fragment would let a host match a row back to their store
+  in full. A short identifying fragment would let an implementor match a row back to their store
   without exposing the whole key.
 
 #### Correction to the first pass: Q2 and Q4 are coupled
@@ -342,7 +344,7 @@ fundamentally *is*:
 ```
 
 Every requirement specced so far answers a yes/no question. R3-R5 turn a license into a
-description of what the customer bought, which is a different thing to model and a different
+description of what the site owner bought, which is a different thing to model and a different
 thing to display.
 
 #### Requirement R3: backoffice UI for managing license keys
@@ -352,13 +354,13 @@ expiry, the products it permits, and its state, and managing the keys themselves
 
 #### Requirement R4: per-key renewal / upgrade link
 
-Each key can surface a link that takes the customer to the vendor, to renew an expiring license
+Each key can surface a link that takes the site owner to the vendor, to renew an expiring license
 or to buy additional features.
 
 #### Requirement R5: feature flags
 
 A license can permit a subset of a product's features, so functionality can be gated per
-customer rather than the whole product being all-or-nothing.
+site owner rather than the whole product being all-or-nothing.
 
 #### Q6. Is the backoffice manager view-only, or read-write?
 
@@ -370,7 +372,7 @@ are effectively read-only at runtime:
                         source-controlled, deployed rather than edited)
   environment var    -> not writable at runtime in any meaningful sense
   Key Vault          -> writable in principle, but needs a write permission
-                        most hosts will not grant the application
+                        most implementors will not grant the application
 ```
 
 A view-only screen fits this perfectly. An editing screen requires a **writable store the site
@@ -392,7 +394,7 @@ Underneath that sits a genuine split in how a site is operated:
   staging does not exist in production.
 
 Supporting both means choosing a precedence rule and accepting the resulting confusion. A
-view-only manager that reports status and points the host at *where* to edit sidesteps the
+view-only manager that reports status and points the implementor at *where* to edit sidesteps the
 entire question, at the cost of not being a manager in the fullest sense.
 
 #### Q7. Who ships the UI, and what may it display?
@@ -406,8 +408,8 @@ copies attempt to register the same backoffice section:
    [Commerce] ---+
 ```
 
-The licensing screen is a **host-level concern, not a per-package one** - a site has one
-licensing screen, not one per vendor. That argues for a third shipped package that the host
+The licensing screen is a **site-level concern, not a per-package one** - a site has one
+licensing screen, not one per vendor. That argues for a third shipped package that the implementor
 installs once, alongside the core and Key Vault packages split in ADR-0002. It also reinforces
 the shared-store reading of Q2: a single UI over per-vendor stores cannot work.
 
@@ -418,13 +420,13 @@ licenses". Needs a decision on what the screen shows and which backoffice users 
 
 #### Q8. Where does the renewal link come from, and is renewal one link or two?
 
-This is Q1's host-versus-issuer tension again, but it resolves the opposite way, because URLs
+This is Q1's site-versus-vendor tension again, but it resolves the opposite way, because URLs
 decay and names do not.
 
 | Source | Problem |
 |---|---|
 | Baked into the signed key at mint | **URLs rot.** A vendor rebrands or moves their store and every key ever issued points at a dead link, unfixable without reissuing. |
-| Configured by the host | The host does not know the vendor's renewal URL. Wrong party. |
+| Configured by the implementor | The implementor does not know the vendor's renewal URL. Wrong party. |
 | Declared by the package at runtime | Always current, ships with the vendor's own release, no staleness. |
 
 Package-declared links need the same **package self-registration** mechanism that Q4's product
@@ -447,7 +449,7 @@ Two attached points:
      features: [reports, export,       tier: "pro"
                 api, whitelabel]
 
-  + bespoke per-customer deals      + compact
+  + bespoke per-owner deals         + compact
   + no vendor-side mapping needed   + tier->features mapping lives in the
                                       package and ships with releases
   - key grows with each feature     - bespoke deals require inventing tiers
@@ -456,13 +458,13 @@ Two attached points:
 ```
 
 The capitalised line is the heaviest consideration. Under an explicit list, the day a vendor
-adds a capability to their Pro offering, every existing Pro customer's key lacks it - the
-vendor must mint and redistribute keys to their entire customer base to deliver a feature
-customers believe they already bought. Under a tier name, a package release does it.
+adds a capability to their Pro offering, every existing Pro site owner's key lacks it - the
+vendor must mint and redistribute keys to every site owner who bought Pro to deliver a
+feature they believe they already bought. Under a tier name, a package release does it.
 
 But the tier model forces a **commercial** question that no technical choice can answer:
 
-> When a customer buys "Pro" today, are they buying today's Pro features, or Pro forever,
+> When a site owner buys "Pro" today, are they buying today's Pro features, or Pro forever,
 > including everything added later?
 
 ```
@@ -470,7 +472,7 @@ But the tier model forces a **commercial** question that no technical choice can
                             |
    package 2028 adds "ai-assist" to Pro
                             |
-                    is this customer entitled?
+                    is this site owner entitled?
 ```
 
 Answer yes and a tier name suffices. Answer no and the entitlement must be pinned to what the
@@ -516,3 +518,238 @@ even if the UI becomes a separate change entirely.
    cannot be changed after keys are issued.
 3. **Q3** - routing and duplicates; changes existing spec text.
 4. **Q1, Q5, Q6, Q7** - largely additive, and Q6/Q7 can plausibly become a separate change.
+
+---
+
+### Third pass: features, dropped requirements, prior art (2026-09-26)
+
+**Status: R7 settled, pending Q11. Not yet reflected in `proposal.md` or any spec.** Three
+requirements were raised after comparing this project with an existing library (see Prior art,
+below). Each was explored separately. Two were dropped and one was agreed.
+
+#### Requirement R7: product features (agreed)
+
+A license key carries a set of named features with typed values. Vendors use these to gate
+capabilities inside their package, and to sell limits as well as switches, e.g. an eCommerce
+package controlling `max-orders`.
+
+```
+  KEY (signed, fixed at issue)        PACKAGE RELEASE (vendor code, changes)
+  +---------------------------+       +----------------------------------+
+  | features:                 |       | checkout   requires  ecommerce   |
+  |   ecommerce               | ----> | ai-assist  requires  pro   (new) |
+  |   pro                     |       | new order  allowed while         |
+  |   max-orders: 500         |       |            orders < max-orders   |
+  +---------------------------+       +----------------------------------+
+```
+
+Agreed rules:
+
+- A key carries 0..N features, scoped to the key's product. There is no cross-vendor naming
+  scheme because names never cross product boundaries.
+- Each feature is a name plus a **typed** value. Allowed types: switch (true), whole number,
+  text.
+- A plain name means `true`: `[pro]` is the same as `pro: true`.
+- An explicit `false` is **invalid**. Present means granted, with no second way to say "not
+  granted".
+- Malformed values are rejected when the key is issued. A typo such as `max-orders: "5OO"` must
+  fail at the vendor, not months later on a site owner's site.
+- "Tier" and "feature" are one concept. Whether `pro` is a bundle or a single capability is a
+  vendor convention the library does not model.
+- The package maps its own capabilities to feature names. A capability added in a later release
+  can be gated on a name existing site owners already hold, so it reaches them without new keys.
+  This answers Q9's commercial question: site owners get later additions when the vendor gates
+  them on a name they already hold.
+- A feature missing from the key is not granted (fails closed). A name in the key that the
+  running package does not recognise is ignored.
+- Features do not affect validity. A valid key with no features is a valid license. "Does this
+  license grant X?" is a separate question, asked after validation, and always answers no for
+  an invalid license. The existing "Distinct validation result reasons" requirement is
+  unchanged.
+- The library reports values; the package enforces them. Counting orders, and deciding whether
+  a limit is lifetime, per period or per site, is outside the library.
+
+This resolves Q9: both feature lists and tiers are supported, as a vendor convention. It also
+resolves Q10: features and the Umbraco version range are orthogonal. Features gate entitlement
+within a product; the range sets which Umbraco versions a license covers.
+
+Touches: `license-generation` (new claim, typed-value and no-`false` input rules),
+`license-validation` (feature query, separate from the validity verdict), ADR-0001's payload
+shape, `tasks.md`.
+
+#### Q11. Are feature names case-sensitive? (open)
+
+If a vendor issues `Pro` and the package checks for `pro`, is that a match? Suggested:
+case-insensitive matching, with generation rejecting a key that holds two names differing only
+by case. Unconfirmed.
+
+#### Q12. Precision of the Umbraco version range bounds (open)
+
+With R8 dropped, the supported Umbraco version range is the **commercial** boundary (e.g. "an
+Umbraco 17-18 license; Umbraco 19 is a paid upgrade"), not a compatibility declaration. The
+specs do not define what the bounds contain:
+
+- Majors only (`17`) or full versions (`17.2.1`)?
+- Does a max of `18` include `18.4`? Presumably yes if the range is commercial, but it is not
+  written down.
+- Only a contiguous range is possible; "17 and 19 but not 18" cannot be expressed. Probably
+  acceptable, but unconfirmed.
+
+Touches: `license-generation` and `license-validation` range requirements, tasks.md task 2.1
+and task 4.5.
+
+#### Dropped: R6, kind of license
+
+Proposed: a signed license kind (`Trial`, `Standard`). Dropped by the Product Owner.
+
+Why it was considered: to mark trials in the inventory, let packages vary behaviour per kind,
+require an expiry on trials, and prefer a standard key over a trial for the same product when
+resolving duplicates (Q3).
+
+Consequence of dropping it: a trial is a key with a short expiry. Nothing in the key
+distinguishes it from a paid license except the date and the site label. If a vendor needs to
+detect a trial, a feature (R7) can carry it by convention. That is a possible fallback, not a
+requirement.
+
+#### Dropped: R8, release-date gating
+
+Proposed: after a license expires, releases published before expiry keep working; only newer
+releases are refused. Expiry would mean "end of updates" rather than "stop working". Dropped by
+the Product Owner: it adds complication, and the Umbraco version range already gives enough
+commercial control.
+
+What it would have required, recorded so the idea is not re-raised without context:
+
+- Expiry's meaning changes from "stop working" to "end of coverage", which means rewriting the
+  "Expiry check" requirement in `license-validation`.
+- Each package needs a trustworthy, offline, vendor-declared release date.
+- Trials would need a hard stop, or a lapsed trial would license the trial-period release
+  forever for free.
+- A policy is needed for security patches released after a license lapses.
+- A new "lapsed" inventory state is needed. The site keeps working until an upgrade breaks it,
+  so the failure is tied to a deployment rather than a date.
+- It overlaps with the Umbraco version range as a second control over what a license covers.
+
+Consequence of dropping it: expiry remains a hard stop, as specified. The clock-rollback risk
+in Risks / Trade-offs stands.
+
+#### Prior art: Standard.Licensing
+
+[junian/Standard.Licensing](https://github.com/junian/Standard.Licensing), v1.3.0 (2026-05), MIT
+licence, a fork of Portable.Licensing. Reviewed as a feature comparison, not as a candidate
+dependency; build vs. reuse is a propose-phase question.
+
+What it has that this project does not, and what happened to each:
+
+| Its feature | Outcome here |
+|---|---|
+| Name/value product features | Adopted as R7, with typed values instead of plain text |
+| License type (Trial/Standard) | Considered as R6, dropped |
+| Build-date validation (runs any release built before expiry) | Considered as R8, dropped |
+| Unique license ID | Matches Q8's opaque license reference; still open |
+| Licensee name/email/company in the key | Q1's licensee question; still open. Note this puts personal data in a string that gets pasted into config and may be logged. |
+| All failures returned together, each with a `HowToResolve` hint | Relevant to R2 (a row wants every reason) and R4 (a hint is a simple renewal link); not yet a requirement |
+| Conditional and vendor-defined validation rules | Not pursued |
+
+What this project has that it does not: a product ID claim (it identifies a product by giving
+each product its own key pair, so a key cannot be matched to its package by reading it; Q3's
+automatic matching needs the claim), key ID and rotation, the Umbraco version range, key
+sourcing, and everything in R1-R4.
+
+Deliberately not repeated:
+
+- **A claim that is signed but never checked.** Its `Quantity` claim looks like a restriction
+  but is never enforced. Every claim here needs a defined check, or a clear statement that the
+  library only reports it (as with R7 limits).
+- **Multi-line XML keys.** They are hard to put in an environment variable or a single config
+  value, and the signature breaks if the XML is reformatted.
+- **Expiry compared against the machine's local time.** Its expiry check uses the local date,
+  so a license expires at a different moment depending on the server's time zone.
+
+#### Updated order of discussion
+
+Q9 and Q10 are resolved above. Remaining, in order:
+
+1. **Q2 with Q4**: shared vs. per-vendor store, and store view vs. product view. The primary
+   customer is now decided (site owner; see Fourth pass), which favours a shared store and a
+   product view. Also, an inventory can only cover packages built on this library, so it can
+   look complete when it is not.
+2. **Q8's license-reference claim, Q11 and Q12**: remaining key-payload questions. These must
+   be settled before any key is issued.
+3. **Q3**: routing and duplicates.
+4. **Q1, Q5, Q6, Q7**: largely additive.
+
+---
+
+### Fourth pass: personas (2026-09-26)
+
+**Status: primary customer decided; Q13 open. Not yet reflected in `proposal.md` or any spec.**
+Personas are now defined in [`docs/personas.md`](../../../docs/personas.md): vendor, site owner,
+implementor, backoffice editor, site visitor. Earlier passes used "host", "admin" and "customer"
+for people; they have been reworded to the persona that fits each case.
+
+#### Decided: the primary customer is the site owner
+
+The site owner buys licenses and gets most of the value from R1-R3. When personas' interests
+conflict, the site owner wins, then the implementor, then the vendor.
+
+Effect on open questions:
+
+- **Q2 leans towards a shared store.** A site owner with keys from several vendors should not
+  have their implementor learn a different arrangement per package.
+- **Q4 leans towards the product view.** "Commerce: no license found" is the row a site owner
+  most needs to see. The cost is package self-registration (also needed by Q8).
+- **Q8: links must come from the vendor.** Site owners buy "from anywhere" (vendor store,
+  marketplace, reseller), so no purchase channel can be assumed.
+- **Q1 and R2 have two readers.** The implementor needs to know which configured entry to fix
+  and why. The site owner needs to know what they are licensed for and what is about to expire.
+  Same data, different questions.
+- **Q7 and the backoffice editor.** Editors use the product but do not manage licenses.
+  Whether they see licensing warnings, and never full keys, is part of Q7.
+
+#### New requirements from the site visitor persona (not yet specified)
+
+- No license key, license status or licensing message reaches a public visitor.
+- A licensing problem (expired, malformed, missing key) never crashes a page. The library
+  reports problems; it does not throw in the request path.
+- What visitors experience when a license fails is the vendor's decision, not the library's.
+
+Touches: `license-validation`.
+
+#### Q13. Licenses combine: full product, add-on, extra capacity (open)
+
+A site owner can buy a license for a full product, an add-on for a product, or extra capacity.
+One product can therefore have several valid keys at once, and they combine. Q3 treated a
+second key for a product as a duplicate to resolve; that is now also a normal case.
+
+```
+  Commerce
+    key 1: base license      ecommerce, max-orders: 500    exp 2027-03
+    key 2: add-on            ai-assist                     exp 2026-12
+    key 3: capacity pack     max-orders: +1000             exp 2027-03
+                                     |
+                       effective entitlement = ?
+```
+
+The renewal and capacity cases look alike but must combine differently:
+
+```
+  RENEWAL (old key left in place)        CAPACITY PACK
+    max-orders: 500   exp 2026-03          max-orders: 500
+    max-orders: 500   exp 2027-03          max-orders: +1000
+    must NOT become 1000                   MUST become 1500
+```
+
+First decision: what is an add-on?
+
+- **(a) A feature on the same product.** The add-on key carries the base product's ID and is
+  signed with that product's private key. Keys for one product combine.
+- **(b) A product of its own.** The add-on has its own product ID and private key, and may
+  require the base product's license. Add-ons never combine with the base; only capacity packs
+  do.
+
+Then: how keys for one product combine per value type (switches, whole numbers, text), how a
+capacity key is told apart from a renewal, and how combined keys with different expiries are
+reported. Touches: R7, Q3, R2, `license-generation`, `license-validation`.
+
+Updated order of discussion: Q13 joins item 3, alongside Q3.
