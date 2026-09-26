@@ -753,3 +753,68 @@ capacity key is told apart from a renewal, and how combined keys with different 
 reported. Touches: R7, Q3, R2, `license-generation`, `license-validation`.
 
 Updated order of discussion: Q13 joins item 3, alongside Q3.
+
+---
+
+### Fifth pass: store and inventory decided (2026-09-26)
+
+**Status: Q2 and Q4 decided; Q14 open, parked mid-discussion. Not yet reflected in
+`proposal.md` or any spec.**
+
+#### Decided: Q2, shared store
+
+All license keys, from all vendors, go in one store per site. This follows from the site owner
+being the primary customer. Consequence, accepted: the store's shape is a permanent contract
+between library versions and can only be extended, never changed.
+
+#### Decided: Q4, product view
+
+The inventory has one row per product that expects a license, so "no license found" can be
+reported. Keys that match no registered product are listed separately.
+
+```
+                        SHARED STORE
+          +------------------------------------+
+          | forms key | seo key | commerce key |
+          +------------------------------------+
+                           |
+                           v
+   REGISTERED PRODUCTS --> INVENTORY (one row per product)
+   Forms Pro   -> active, exp 2027-03
+   SEO Toolkit -> expired
+   Commerce    -> no license found
+   (key with no registered product) -> listed separately
+```
+
+Consequence: **package self-registration is now a requirement (R9).** Each licensed package
+declares that it is installed and expects a license. Q8's package-supplied links depend on the
+same mechanism.
+
+#### Q14. What does a package declare when it registers? (open, parked)
+
+Minimum: its product ID, so it can appear as a row with no key.
+
+| Declaration | Serves | Why |
+|---|---|---|
+| Display name ("Commerce") | Site owner | Product IDs read badly to people |
+| Vendor name | Site owner | "Who do I call?" |
+| Renewal / purchase link | Site owner | Q8: links must come from the vendor; this is where they live |
+| Features the package recognises | Implementor | Could show "granted, unused", or explain a feature |
+| License required or optional | Site owner | A free package with paid add-ons must not show "no license found" as an error |
+
+Suggested, not confirmed: product ID, display name, vendor name, required/optional, renewal
+link. The recognised-features list is the least clear-cut.
+
+The required/optional point matters: many Umbraco packages are free with paid add-ons. If every
+registered package without a key is shown as a problem, site owners learn to ignore the
+inventory.
+
+#### Where to resume
+
+1. Q14: registration declarations (in progress).
+2. Q13: licenses combining. It affects key contents (e.g. a capacity key saying "add 1000"
+   rather than "limit is 1000"), so it belongs with the key-contents questions.
+3. Q11 and Q12: small key-contents questions.
+4. Q8's license-reference claim.
+5. Q3: matching keys to products and handling duplicates.
+6. Q1, Q5, Q6, Q7.

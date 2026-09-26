@@ -31,13 +31,16 @@ further requirements, none of them yet reflected in the proposal or the specs:
 | R6 kind of license (trial / standard) | dropped |
 | R8 release-date gating | dropped |
 | Primary customer | decided: site owner |
+| Shared key store across vendors (design.md Q2) | decided |
+| Inventory lists products, not just keys (design.md Q4) | decided |
+| R9 package self-registration | required; contents open, design.md Q14 |
 | Licenses combining (full product, add-on, extra capacity) | open, design.md Q13 |
 
-Open questions Q1-Q8 and Q11-Q13 must be settled before the specs are revised. They are
-written up in four exploration passes at the end of
+Open questions Q1, Q3, Q5-Q8 and Q11-Q14 must be settled before the specs are revised. They
+are written up in five exploration passes at the end of
 [`openspec/changes/license-key-management/design.md`](openspec/changes/license-key-management/design.md),
 which also records why R6 and R8 were dropped, and a comparison with the Standard.Licensing
-library. The *"Updated order of discussion"* at the end of that file says where to resume.
+library. The *"Where to resume"* list at the end of that file says what to pick up next.
 
 Read those sections before assuming the current specs are settled.
 
