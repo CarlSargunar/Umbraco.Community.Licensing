@@ -100,5 +100,5 @@ and any online or network-based validation.
 
 ## Architecture decisions
 
-- [ADR-0001](docs/adrs/0001-license-token-signing-algorithm.md) - license token signing algorithm and format
-- [ADR-0002](docs/adrs/0002-package-split-for-keyvault-dependency.md) - splitting Azure Key Vault sourcing into a separate package
+- [ADR-0001](docs/adrs/0001-license-token-signing-algorithm.md) - license token signing algorithm and format (draft)
+- [ADR-0002](docs/adrs/0002-package-split-for-keyvault-dependency.md) - splitting Azure Key Vault sourcing into a separate package (draft)
