@@ -716,7 +716,7 @@ Effect on open questions:
 
 Touches: `license-validation`.
 
-#### Q13. Licenses combine: full product, add-on, extra capacity (open)
+#### Q13. Licenses combine: full product, add-on, extra capacity (model decided in seventh pass)
 
 A site owner can buy a license for a full product, an add-on for a product, or extra capacity.
 One product can therefore have several valid keys at once, and they combine. Q3 treated a
@@ -758,7 +758,7 @@ Updated order of discussion: Q13 joins item 3, alongside Q3.
 
 ### Fifth pass: store and inventory decided (2026-09-26)
 
-**Status: Q2 and Q4 decided; Q14 open, parked mid-discussion. Not yet reflected in
+**Status: Q2, Q4 and Q14 decided (Q14 on 2026-09-28). Not yet reflected in
 `proposal.md` or any spec.**
 
 #### Decided: Q2, shared store
@@ -790,7 +790,7 @@ Consequence: **package self-registration is now a requirement (R9).** Each licen
 declares that it is installed and expects a license. Q8's package-supplied links depend on the
 same mechanism.
 
-#### Q14. What does a package declare when it registers? (open, parked)
+#### Q14. What does a package declare when it registers? (decided)
 
 Minimum: its product ID, so it can appear as a row with no key.
 
@@ -802,8 +802,41 @@ Minimum: its product ID, so it can appear as a row with no key.
 | Features the package recognises | Implementor | Could show "granted, unused", or explain a feature |
 | License required or optional | Site owner | A free package with paid add-ons must not show "no license found" as an error |
 
-Suggested, not confirmed: product ID, display name, vendor name, required/optional, renewal
-link. The recognised-features list is the least clear-cut.
+Decided (2026-09-28):
+
+- **Product ID**: required.
+- **Display name**: required.
+- **Vendor name**: required.
+- **Renewal link**: **one** link, optional. Resolves Q8's "one link or two": no separate upgrade
+  link. The library stores and displays it; everything past the link (shop, pricing, checkout)
+  is the vendor's. It must be declared because the inventory is a site-level screen with no
+  per-vendor hook, so without it a site owner sees an expiry with no way to act on it. Optional
+  because a vendor may have no renewal page. Must not contain the license key (Q8).
+- **License requirement**: required, two states: `required` or `optional`. It only changes how
+  the inventory presents a **missing** key. It does not enforce anything; what the product does
+  without a key is the vendor's code, and with no key no features are granted (R7).
+
+```
+  Commerce       required   no license found         [!]
+  SEO Toolkit    optional   free edition
+```
+
+  Why: many Umbraco packages are free with paid extras. Without the flag every keyless package
+  shows as a problem, and site owners learn to ignore real warnings. Once a key is present the
+  flag is irrelevant: an expired key for an optional product is still reported, because the
+  site owner bought something.
+
+  Not included, for now: an "evaluation" state (works unlicensed for a period, then nags). It
+  would need an evaluation period and an install date, and is close to the dropped R6. A
+  package with an evaluation period declares `required`; "no license found" is accurate for it.
+
+Deferred:
+
+- **Recognised features list**: not declared for now. The inventory shows the raw feature
+  names from the key. It would add friendly names, flag granted-but-unused features, and show
+  features not held (upsell), but vendors would have to keep it current per release, and R7
+  already ignores features a package does not recognise. Safe to add later: registration ships
+  with each package release, not in the key, so adding it never affects issued keys.
 
 The required/optional point matters: many Umbraco packages are free with paid add-ons. If every
 registered package without a key is shown as a problem, site owners learn to ignore the
@@ -811,10 +844,276 @@ inventory.
 
 #### Where to resume
 
-1. Q14: registration declarations (in progress).
-2. Q13: licenses combining. It affects key contents (e.g. a capacity key saying "add 1000"
+1. Q13: licenses combining. It affects key contents (e.g. a capacity key saying "add 1000"
    rather than "limit is 1000"), so it belongs with the key-contents questions.
-3. Q11 and Q12: small key-contents questions.
-4. Q8's license-reference claim.
-5. Q3: matching keys to products and handling duplicates.
-6. Q1, Q5, Q6, Q7.
+2. Q11 and Q12: small key-contents questions.
+3. Q8's license-reference claim.
+4. Q3: matching keys to products and handling duplicates.
+5. Q1, Q5, Q6, Q7.
+
+---
+
+### Sixth pass: vendor issuing tooling (2026-09-28)
+
+**Status: scope of the issuing side and Q15 decided. Not yet reflected in `proposal.md` or
+any spec.** Nothing written so far said what the vendor uses to issue keys, or where the vendor
+keeps products, signing secrets and issued keys. This pass settles that scope. The technology is
+deferred to propose.
+
+#### What the vendor has to keep
+
+```
+  +--------------------+   +--------------------+   +------------------------+
+  | SIGNING SECRETS    |   | PRODUCTS           |   | ISSUED LICENSE KEYS    |
+  | one per product,   |   | product ID, name,  |   | what was issued, when, |
+  | plus replaced ones |   | feature names      |   | expiry, features, the  |
+  |                    |   |                    |   | key itself             |
+  +--------------------+   +--------------------+   +------------------------+
+   leaked = anyone can      wrong = bad keys         lost = cannot re-send or
+   forge licenses           issued                   renew; may hold customer
+   lost = no new keys for                            personal data
+   shipped releases
+```
+
+Losing issued keys or signing secrets hurts the site owner, who cannot get a key re-sent or
+renewed. So vendor-side storage matters to the primary customer.
+
+#### Decided: the core library signs only
+
+The core turns key contents into a signed key string, checks the input (R7's typed values and
+so on) and **keeps no records**. Vendors with a shop or CRM call it from their own systems,
+including automatic issuance on purchase, and keep their own records.
+
+#### Requirement R10: optional issuing add-on for smaller vendors (agreed)
+
+Most Umbraco package authors are small and have no shop system. An optional add-on keeps
+product definitions and issued license keys somewhere safe, and calls the core to issue, list,
+re-send and renew. The core does not depend on it; a vendor with its own systems never takes it.
+
+```
+  CORE (every vendor)                 OPTIONAL ADD-ON (smaller vendors)
+  +-----------------------------+     +---------------------------------+
+  | sign: contents -> key       | <-- | keeps products + issued keys,   |
+  | checks input                |     | calls the core to issue, lists, |
+  | holds nothing               |     | re-sends, renews                |
+  +-----------------------------+     +---------------------------------+
+         ^
+         |  vendor with a shop calls the core directly
+```
+
+Serves: vendor (small vendors get a working issuing setup), site owner (vendor can re-send
+and renew reliably).
+
+#### Decided: signing secrets are stored apart from issued keys
+
+The add-on stores products and issued license keys. It does **not** store signing secrets; the
+secret is supplied when a key is issued. The existing "Private key isolation" requirement in
+`license-generation` is unchanged. The add-on's guidance must tell the vendor to back up the
+signing secret.
+
+Why: a store holding both is a single place from which every product's licenses can be
+forged. Separating them later does not undo the exposure, because every earlier backup or
+copy still holds the secrets. Removing that exposure means replacing the secret:
+
+```
+  1. new secret, new package release that trusts it
+  2. old secret still trusted?  --yes--> existing keys keep working, but an old
+                                         backup can still forge keys
+                                --no---> every existing key stops working until
+                                         reissued: cost lands on site owners
+```
+
+| Start with | Change later | Cost |
+|---|---|---|
+| Stored together | Separate | Moving data is cheap; removing the exposure means replacing the secret |
+| Stored apart | Offer "together" as an opt-in | Low; nothing newly exposed |
+
+#### Q15. What does the add-on record about each issued key? (decided)
+
+An issuance log with an optional order reference. **No customer personal data.**
+
+```
+  ISSUED KEY RECORD
+  +-------------------------------------------+
+  | product, key contents, dates,             |
+  | signing secret used, the key              |
+  | order reference (optional, free text)     |
+  +-------------------------------------------+
+  no name, no email, no company
+```
+
+- **No personal data by design.** The add-on needs no access, deletion or retention features.
+  The vendor's own shop or payment provider already holds the customer and carries those
+  duties.
+- **Lookup by order reference is required.** A vendor gets from a customer ("I lost my key")
+  to the records by finding the order in their own system, then searching the add-on by
+  reference.
+- **The reference field cannot be policed.** Nothing stops a vendor typing an email into free
+  text. The field's label and guidance must say it is for an order reference and must not hold
+  personal data. The responsibility is the vendor's.
+- **Which signing secret signed each key** is recorded, so a vendor knows which keys are
+  affected if a secret leaks.
+- **Customer personal details never go into the key.** The key is pasted into config and may
+  be logged. This settles the personal-data half of Q1's licensee question; the site label
+  in Q1 remains open.
+
+Considered and rejected: optional name, email and company fields. Optional fields lower the
+vendor's burden but not the add-on's, which would still have to support finding and removing
+personal data because it cannot know whether any was entered.
+
+Serves: vendor (small scope, no personal data duties), site owner (re-send and renewal still
+work).
+
+#### Deferred to propose (Architect)
+
+- How the add-on stores its records (e.g. a database or a file).
+- What form the issuing tooling takes (e.g. a console app shipped with the library, or a
+  global tool).
+
+#### Note on Q13
+
+Walking through the vendor's view (release, sale, runtime, change over time) suggests Q13's
+underlying question is **what one key stands for: one purchase, or everything the site owner
+is currently entitled to for that product?** Earlier passes assumed the latter without deciding
+it. Resume Q13 from that question.
+
+#### Where to resume
+
+Superseded by the list at the end of the seventh pass.
+
+---
+
+### Seventh pass: what a key stands for, and the license reference (2026-09-28)
+
+**Status: Q13's model decided; license reference agreed (Q8's claim); combining rules open.
+Not yet reflected in `proposal.md` or any spec.** Session parked at the end of this pass.
+
+#### Decided: Q13, a key stands for one purchase
+
+Two models were compared:
+
+```
+  (1) ONE PURCHASE                      (2) CURRENT ENTITLEMENT
+  a key = what one order bought         a key = everything the site owner
+                                        holds for that product, right now
+  base      ecommerce, max 500
+  add-on    ai-assist                   ecommerce, ai-assist, max 1500
+  capacity  max 1000                    (one key; the next purchase
+  (3 keys, combined on the site)         replaces it)
+```
+
+**(1) now; (2) is a possible future feature.**
+
+Why (1):
+
+- **Buy from anywhere.** Each purchase stands alone, so a marketplace or reseller can sell an
+  add-on or capacity without knowing what the site owner already holds.
+- **Add-ons can have their own term** (e.g. monthly add-on on a yearly base). One key has one
+  expiry, so (2) cannot express this.
+- **(2) needs proof of ownership that nothing here provides.** Under (2) every reissue hands over
+  the whole entitlement. The vendor must confirm the buyer owns the license: the current key
+  (a bearer token, emailed around), the vendor's customer account (absent at marketplaces and
+  resellers, and the customer link Q15 kept out of the add-on), or a contact for the original
+  buyer (personal data). A non-secret identifier is not enough; see the flaw below.
+- Under (1) an add-on key grants only the add-on, so quoting someone else's identifier gets a
+  stranger only what they paid for.
+
+Cost of (1): the library must combine keys for one product. The rules are open (Q16).
+
+Add-ons that are separately installed packages, including third-party add-ons (vendor Y
+building on vendor X's product, unable to sign with X's secret), are products of their own:
+they register (Q14) and carry their own keys. This needs no decision.
+
+#### Agreed: license reference (answers Q8's claim)
+
+A short identifier, generated when a license is first issued and signed into the key. It stays
+the same when that license is reissued (renewal, or a future (2) upgrade). It names **a
+license**: one entitlement to one product. Not a key, an order or a customer.
+
+```
+  FIRST SALE           RENEWAL              ON THE SITE
+  ref LIC-8F3A         ref LIC-8F3A         inventory shows
+  new, random          + later expiry       Commerce  LIC-8F3A
+  key 1 ------------>  key 2                ecommerce, expires 2028-03
+                       (key 1 superseded)
+```
+
+Properties:
+
+- Random. Never derived from a customer, order or site, so it reveals nothing.
+- Unique per product.
+- Signed, so it cannot be edited. Readable before the signature is trusted, like the product
+  ID used for routing (Q3).
+- **Not secret and not proof of ownership.** It grants nothing, so it may be shown in the
+  backoffice, quoted in email or support, put on an order form, or passed in the renewal link
+  (Q8 forbids the key in the link; the reference is safe there).
+
+Uses:
+
+| Persona | Use |
+|---|---|
+| Site owner | "Which license is this?" Quoted for support or renewal without handling the key |
+| Implementor | Sees old and new versions of one license; knows which to remove |
+| Vendor | Finds one license's history in their own systems or the R10 add-on's records |
+| Library | Resolves renewal duplicates (below) |
+
+The R10 add-on stores the reference on every issued-key record, so "renew LIC-8F3A" loads the
+latest record for that reference. The order reference (Q15) stays optional and is the vendor's
+own bookkeeping.
+
+The flaw that rules it out as authorisation:
+
+```
+  stranger sees "LIC-8F3A" (screenshot, support email, agency handover)
+    -> buys the cheapest add-on, quoting LIC-8F3A
+    -> under (2), vendor reissues "latest for LIC-8F3A + add-on"
+    -> stranger receives the WHOLE entitlement
+```
+
+#### Agreed: supersede or combine, by license reference
+
+```
+  SAME reference       -> one supersedes the other (latest issued wins)
+  DIFFERENT reference  -> separate purchases; they combine
+
+  RENEWAL                      CAPACITY PACK
+  LIC-8F3A max 500  exp 2026   LIC-8F3A  max 500
+  LIC-8F3A max 500  exp 2027   LIC-21C9  max 1000
+  same ref -> latest wins      different refs -> combine to 1500
+  = 500, not 1000
+```
+
+- **Resolves the renewal vs capacity ambiguity** from the fourth pass, without an "add" marker
+  in the key.
+- **Gives Q3 its duplicate rule** for renewals: an old key left in place is superseded, not a
+  conflict. Q3's routing question is still open.
+- **(2) needs no new library behaviour later.** An entitlement key is a reissue under the base
+  license's reference with add-ons folded in; latest wins. What (2) needs is vendor-side proof
+  of ownership.
+- Note for whoever designs (2): if a folded-in key and the original separate add-on key are
+  both on the site, the add-on's capacity could be counted twice.
+
+"Latest issued" implies the key records when it was issued. The current token design already
+has an issued-at time (see Token format, above).
+
+#### Q16. How do values combine across different licenses for one product? (open)
+
+- Whole numbers presumably add. Should two base licenses bought by mistake double capacity?
+- Text values: two licenses give different text. Which wins, or is it both?
+- Switches: present in any valid license means granted (presumably).
+- Different expiries: the product is partly valid. How is that reported (R2), and does an
+  expired license's value drop out of the combination while the others remain?
+- Different Umbraco version ranges across licenses for one product.
+
+Touches: R7, R2, Q3, `license-generation` (reference claim), `license-validation` (combining,
+superseding), ADR-0001's payload shape.
+
+#### Where to resume
+
+Supersedes all earlier lists.
+
+1. Q16: how values combine across licenses.
+2. Q11 and Q12: small key-contents questions.
+3. Q3: routing keys to products (duplicate rule for renewals now settled).
+4. Q8: remaining part, if any (renewal link settled by Q14; license reference settled above).
+5. Q1 (licensee personal data settled by Q15; site label open), Q5, Q6, Q7.
