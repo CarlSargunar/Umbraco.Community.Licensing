@@ -529,6 +529,8 @@ below). Each was explored separately. Two were dropped and one was agreed.
 
 #### Requirement R7: product features (agreed)
 
+Recorded in [PDR-0010](../../../docs/decisions/0010-product-features.md).
+
 A license key carries a set of named features with typed values. Vendors use these to gate
 capabilities inside their package, and to sell limits as well as switches, e.g. an eCommerce
 package controlling `max-orders`.
@@ -579,11 +581,15 @@ shape, `tasks.md`.
 
 #### Q11. Are feature names case-sensitive? (decided in ninth pass)
 
+Recorded in [PDR-0013](../../../docs/decisions/0013-feature-names.md).
+
 If a vendor issues `Pro` and the package checks for `pro`, is that a match? Suggested:
 case-insensitive matching, with generation rejecting a key that holds two names differing only
 by case. Unconfirmed.
 
 #### Q12. Precision of the Umbraco version range bounds (decided in ninth pass)
+
+Recorded in [PDR-0012](../../../docs/decisions/0012-umbraco-version-range.md).
 
 With R8 dropped, the supported Umbraco version range is the **commercial** boundary (e.g. "an
 Umbraco 17-18 license; Umbraco 19 is a paid upgrade"), not a compatibility declaration. The
@@ -600,6 +606,8 @@ and task 4.5.
 
 #### Dropped: R6, kind of license
 
+Recorded in [PDR-0014](../../../docs/decisions/0014-dropped-kind-of-license.md).
+
 Proposed: a signed license kind (`Trial`, `Standard`). Dropped by the Product Owner.
 
 Why it was considered: to mark trials in the inventory, let packages vary behaviour per kind,
@@ -612,6 +620,8 @@ detect a trial, a feature (R7) can carry it by convention. That is a possible fa
 requirement.
 
 #### Dropped: R8, release-date gating
+
+Recorded in [PDR-0015](../../../docs/decisions/0015-dropped-release-date-gating.md).
 
 Proposed: after a license expires, releases published before expiry keep working; only newer
 releases are refused. Expiry would mean "end of updates" rather than "stop working". Dropped by
@@ -690,6 +700,8 @@ for people; they have been reworded to the persona that fits each case.
 
 #### Decided: the primary customer is the site owner
 
+Recorded in [PDR-0001](../../../docs/decisions/0001-primary-customer-is-the-site-owner.md).
+
 The site owner buys licenses and gets most of the value from R1-R3. When personas' interests
 conflict, the site owner wins, then the implementor, then the vendor.
 
@@ -717,6 +729,8 @@ Effect on open questions:
 Touches: `license-validation`.
 
 #### Q13. Licenses combine: full product, add-on, extra capacity (model decided in seventh pass)
+
+Recorded in [PDR-0008](../../../docs/decisions/0008-a-key-stands-for-one-purchase.md), [PDR-0011](../../../docs/decisions/0011-base-and-add-on-licenses.md).
 
 A site owner can buy a license for a full product, an add-on for a product, or extra capacity.
 One product can therefore have several valid keys at once, and they combine. Q3 treated a
@@ -763,11 +777,15 @@ Updated order of discussion: Q13 joins item 3, alongside Q3.
 
 #### Decided: Q2, shared store
 
+Recorded in [PDR-0002](../../../docs/decisions/0002-shared-license-store.md).
+
 All license keys, from all vendors, go in one store per site. This follows from the site owner
 being the primary customer. Consequence, accepted: the store's shape is a permanent contract
 between library versions and can only be extended, never changed.
 
 #### Decided: Q4, product view
+
+Recorded in [PDR-0003](../../../docs/decisions/0003-inventory-is-a-product-view.md).
 
 The inventory has one row per product that expects a license, so "no license found" can be
 reported. Keys that match no registered product are listed separately.
@@ -791,6 +809,8 @@ declares that it is installed and expects a license. Q8's package-supplied links
 same mechanism.
 
 #### Q14. What does a package declare when it registers? (decided)
+
+Recorded in [PDR-0004](../../../docs/decisions/0004-package-registration-declarations.md).
 
 Minimum: its product ID, so it can appear as a row with no key.
 
@@ -880,11 +900,15 @@ renewed. So vendor-side storage matters to the primary customer.
 
 #### Decided: the core library signs only
 
+Recorded in [PDR-0005](../../../docs/decisions/0005-core-signs-only.md).
+
 The core turns key contents into a signed key string, checks the input (R7's typed values and
 so on) and **keeps no records**. Vendors with a shop or CRM call it from their own systems,
 including automatic issuance on purchase, and keep their own records.
 
 #### Requirement R10: optional issuing add-on for smaller vendors (agreed)
+
+Recorded in [PDR-0006](../../../docs/decisions/0006-issuing-add-on-without-personal-data.md).
 
 Most Umbraco package authors are small and have no shop system. An optional add-on keeps
 product definitions and issued license keys somewhere safe, and calls the core to issue, list,
@@ -905,6 +929,8 @@ Serves: vendor (small vendors get a working issuing setup), site owner (vendor c
 and renew reliably).
 
 #### Decided: signing secrets are stored apart from issued keys
+
+Recorded in [PDR-0007](../../../docs/decisions/0007-signing-secrets-stored-apart.md).
 
 The add-on stores products and issued license keys. It does **not** store signing secrets; the
 secret is supplied when a key is issued. The existing "Private key isolation" requirement in
@@ -929,6 +955,8 @@ copy still holds the secrets. Removing that exposure means replacing the secret:
 | Stored apart | Offer "together" as an opt-in | Low; nothing newly exposed |
 
 #### Q15. What does the add-on record about each issued key? (decided)
+
+Recorded in [PDR-0006](../../../docs/decisions/0006-issuing-add-on-without-personal-data.md).
 
 An issuance log with an optional order reference. **No customer personal data.**
 
@@ -990,6 +1018,8 @@ Not yet reflected in `proposal.md` or any spec.** Session parked at the end of t
 
 #### Decided: Q13, a key stands for one purchase
 
+Recorded in [PDR-0008](../../../docs/decisions/0008-a-key-stands-for-one-purchase.md).
+
 Two models were compared:
 
 ```
@@ -1025,6 +1055,8 @@ building on vendor X's product, unable to sign with X's secret), are products of
 they register (Q14) and carry their own keys. This needs no decision.
 
 #### Agreed: license reference (answers Q8's claim)
+
+Recorded in [PDR-0009](../../../docs/decisions/0009-license-reference.md).
 
 A short identifier, generated when a license is first issued and signed into the key. It stays
 the same when that license is reissued (renewal, or a future (2) upgrade). It names **a
@@ -1072,6 +1104,8 @@ The flaw that rules it out as authorisation:
 
 #### Agreed: supersede or combine, by license reference
 
+Recorded in [PDR-0009](../../../docs/decisions/0009-license-reference.md).
+
 ```
   SAME reference       -> one supersedes the other (latest issued wins)
   DIFFERENT reference  -> separate purchases; they combine
@@ -1097,6 +1131,8 @@ The flaw that rules it out as authorisation:
 has an issued-at time (see Token format, above).
 
 #### Q16. How do values combine across different licenses for one product? (decided in eighth pass)
+
+Recorded in [PDR-0011](../../../docs/decisions/0011-base-and-add-on-licenses.md).
 
 - Whole numbers presumably add. Should two base licenses bought by mistake double capacity?
 - Text values: two licenses give different text. Which wins, or is it both?
@@ -1126,6 +1162,8 @@ Supersedes all earlier lists.
 
 #### Decided: a key's role is base or add-on
 
+Recorded in [PDR-0011](../../../docs/decisions/0011-base-and-add-on-licenses.md).
+
 An add-on without a valid base license makes no sense commercially, so the library must tell
 the two apart. Every key carries a signed **role**: `base` or `add-on`.
 
@@ -1152,6 +1190,8 @@ features, and a capacity pack carries one.
 
 #### Decided: the role is required at issue
 
+Recorded in [PDR-0011](../../../docs/decisions/0011-base-and-add-on-licenses.md).
+
 Issuing refuses a key without a role. A key without one can only be malformed and is invalid.
 
 | Default for an unmarked key | Who pays for a vendor mistake |
@@ -1165,11 +1205,15 @@ can pre-fill the role per product.
 
 #### Decided: capacity packs are add-ons; no subtype
 
+Recorded in [PDR-0011](../../../docs/decisions/0011-base-and-add-on-licenses.md).
+
 Feature add-ons and capacity packs differ only in their features (a switch vs a whole number).
 Both need a valid base and never license the product alone. A capacity pack therefore cannot be
 sold as a cheap standalone license.
 
 #### Decided: values combine by type
+
+Recorded in [PDR-0010](../../../docs/decisions/0010-product-features.md), [PDR-0011](../../../docs/decisions/0011-base-and-add-on-licenses.md).
 
 R7's allowed types are reduced to two. **Text is dropped.**
 
@@ -1195,6 +1239,8 @@ combination.
 
 #### Decided: two valid base licenses combine
 
+Recorded in [PDR-0011](../../../docs/decisions/0011-base-and-add-on-licenses.md).
+
 Two base licenses with **different** references combine like any other licenses. Same reference
 is a renewal and supersedes (seventh pass).
 
@@ -1213,6 +1259,8 @@ Rejected: only one base counts, chosen by a rule. That silently discards capacit
 paid for and needs a selection rule.
 
 #### Decided: restrictions by role
+
+Recorded in [PDR-0012](../../../docs/decisions/0012-umbraco-version-range.md).
 
 The library enforces two restrictions. Everything else in a key identifies or entitles.
 
@@ -1243,6 +1291,8 @@ expiry, online validation (out of scope for this change); trial kind (R6) and re
 gating (R8) dropped in the third pass.
 
 #### Decided: each license is judged on its own, then combined
+
+Recorded in [PDR-0011](../../../docs/decisions/0011-base-and-add-on-licenses.md).
 
 ```
   per license                                per product
@@ -1328,6 +1378,8 @@ Supersedes all earlier lists.
 
 #### Decided: Q11, feature names are restricted, lookups ignore case
 
+Recorded in [PDR-0013](../../../docs/decisions/0013-feature-names.md).
+
 - A feature name is lowercase `a-z`, digits and hyphens, starting with a letter.
 - Issuing rejects any other name.
 - A package's lookup ignores case, so asking for `Pro` finds `pro`.
@@ -1355,6 +1407,8 @@ display name is not requested.
 Touches: `license-generation` (name rule), `license-validation` (feature lookup).
 
 #### Decided: Q12, Umbraco range bounds are majors, inclusive, each optional
+
+Recorded in [PDR-0012](../../../docs/decisions/0012-umbraco-version-range.md).
 
 - A base license may carry a minimum and a maximum Umbraco **major** (eighth pass: add-ons
   may not carry a range).

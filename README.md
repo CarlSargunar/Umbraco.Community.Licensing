@@ -75,7 +75,9 @@ code - work is specified, discussed and agreed before it is implemented.
       tasks.md                      verifiable implementation steps
       specs/<capability>/spec.md    requirements and scenarios (behaviour, not design)
   docs/personas.md                  who the library serves; primary customer
-  docs/adrs/                        architecture decision records
+  docs/license-examples.md          worked examples of license contents and evaluation
+  docs/adrs/                        architecture decision records (technology)
+  docs/decisions/                   product decision records (behaviour, and why)
 ```
 
 A change moves through phases, each driven by a slash command:
@@ -92,7 +94,8 @@ Conventions worth knowing before contributing:
 - **Specs describe behaviour, not implementation.** A requirement states what the system SHALL
   do, with scenarios; how it is built belongs in `design.md` or an ADR.
 - **Decisions are recorded, not just made.** Anything architecturally significant gets an ADR in
-  `docs/adrs/`, cross-referenced from the design that made the call.
+  `docs/adrs/`; product decisions get a PDR in `docs/decisions/` stating why and what was
+  rejected. Both are cross-referenced from the design that made the call.
 - **Requirements come before technology.** Exploration deliberately stays off the subject of
   frameworks and libraries so the problem is understood on its own terms first.
 
@@ -108,6 +111,11 @@ One active change, `license-key-management`, covering three capabilities:
 
 Explicitly out of scope for this change: machine or domain binding, revocation before expiry,
 and any online or network-based validation.
+
+## Product decisions
+
+Why the library behaves as it does: [`docs/decisions/`](docs/decisions/README.md) holds one record
+per product decision (PDR-0001 to PDR-0015), with the reasons and the options rejected.
 
 ## Architecture decisions
 
