@@ -13,8 +13,8 @@ one product. Not a key, an order or a customer.
 - Keys with the **same** reference: the latest issued supersedes the others.
 - Keys with **different** references: separate purchases; they combine.
 
-The reference is unique per product, reveals nothing, is readable before the signature is
-trusted, and is **not secret and not proof of ownership**.
+The reference is unique per product (format: PDR-0017), reveals nothing, is readable before
+the signature is trusted, and is **not secret and not proof of ownership**.
 
 ## Why
 
@@ -33,4 +33,5 @@ trusted, and is **not secret and not proof of ownership**.
 
 ## Consequences
 
-"Latest issued" requires the key to record when it was issued.
+"Latest issued" requires the key to record when it was issued: a UTC date and time set by the
+core (PDR-0016).

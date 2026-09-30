@@ -22,12 +22,14 @@ A decided PDR is not yet a spec requirement until the specs are revised.
 | [0007](0007-signing-secrets-stored-apart.md) | Signing secrets are stored apart from issued keys | Decided |
 | [0008](0008-a-key-stands-for-one-purchase.md) | A license key stands for one purchase | Decided |
 | [0009](0009-license-reference.md) | License reference: same reference supersedes, different ones combine | Decided |
-| [0010](0010-product-features.md) | Product features are switches and whole numbers | Decided |
+| [0010](0010-product-features.md) | Product features are switches and numbers | Decided |
 | [0011](0011-base-and-add-on-licenses.md) | Base and add-on licenses, and how licenses combine | Decided |
 | [0012](0012-umbraco-version-range.md) | Umbraco version range: base licenses only, majors, inclusive | Decided |
 | [0013](0013-feature-names.md) | Feature names are restricted; lookups ignore case | Decided |
 | [0014](0014-dropped-kind-of-license.md) | No kind of license (trial / standard) | Dropped |
 | [0015](0015-dropped-release-date-gating.md) | No release-date gating | Dropped |
+| [0016](0016-dates-and-times.md) | Issue and expiry dates are UTC; the core sets the issue time | Decided |
+| [0017](0017-identifier-formats.md) | Identifier formats: `vendor.product` and `LIC-XXXXX-XXXXX` | Decided |
 
 ## Template
 

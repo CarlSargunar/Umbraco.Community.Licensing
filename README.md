@@ -27,7 +27,7 @@ further requirements, none of them yet reflected in the proposal or the specs:
 | R2 inventory reporting across the collection | open |
 | R3 backoffice UI for license keys | open |
 | R4 per-key renewal / upgrade link | open |
-| R7 product features: switches and whole numbers, e.g. `max-orders: 500`; text dropped (design.md eighth pass) | decided; names lowercase `a-z`, digits, hyphens (design.md Q11) |
+| R7 product features: switches and numbers (decimal, zero or positive, additive), e.g. `max-orders: 500`; text dropped | decided; names lowercase `a-z`, digits, hyphens, once per key (design.md Q11, tenth pass) |
 | R6 kind of license (trial / standard) | dropped |
 | R8 release-date gating | dropped |
 | Primary customer | decided: site owner |
@@ -39,13 +39,15 @@ further requirements, none of them yet reflected in the proposal or the specs:
 | How values combine across licenses: base / add-on role, switches OR, numbers sum, per-license filter (design.md Q16) | decided, design.md eighth pass |
 | Umbraco range on base licenses only; expiry on base and add-ons | decided, design.md eighth pass |
 | Umbraco range bounds: optional min / max major, inclusive (design.md Q12) | decided, design.md ninth pass |
+| Dates: `issued` UTC date and time set by the core; `expires` a date, valid to end of day UTC | decided, design.md tenth pass |
+| Identifier formats: product ID `vendor.product`; license reference `LIC-XXXXX-XXXXX` | decided, design.md tenth pass |
 | Dependencies between products, e.g. Shipping needs Commerce (design.md Q17) | open, parked |
 | Core issuing API signs only, keeps no records | decided, design.md sixth pass |
 | R10 optional issuing add-on for smaller vendors; no customer personal data (design.md Q15) | decided |
 | Signing secrets stored apart from issued keys | decided, design.md sixth pass |
 
 Open questions Q1, Q3 and Q5-Q8 must be settled before the specs are revised; Q17 is parked. They
-are written up in nine exploration passes at the end of
+are written up in ten exploration passes at the end of
 [`openspec/changes/license-key-management/design.md`](openspec/changes/license-key-management/design.md),
 which also records why R6 and R8 were dropped, and a comparison with the Standard.Licensing
 library. The *"Where to resume"* list at the end of that file says what to pick up next.
@@ -115,7 +117,7 @@ and any online or network-based validation.
 ## Product decisions
 
 Why the library behaves as it does: [`docs/decisions/`](docs/decisions/README.md) holds one record
-per product decision (PDR-0001 to PDR-0015), with the reasons and the options rejected.
+per product decision (PDR-0001 to PDR-0017), with the reasons and the options rejected.
 
 ## Architecture decisions
 

@@ -21,12 +21,16 @@ only wear the hat appropriate to the current OpenSpec phase. Both hats use the O
 - Record each product decision as a PDR under `docs/decisions/` (template in its README): the
   decision, why, rejected options and why, personas served. Cross-reference it from the
   design.md section that made the call.
+- When a PDR is added, changed or superseded, or an open question is settled, update
+  `docs/license-examples.md` (schema and examples) in the same change, and its
+  "Last checked against" line.
 
 ### `opsx:propose` phase — Architect hat
 - Recommend the best technologies to meet the requirements, and be ready to defend the choices.
 - Defer to Carl if he overrides a recommendation.
 - Record technology decisions in ADRs under `docs/adrs/`, as well as in the OpenSpec specs.
-- Product decisions made or changed in this phase also get a PDR under `docs/decisions/`.
+- Product decisions made or changed in this phase also get a PDR under `docs/decisions/`, and
+  `docs/license-examples.md` is updated to match.
 
 ### `opsx:apply` phase — sub-agents TBD
 - Implementation will use sub-agents. Not yet defined — to be specified once the first
