@@ -8,7 +8,7 @@ decisions in [`decisions/`](decisions/README.md).
 > same change, and adjust the "Last checked against" line. An example that contradicts a PDR is
 > a documentation bug.
 >
-> Last checked against: PDR-0001 to PDR-0017 (2026-09-30).
+> Last checked against: PDR-0001 to PDR-0018 (2026-09-30).
 
 ## Schema
 
@@ -26,16 +26,17 @@ the signing secret used for rotation.
 | `expires` | date | optional | optional | Valid until the end of that date in UTC. Omitted means never expires. Rejected if before the current UTC date | PDR-0016 |
 | `umbraco.min` | whole major | optional | **not allowed** | Inclusive; covers every minor, patch, pre-release | PDR-0012 |
 | `umbraco.max` | whole major | optional | **not allowed** | Inclusive; `min` must not exceed `max` | PDR-0012 |
-| `features` | 0..N name / value pairs | optional | optional | See below | PDR-0010, PDR-0013 |
+| `features` | 0..N name / value pairs | optional | optional | See below | PDR-0010, PDR-0013, PDR-0018 |
 
 Feature entries:
 
 | Part | Rules | Decision |
 |---|---|---|
 | name | Lowercase `a-z`, digits, hyphens; starts with a letter. At most once per key. Looked up ignoring case | PDR-0013, PDR-0010 |
-| value | Switch (present = granted; a plain name) or number | PDR-0010 |
-| number | Zero or positive; at most 4 decimal places and 15 digits; an additive quantity (a count, limit or amount), never a rate or factor | PDR-0010 |
-| not allowed | Text values; explicit `false`; negative or malformed numbers | PDR-0010 |
+| value | Switch (present = granted; a plain name), number or text. The type is what the vendor issues; text is never read as a number | PDR-0010, PDR-0018 |
+| number | Zero or positive; at most 4 decimal places and 15 digits; an additive quantity (a count, limit or amount), never a rate or factor. Summed across licenses | PDR-0010 |
+| text | Non-empty; at most 256 characters; no leading or trailing whitespace, line breaks or control characters. Never combined: equal values (exact, case-sensitive) count as one; different values, or text alongside a switch or number under one name, are a conflict | PDR-0018 |
+| not allowed | Explicit `false`; negative or malformed numbers; empty or padded text | PDR-0010, PDR-0018 |
 
 Never in a key: customer name, email, company or any other personal data (PDR-0006).
 
@@ -69,6 +70,8 @@ products, references and dates are illustrative.
   features   ecommerce           switch
              max-orders: 500     number
 ```
+
+Text values (`licensed-domain: example.com`) are shown in examples 14 and 15.
 
 `umbraco 17..` means 17 and later; `..18` means up to and including 18; omitted means any
 version. In site evaluations, keys are shortened to reference, role and the fields that matter.
@@ -258,7 +261,52 @@ even from a third-party vendor:
 It never combines with acme.commerce's licenses. Whether it should be shown as inactive when
 acme.commerce is not licensed is open (design.md Q17).
 
-## 14. Rejected when issued
+## 14. Text features: domain and tenant
+
+Text carries what a switch cannot name in advance (PDR-0018). Here a vendor binds a license to
+a site by convention and identifies the customer's account on its own service:
+
+```
+  product    acme.search-cloud
+  role       base
+  reference  LIC-3TQ7A-YE9DR
+  issued     2026-04-12T10:30Z
+  expires    2027-04-12
+  features   licensed-domain: example.com
+             tenant: t-8c21f
+             max-documents: 50000
+```
+
+The library reports `licensed-domain` as `example.com`. Whether the package compares it with
+the site's hostnames, and what it does on a mismatch, is the vendor's decision. Keys stay
+bearer tokens (PDR-0011).
+
+## 15. Text across licenses: equal counts as one, different conflicts
+
+An add-on for example 14 that repeats the domain:
+
+```
+  LIC-3TQ7A-YE9DR  base    licensed-domain example.com, tenant t-8c21f, max-documents 50000   valid
+  LIC-K6W2P-D4ZHN  add-on  licensed-domain example.com, max-documents 25000                   valid
+  ---------------------------------------------------------------------------------------------
+  acme.search-cloud  licensed   licensed-domain example.com, tenant t-8c21f, max-documents 75000
+```
+
+The same add-on issued with a typo in the domain:
+
+```
+  LIC-3TQ7A-YE9DR  base    licensed-domain example.com, tenant t-8c21f, max-documents 50000   valid    conflict: licensed-domain
+  LIC-K6W2P-D4ZHN  add-on  licensed-domain exmaple.com, max-documents 25000                   valid    conflict: licensed-domain
+  ---------------------------------------------------------------------------------------------
+  acme.search-cloud  licensed   tenant t-8c21f, max-documents 75000
+                                licensed-domain: CONFLICT (2 licenses disagree)
+```
+
+Both licenses stay valid and the numbers still sum; only `licensed-domain` answers nothing
+until the vendor reissues `LIC-K6W2P-D4ZHN`. Comparison is exact: `Example.com` would conflict
+the same way, as would `licensed-domain: 500` (text) alongside a number under that name.
+
+## 16. Rejected when issued
 
 Each of these fails at the vendor; no key is produced. Assumes issuing on 2026-10-01.
 
@@ -272,8 +320,11 @@ Each of these fails at the vendor; no key is produced. Assumes issuing on 2026-1
 | `product Acme.Commerce` | Product ID is lowercase | PDR-0017 |
 | `issued` supplied by the vendor | Set by the core at signing | PDR-0016 |
 | `expires 2026-09-30` | Before the current UTC date | PDR-0016 |
-| `edition: "enterprise"` | Text values are not allowed | PDR-0010 |
 | `pro: false` | Explicit `false` is invalid; absence means not granted | PDR-0010 |
+| `licensed-domain: ""` | Text is non-empty; a switch is a plain name | PDR-0018 |
+| `licensed-domain: " example.com"` | No leading or trailing whitespace in text | PDR-0018 |
+| `notes: "line one` ⏎ `line two"` | No line breaks or control characters in text | PDR-0018 |
+| text longer than 256 characters | Keys must stay pasteable | PDR-0018 |
 | `max-orders: "5OO"` | Malformed number | PDR-0010 |
 | `max-orders: -200` | Numbers are zero or positive | PDR-0010 |
 | `storage-gb: 2.12345` | More than 4 decimal places | PDR-0010 |
@@ -289,6 +340,6 @@ Each of these fails at the vendor; no key is produced. Assumes issuing on 2026-1
 |---|---|
 | Q1 site label | A label per stored key, alongside its contents |
 | Q3 routing keys to products | How keys in examples 3, 6 and 11 reach acme.commerce |
-| Q5 marking unverified claims | How invalid or unreadable keys appear in evaluations |
+| Q5 marking unverified claims | How invalid or unreadable keys appear in evaluations; how the feature conflict in example 15 is shown alongside them |
 | Q17 dependencies between products | Example 13 |
 | Q18 same reference, different role or product | Examples 3 and 4: what supersedes when the reissue changes role, and that superseding is scoped by product |

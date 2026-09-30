@@ -90,7 +90,7 @@ option (y) and Q18 could change what a key holds; the rest are outside the key.
 | R4 | Renewal link | decided | PDR-0004 (one optional link, declared by the package); PDR-0009 (the reference, never the key, may go in it) |
 | R5 | Feature flags | superseded by R7 | |
 | R6 | Kind of license (trial / standard) | dropped | PDR-0014 |
-| R7 | Product features: switches and numbers | decided | PDR-0010, PDR-0013 |
+| R7 | Product features: switches, numbers and text | decided | PDR-0010, PDR-0013, PDR-0018 (text; revisited 2026-09-30) |
 | R8 | Release-date gating | dropped | PDR-0015 |
 | R9 | Package self-registration | decided | PDR-0003, PDR-0004 |
 | R10 | Optional issuing add-on for smaller vendors | decided | PDR-0005, PDR-0006, PDR-0007 |
@@ -119,7 +119,7 @@ is plausibly a separate change; R11 touches `license-validation`.
 | Q13 | What one key stands for | PDR-0008: one purchase |
 | Q14 | What a package declares at registration | PDR-0004 |
 | Q15 | What the issuing add-on records | PDR-0006 |
-| Q16 | How licenses for one product combine | PDR-0011, PDR-0010, PDR-0012 |
+| Q16 | How licenses for one product combine | PDR-0011, PDR-0010, PDR-0012; PDR-0018 (text never combines) |
 | Q17 | Dependencies between products | parked |
 | Q18 | Same reference, different role or product | open |
 
@@ -374,7 +374,7 @@ What it has that this project does not, and what happened to each:
 
 | Its feature | Outcome here |
 |---|---|
-| Name/value product features | Adopted as R7, with typed values instead of plain text (PDR-0010) |
+| Name/value product features | Adopted as R7, with typed values: switches, numbers and text, each with its own combining rule (PDR-0010, PDR-0018) |
 | License type (Trial/Standard) | Considered as R6, dropped (PDR-0014) |
 | Build-date validation (runs any release built before expiry) | Considered as R8, dropped (PDR-0015) |
 | Unique license ID | Adopted as the license reference (PDR-0009, PDR-0017) |

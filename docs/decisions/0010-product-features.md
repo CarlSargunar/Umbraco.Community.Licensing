@@ -1,6 +1,7 @@
 # PDR-0010: Product features are switches and numbers
 
-- **Status:** Decided, 2026-09-30
+- **Status:** Decided, 2026-09-30. Amended by PDR-0018, 2026-09-30: text values are allowed
+  and never combine
 - **Source:** `openspec/changes/license-key-management/design.md` R7, Q9, Q10, Q16
 - **Serves:** vendor (gate capabilities and sell limits), site owner (later additions reach existing licenses; adding a key never reduces what they hold)
 
@@ -12,6 +13,7 @@ A key carries 0..N features, scoped to its product. Each is a name (PDR-0013) an
 |---|---|
 | Switch | `pro` (a plain name means granted) |
 | Number | `max-orders: 500`, `storage-gb: 2.5` |
+| Text | `licensed-domain: example.com`; rules in PDR-0018 |
 
 - Present means granted. An explicit `false` is invalid.
 - Numbers are **zero or positive**, with at most **4 decimal places** and at most **15 digits**
@@ -48,7 +50,7 @@ A key carries 0..N features, scoped to its product. Each is a name (PDR-0013) an
 
 | Option | Why rejected |
 |---|---|
-| Text values | No natural way to combine across licenses (PDR-0011): concatenate, or latest wins so a cheap add-on overrides the base? Obvious uses have better forms: an edition is a switch, a support level is a switch such as `priority-support`, links and names belong to registration (PDR-0004) |
+| Text values | Rejected here, then allowed by PDR-0018. The objection was combining: concatenate, or latest wins so a cheap add-on overrides the base? PDR-0018 answers it by not combining: one value per name, different values conflict. Still true: an edition is a switch, a support level is a switch such as `priority-support`, links and names belong to registration (PDR-0004) |
 | Whole numbers only | Excludes fractional quantities such as `storage-gb: 2.5` |
 | Negative numbers | See Why; reissue covers corrections |
 | Decimals with no precision limit | "Exact" has no fixed meaning; values like `2.50000000001` reach the inventory |
