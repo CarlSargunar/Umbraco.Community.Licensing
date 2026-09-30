@@ -1,7 +1,7 @@
 # PDR-0005: The core issuing API signs only and keeps no records
 
 - **Status:** Decided, 2026-09-28
-- **Source:** `openspec/changes/license-key-management/design.md` sixth pass
+- **Source:** `openspec/changes/license-key-management/design.md` R10
 - **Serves:** vendor
 
 ## Decision

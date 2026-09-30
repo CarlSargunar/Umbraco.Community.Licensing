@@ -1,8 +1,7 @@
 # PDR-0010: Product features are switches and numbers
 
-- **Status:** Decided, 2026-09-26; text type dropped 2026-09-30 (eighth pass); numbers widened
-  to decimals and duplicate names rejected 2026-09-30 (tenth pass)
-- **Source:** `openspec/changes/license-key-management/design.md` third pass (R7, Q9, Q10); eighth pass; tenth pass
+- **Status:** Decided, 2026-09-30
+- **Source:** `openspec/changes/license-key-management/design.md` R7, Q9, Q10, Q16
 - **Serves:** vendor (gate capabilities and sell limits), site owner (later additions reach existing licenses; adding a key never reduces what they hold)
 
 ## Decision

@@ -1,7 +1,7 @@
 # PDR-0009: License reference: same reference supersedes, different ones combine
 
 - **Status:** Decided, 2026-09-28
-- **Source:** `openspec/changes/license-key-management/design.md` seventh pass (Q8's license-reference claim)
+- **Source:** `openspec/changes/license-key-management/design.md` Q8
 - **Serves:** site owner, implementor, vendor
 
 ## Decision

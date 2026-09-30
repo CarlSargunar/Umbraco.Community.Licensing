@@ -1,7 +1,7 @@
 # PDR-0016: Issue and expiry dates are UTC; the core sets the issue time
 
 - **Status:** Decided, 2026-09-30
-- **Source:** `openspec/changes/license-key-management/design.md` tenth pass
+- **Source:** raised while writing the schema in [`docs/license-examples.md`](../license-examples.md)
 - **Serves:** implementor (one answer on every server), vendor (reissue ordering cannot break), site owner (no dead-on-arrival keys); **Cost to:** site owner west of UTC (up to 12 hours of the stated expiry day)
 
 ## Decision

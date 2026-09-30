@@ -17,42 +17,20 @@ backoffice editor and site visitor also considered. See [`docs/personas.md`](doc
 
 **Design in progress - no implementation yet.**
 
-The active change, `license-key-management`, has a complete proposal, design, delta specs and
-task breakdown, but no code. The specs cover a single license key. Exploration has since added
-further requirements, none of them yet reflected in the proposal or the specs:
+The active change, `license-key-management`, has a proposal, design, delta specs and tasks, but
+no code. The proposal, specs and tasks still describe a single license key per site and predate
+the exploration that followed. That exploration has settled the key's contents and most of the
+product behaviour, recorded as PDR-0001 to PDR-0017 in [`docs/decisions/`](docs/decisions/README.md),
+with the key schema and worked examples in [`docs/license-examples.md`](docs/license-examples.md).
 
-| Requirement | State |
-|---|---|
-| R1 named collection of license keys | open |
-| R2 inventory reporting across the collection | open |
-| R3 backoffice UI for license keys | open |
-| R4 per-key renewal / upgrade link | open |
-| R7 product features: switches and numbers (decimal, zero or positive, additive), e.g. `max-orders: 500`; text dropped | decided; names lowercase `a-z`, digits, hyphens, once per key (design.md Q11, tenth pass) |
-| R6 kind of license (trial / standard) | dropped |
-| R8 release-date gating | dropped |
-| Primary customer | decided: site owner |
-| Shared key store across vendors (design.md Q2) | decided |
-| Inventory lists products, not just keys (design.md Q4) | decided |
-| R9 package self-registration | decided, design.md Q14 |
-| Licenses combining: a key stands for one purchase (design.md Q13) | decided; entitlement keys a future feature |
-| License reference: stable, non-secret ID; same ref supersedes, different refs combine | agreed, design.md seventh pass |
-| How values combine across licenses: base / add-on role, switches OR, numbers sum, per-license filter (design.md Q16) | decided, design.md eighth pass |
-| Umbraco range on base licenses only; expiry on base and add-ons | decided, design.md eighth pass |
-| Umbraco range bounds: optional min / max major, inclusive (design.md Q12) | decided, design.md ninth pass |
-| Dates: `issued` UTC date and time set by the core; `expires` a date, valid to end of day UTC | decided, design.md tenth pass |
-| Identifier formats: product ID `vendor.product`; license reference `LIC-XXXXX-XXXXX` | decided, design.md tenth pass |
-| Dependencies between products, e.g. Shipping needs Commerce (design.md Q17) | open, parked |
-| Core issuing API signs only, keeps no records | decided, design.md sixth pass |
-| R10 optional issuing add-on for smaller vendors; no customer personal data (design.md Q15) | decided |
-| Signing secrets stored apart from issued keys | decided, design.md sixth pass |
+What remains open is indexed in the *Exploration since the proposal* section of
+[`openspec/changes/license-key-management/design.md`](openspec/changes/license-key-management/design.md):
+the site label (Q1), routing keys to products (Q3), marking unverified claims in the inventory
+(Q5), the backoffice screen (Q6, Q7) and superseding edge cases (Q18); Q17 is parked. Its
+*"Where to resume"* list says what to pick up next. The proposal, specs and tasks will be
+revised against the PDRs once those are settled.
 
-Open questions Q1, Q3 and Q5-Q8 must be settled before the specs are revised; Q17 is parked. They
-are written up in ten exploration passes at the end of
-[`openspec/changes/license-key-management/design.md`](openspec/changes/license-key-management/design.md),
-which also records why R6 and R8 were dropped, and a comparison with the Standard.Licensing
-library. The *"Where to resume"* list at the end of that file says what to pick up next.
-
-Read those sections before assuming the current specs are settled.
+Read those before assuming the current specs are settled.
 
 ## Not yet specified
 

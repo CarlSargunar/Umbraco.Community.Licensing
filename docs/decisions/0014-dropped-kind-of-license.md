@@ -1,7 +1,7 @@
 # PDR-0014: No kind of license (trial / standard)
 
 - **Status:** Dropped, 2026-09-26, by the Product Owner
-- **Source:** `openspec/changes/license-key-management/design.md` third pass (R6)
+- **Source:** `openspec/changes/license-key-management/design.md` R6
 
 ## Proposal
 

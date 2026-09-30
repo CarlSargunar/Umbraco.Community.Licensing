@@ -1,7 +1,7 @@
 # PDR-0004: What a package declares when it registers
 
 - **Status:** Decided, 2026-09-28
-- **Source:** `openspec/changes/license-key-management/design.md` Q14 (fifth pass); Q8
+- **Source:** `openspec/changes/license-key-management/design.md` Q14, Q8
 - **Serves:** site owner
 
 ## Decision

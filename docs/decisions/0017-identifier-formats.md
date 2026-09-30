@@ -1,7 +1,7 @@
 # PDR-0017: Identifier formats: vendor.product and LIC-XXXXX-XXXXX
 
 - **Status:** Decided, 2026-09-30
-- **Source:** `openspec/changes/license-key-management/design.md` tenth pass
+- **Source:** raised while writing the schema in [`docs/license-examples.md`](../license-examples.md)
 - **Serves:** site owner (sees whose key it is; reference easy to read and type), implementor (readable routing key), vendor (uniqueness within its own records)
 
 ## Decision

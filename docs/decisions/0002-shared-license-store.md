@@ -1,7 +1,7 @@
 # PDR-0002: One license store per site, shared by all vendors
 
 - **Status:** Decided, 2026-09-26
-- **Source:** `openspec/changes/license-key-management/design.md` Q2 (first pass), decided in fifth pass
+- **Source:** `openspec/changes/license-key-management/design.md` Q2
 - **Serves:** site owner, implementor; **Cost to:** library maintainers (permanent contract)
 
 ## Decision

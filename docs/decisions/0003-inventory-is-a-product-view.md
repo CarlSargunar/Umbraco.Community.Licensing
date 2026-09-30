@@ -1,7 +1,7 @@
 # PDR-0003: The inventory has one row per product; packages register
 
 - **Status:** Decided, 2026-09-26
-- **Source:** `openspec/changes/license-key-management/design.md` Q4 (first pass), decided in fifth pass; R9
+- **Source:** `openspec/changes/license-key-management/design.md` Q4, R9
 - **Serves:** site owner, implementor; **Cost to:** vendor (must register the package)
 
 ## Decision

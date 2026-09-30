@@ -18,7 +18,7 @@ Personas affected (see `docs/personas.md`):
 
 Sign license tokens with **ECDSA using the P-256 curve** (`System.Security.Cryptography.ECDsa`), and use a **custom fixed-algorithm compact token format** — `base64url(JSON payload) + "." + base64url(signature)` — rather than a generic JWT.
 
-The JSON payload carries: `keyId`, `productId`, `expiryUtc` (optional), `minVersion`/`maxVersion` (optional), `issuedAtUtc`. The verifier always verifies with ECDSA P-256; the format has no algorithm-negotiation field for an attacker to manipulate.
+The JSON payload carries `keyId` plus the key schema in `docs/license-examples.md` (product ID, role, license reference, issued time, optional expiry, optional Umbraco major range on base licenses, features). The JSON property names and encodings are to be fixed when this ADR is accepted. The verifier always verifies with ECDSA P-256; the format has no algorithm-negotiation field for an attacker to manipulate.
 
 ## Alternatives Considered
 

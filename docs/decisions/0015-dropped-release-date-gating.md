@@ -1,7 +1,7 @@
 # PDR-0015: No release-date gating
 
 - **Status:** Dropped, 2026-09-26, by the Product Owner
-- **Source:** `openspec/changes/license-key-management/design.md` third pass (R8)
+- **Source:** `openspec/changes/license-key-management/design.md` R8
 
 ## Proposal
 

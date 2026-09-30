@@ -1,7 +1,7 @@
 # PDR-0006: Optional issuing add-on; no customer personal data
 
 - **Status:** Decided, 2026-09-28
-- **Source:** `openspec/changes/license-key-management/design.md` sixth pass, R10 and Q15
+- **Source:** `openspec/changes/license-key-management/design.md` R10, Q15
 - **Serves:** vendor (small scope, no personal data duties), site owner (keys can be re-sent and renewed)
 
 ## Decision

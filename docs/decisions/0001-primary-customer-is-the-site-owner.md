@@ -1,7 +1,7 @@
 # PDR-0001: The site owner is the primary customer
 
 - **Status:** Decided, 2026-09-26
-- **Source:** `openspec/changes/license-key-management/design.md` fourth pass; [`docs/personas.md`](../personas.md)
+- **Source:** [`docs/personas.md`](../personas.md)
 - **Serves:** site owner
 
 ## Decision

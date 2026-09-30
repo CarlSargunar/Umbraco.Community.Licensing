@@ -1,7 +1,7 @@
 # PDR-0007: Signing secrets are stored apart from issued keys
 
 - **Status:** Decided, 2026-09-28
-- **Source:** `openspec/changes/license-key-management/design.md` sixth pass
+- **Source:** `openspec/changes/license-key-management/design.md` R10
 - **Serves:** vendor, site owner
 
 ## Decision

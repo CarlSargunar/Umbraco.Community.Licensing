@@ -1,7 +1,7 @@
 # PDR-0013: Feature names are restricted; lookups ignore case
 
 - **Status:** Decided, 2026-09-30
-- **Source:** `openspec/changes/license-key-management/design.md` Q11, decided in ninth pass
+- **Source:** `openspec/changes/license-key-management/design.md` Q11
 - **Serves:** site owner (never silently loses a paid feature), vendor (typos fail at issue); **Cost to:** vendor (no display-style names)
 
 ## Decision

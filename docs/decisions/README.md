@@ -7,9 +7,11 @@ rejected and why, and who it serves. Written for vendors, implementors and site 
 Technology choices (algorithms, formats, packaging) are ADRs in [`../adrs/`](../adrs/). Product
 decisions are PDRs here. Cite as PDR-0011, never a bare number.
 
-Each record names its source: the exploration pass and question in
-`openspec/changes/license-key-management/design.md` where the discussion is written up in full.
-A decided PDR is not yet a spec requirement until the specs are revised.
+A PDR is the full record of its decision. Its source line names the requirement or question
+(R-number, Q-number) in the exploration section of
+`openspec/changes/license-key-management/design.md`, which indexes every requirement and
+question and holds the open ones. The chronological write-up is in git history. A decided PDR
+is not yet a spec requirement until the specs are revised.
 
 | PDR | Decision | Status |
 |---|---|---|
@@ -37,7 +39,7 @@ A decided PDR is not yet a spec requirement until the specs are revised.
 # PDR-NNNN: <decision as a statement>
 
 - **Status:** Decided | Dropped | Superseded by PDR-NNNN, <date>
-- **Source:** design.md <pass>, <question>
+- **Source:** design.md <R-number or Q-number>, or the document that raised it
 - **Serves:** <personas>; **Cost to:** <personas, if any>
 
 ## Decision

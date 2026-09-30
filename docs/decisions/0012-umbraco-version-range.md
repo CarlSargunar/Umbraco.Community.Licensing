@@ -1,7 +1,7 @@
 # PDR-0012: Umbraco version range: base licenses only, majors, inclusive
 
 - **Status:** Decided, 2026-09-30
-- **Source:** `openspec/changes/license-key-management/design.md` eighth pass (restrictions by role); Q12, decided in ninth pass
+- **Source:** `openspec/changes/license-key-management/design.md` Q12, Q16
 - **Serves:** site owner (a routine update never breaks a license), vendor (sells per major)
 
 ## Decision

@@ -1,7 +1,7 @@
 # PDR-0011: Base and add-on licenses, and how licenses combine
 
 - **Status:** Decided, 2026-09-30
-- **Source:** `openspec/changes/license-key-management/design.md` Q16, decided in eighth pass
+- **Source:** `openspec/changes/license-key-management/design.md` Q16, Q13
 - **Serves:** site owner (gets what they paid for; one place to see why something stopped), vendor (one combining rule; mistakes fail at issue), implementor (states say which key to fix)
 
 ## Decision

@@ -291,3 +291,4 @@ Each of these fails at the vendor; no key is produced. Assumes issuing on 2026-1
 | Q3 routing keys to products | How keys in examples 3, 6 and 11 reach acme.commerce |
 | Q5 marking unverified claims | How invalid or unreadable keys appear in evaluations |
 | Q17 dependencies between products | Example 13 |
+| Q18 same reference, different role or product | Examples 3 and 4: what supersedes when the reissue changes role, and that superseding is scoped by product |
