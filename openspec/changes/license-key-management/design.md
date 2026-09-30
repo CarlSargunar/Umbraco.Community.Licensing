@@ -577,13 +577,13 @@ Touches: `license-generation` (new claim, typed-value and no-`false` input rules
 `license-validation` (feature query, separate from the validity verdict), ADR-0001's payload
 shape, `tasks.md`.
 
-#### Q11. Are feature names case-sensitive? (open)
+#### Q11. Are feature names case-sensitive? (decided in ninth pass)
 
 If a vendor issues `Pro` and the package checks for `pro`, is that a match? Suggested:
 case-insensitive matching, with generation rejecting a key that holds two names differing only
 by case. Unconfirmed.
 
-#### Q12. Precision of the Umbraco version range bounds (open)
+#### Q12. Precision of the Umbraco version range bounds (decided in ninth pass)
 
 With R8 dropped, the supported Umbraco version range is the **commercial** boundary (e.g. "an
 Umbraco 17-18 license; Umbraco 19 is a paid upgrade"), not a compatibility declaration. The
@@ -1096,7 +1096,7 @@ The flaw that rules it out as authorisation:
 "Latest issued" implies the key records when it was issued. The current token design already
 has an issued-at time (see Token format, above).
 
-#### Q16. How do values combine across different licenses for one product? (open)
+#### Q16. How do values combine across different licenses for one product? (decided in eighth pass)
 
 - Whole numbers presumably add. Should two base licenses bought by mistake double capacity?
 - Text values: two licenses give different text. Which wins, or is it both?
@@ -1117,3 +1117,270 @@ Supersedes all earlier lists.
 3. Q3: routing keys to products (duplicate rule for renewals now settled).
 4. Q8: remaining part, if any (renewal link settled by Q14; license reference settled above).
 5. Q1 (licensee personal data settled by Q15; site label open), Q5, Q6, Q7.
+
+---
+
+### Eighth pass: combining licenses (2026-09-30)
+
+**Status: Q16 decided; Q17 open. Not yet reflected in `proposal.md` or any spec.**
+
+#### Decided: a key's role is base or add-on
+
+An add-on without a valid base license makes no sense commercially, so the library must tell
+the two apart. Every key carries a signed **role**: `base` or `add-on`.
+
+Three ways of expressing the dependency were compared:
+
+| | How an add-on depends on a base | Verdict |
+|---|---|---|
+| **A** | Role marker; an add-on counts while **any** valid base for the product is present | **Chosen** |
+| B | Add-on names the base license reference it extends | Rejected: keys are bearer tokens with no site binding, so this prevents no sharing. It only adds failures (mistyped reference, base re-bought under a new reference orphans the add-on) and makes resellers collect the base reference. |
+| C | Nothing in the key; package code says "`ai-assist` needs `ecommerce`" | Rejected: the inventory (R2) cannot show "inactive, base expired", and every vendor re-implements a commercial rule. |
+
+Limits on the role, so it does not reopen dropped R6 (trial / standard):
+
+- Two values only. No third value for trials, NFR or partner keys; those remain a short expiry
+  or a feature (R7), as R6's drop recorded.
+- The library uses it only for combining: a base licenses the product; add-ons count only
+  while a base is valid.
+- The inventory (R2) shows it, so the site owner sees which license holds the product up.
+- Packages do not branch on it. A package asks "is the product licensed?" and "is feature X
+  granted?", never "is this key an add-on?". Anything needing that is a feature.
+
+Inferring the role from contents (no features = add-on) was rejected: a base may carry no
+features, and a capacity pack carries one.
+
+#### Decided: the role is required at issue
+
+Issuing refuses a key without a role. A key without one can only be malformed and is invalid.
+
+| Default for an unmarked key | Who pays for a vendor mistake |
+|---|---|
+| base | Vendor, silently: an add-on licenses the whole product |
+| add-on | Site owner, visibly: a paid base license does not work |
+| **none (required)** | **Nobody; the mistake fails at the vendor** |
+
+Same principle as R7's "malformed values are rejected when the key is issued". The R10 add-on
+can pre-fill the role per product.
+
+#### Decided: capacity packs are add-ons; no subtype
+
+Feature add-ons and capacity packs differ only in their features (a switch vs a whole number).
+Both need a valid base and never license the product alone. A capacity pack therefore cannot be
+sold as a cheap standalone license.
+
+#### Decided: values combine by type
+
+R7's allowed types are reduced to two. **Text is dropped.**
+
+| Type | Combined across valid licenses |
+|---|---|
+| Switch | Granted if any license grants it |
+| Whole number | Summed, base included |
+
+```
+  LIC-8F3A  base    ecommerce, max-orders 500
+  LIC-21C9  add-on  max-orders 500
+  LIC-40BE  add-on  max-orders 1000
+  LIC-77D0  add-on  ai-assist
+  ---------------------------------------------------------
+  combined          ecommerce, ai-assist, max-orders 2000
+```
+
+Why text was dropped: it has no natural combination (concatenate? latest wins, so a cheap
+add-on overrides the base?), and its obvious uses have better forms. An edition name is a switch
+(R7: "tier" and "feature" are one concept); a support level is a switch such as
+`priority-support`; links and names belong to Q14 and Q1. Every remaining type now has a defined
+combination.
+
+#### Decided: two valid base licenses combine
+
+Two base licenses with **different** references combine like any other licenses. Same reference
+is a renewal and supersedes (seventh pass).
+
+```
+  LIC-8F3A  base  ecommerce, max 500
+  LIC-C2D1  base  ecommerce, max 500     combined max = 1000
+```
+
+- One combining rule for every license.
+- A mistaken double purchase gives the site owner what they paid for; the inventory notes
+  "2 base licenses" so they can ask for a refund.
+- An upgrade must be issued under the existing reference (supersede), not as a new base, or it
+  stacks. This matches how the future entitlement-key model (seventh pass, (2)) works.
+
+Rejected: only one base counts, chosen by a rule. That silently discards capacity the site owner
+paid for and needs a selection rule.
+
+#### Decided: restrictions by role
+
+The library enforces two restrictions. Everything else in a key identifies or entitles.
+
+| Key content | Base | Add-on | Kind |
+|---|---|---|---|
+| Product ID | required | required (the base product's ID) | identifies |
+| Role | required | required | combining |
+| License reference | required | required | supersede or combine |
+| Issued-at time | required | required | latest wins |
+| Expiry | optional | optional | **restriction** |
+| Umbraco version range | optional | **rejected at issue** | **restriction** |
+| Features (switch, whole number) | 0..N | 0..N | entitlement |
+
+- **Umbraco coverage is set by the base alone.** An add-on is active wherever a valid base is.
+  An Umbraco upgrade can take a whole product out of range, never part of one: the inventory
+  shows "Commerce: out of range", and one fix restores everything. An add-on with a range is
+  rejected at the vendor rather than ignored, so a range never silently has no effect.
+- **Add-ons keep their own expiry.** Subscription add-ons and capacity packs stay sellable; this
+  is one of the reasons Q13 chose "a key stands for one purchase". Making expiry base-only too
+  would make add-ons perpetual.
+- Whole-number features such as `max-orders` are entitlements, not restrictions: the library
+  reports the combined value, the package enforces it (R7).
+
+Q12 (precision of range bounds) now applies to base licenses only.
+
+Restrictions excluded, for reference: machine binding, domain binding, revocation before
+expiry, online validation (out of scope for this change); trial kind (R6) and release-date
+gating (R8) dropped in the third pass.
+
+#### Decided: each license is judged on its own, then combined
+
+```
+  per license                                per product
+  superseded (same ref, older)  -> ignored   licensed = at least one VALID base
+  invalid (tampered, malformed,              combined = features of VALID bases
+    wrong product, expired,                             + ACTIVE add-ons
+    base out of Umbraco range)  -> drops out   switches: any grants
+  VALID add-on, no VALID base   -> INACTIVE    numbers:  summed
+  otherwise                     -> counts
+```
+
+- Expiry and range are checked per license; ranges are never merged across licenses.
+- An expired add-on drops out; the base and other add-ons still count.
+- An add-on outliving its base is **inactive**, a state distinct from expired. It reactivates
+  when the base is renewed (same reference supersedes), with no reissue.
+- The inventory (R2) lists every license with its role and state (valid, inactive, expired,
+  out of range, superseded, invalid) plus the combined result per product.
+
+This answers every Q16 bullet: numbers sum, text is dropped, switches OR, partly valid products
+are reported per license, and ranges are base-only.
+
+Serves: site owner (gets what they paid for; one place to see why something stopped), vendor
+(one combining rule; mistakes fail at issue), implementor (states say which key to fix). Site
+visitor unaffected.
+
+Touches: R7 (text dropped), R2 (role and inactive state in the inventory), Q3,
+`license-generation` (role claim, required; range rejected on add-ons; text type removed),
+`license-validation` (per-license filter, combining, product-level verdict), ADR-0001's payload
+shape.
+
+#### Add-on license vs add-on product
+
+Two different things share the word "add-on":
+
+| | Add-on license | Add-on product |
+|---|---|---|
+| What | A purchase extending a product | A separate package building on another product |
+| Product ID | The base product's | Its own |
+| Signed by | The base product's vendor | Its own vendor, possibly a third party |
+| Installed | Nothing new; capability is in the package | A separate package |
+| Needs | A valid base for the **same** product | Its **own** base license |
+| Combines with | The base's features | Nothing; products never combine |
+
+Everything above concerns add-on licenses. Add-on products were settled in the seventh pass:
+ordinary products that register (Q14) and carry their own base and add-on licenses. A third
+party cannot sign for another vendor's product, so its extension is always a product.
+
+#### Q17. Should the library model dependencies between products? (open, parked)
+
+The "no add-on without a valid base" rule has no equivalent across products:
+
+```
+  Commerce            base EXPIRED   -> not licensed
+  Commerce Shipping   base valid     -> licensed
+```
+
+- **(x) Leave it to the add-on product (leaning).** The library already answers "is product P
+  licensed?"; Shipping can ask about Commerce. Nothing new in the key or library. Package
+  installation already handles product dependencies.
+- (y) Model it: Shipping's key or registration declares it requires Commerce; the library
+  enforces it; the inventory shows "Shipping inactive: Commerce not licensed".
+- (z) Nothing; each product stands alone.
+
+Open: should the site owner see the reason in the inventory, which only (y) gives?
+
+Touches: R2, R9 / Q14 (registration), `license-validation`.
+
+#### Where to resume
+
+Supersedes all earlier lists.
+
+1. Q11 and Q12: small key-contents questions (Q12 now base licenses only).
+2. Q3: routing keys to products (renewal duplicates and multiple bases now settled).
+3. Q8: remaining part, if any (renewal link settled by Q14; license reference settled).
+4. Q1 (licensee personal data settled by Q15; site label open), Q5, Q6, Q7.
+5. Q17: product dependencies, parked.
+
+---
+
+### Ninth pass: feature names and version bounds (2026-09-30)
+
+**Status: Q11 and Q12 decided. Not yet reflected in `proposal.md` or any spec.**
+
+#### Decided: Q11, feature names are restricted, lookups ignore case
+
+- A feature name is lowercase `a-z`, digits and hyphens, starting with a letter.
+- Issuing rejects any other name.
+- A package's lookup ignores case, so asking for `Pro` finds `pro`.
+
+Why: combining (eighth pass) makes spelling matter across licenses. A name split by case or
+punctuation splits one feature into two, and the site owner silently loses what they paid for:
+
+```
+  LIC-8F3A  base    max-orders 500
+  LIC-40BE  add-on  Max-Orders 1000
+  case-sensitive  -> package sees 500, site owner paid for 1500
+```
+
+Restricting the name at issue applies R7's "malformed values are rejected when the key is
+issued" to names: the mistake fails at the vendor.
+
+| Option | Rejected because |
+|---|---|
+| Any characters, matched ignoring case; issue rejects names differing only by case | Misses trailing spaces, `_` vs `-`, look-alike letters from other alphabets, and letters whose case changes with the server's language setting (Turkish dotted / dotless i), which can give different answers on different servers |
+| Case-sensitive exact match | Exposes the site owner to the silent split above |
+
+Cost: names such as `AI Assist` are not possible; the inventory shows `ai-assist`. A separate
+display name is not requested.
+
+Touches: `license-generation` (name rule), `license-validation` (feature lookup).
+
+#### Decided: Q12, Umbraco range bounds are majors, inclusive, each optional
+
+- A base license may carry a minimum and a maximum Umbraco **major** (eighth pass: add-ons
+  may not carry a range).
+- Both bounds are inclusive. A bound covers every minor, patch and pre-release of its major.
+- Either bound may be omitted: `17`..none is 17 and every later major; none..`18` is up to and
+  including 18; neither is any version.
+- Contiguous only.
+- Issuing rejects non-whole-number bounds and a minimum above the maximum.
+
+Why: the range is a commercial boundary ("Umbraco 19 is a paid upgrade"), and Umbraco is sold
+and upgraded by major. Majors only means a routine minor or patch update never takes a product
+out of range; only a major upgrade, which the site owner plans for, can.
+
+| Option | Rejected because |
+|---|---|
+| Full-version (semver) bounds, major-only shorthand allowed | Motivating case was a package release depending on a CMS feature added mid-major (e.g. 17.3). That is a **compatibility** fact about one release, already enforced by the package's install requirements. A key is signed once and covers every release, so the fact would be frozen into keys (still saying 17.3 after the dependency is removed), and the site owner on 17.1 would see "license out of range" when the fix is a CMS update. No commercial use for minor precision was identified. |
+| List of majors (e.g. `17, 19`) | Allows gaps (an LTS-only license), but cannot express "17 and later". Open-ended coverage was preferred. |
+
+Touches: `license-generation` and `license-validation` range requirements, tasks.md task 2.1
+and task 4.5.
+
+#### Where to resume
+
+Supersedes all earlier lists.
+
+1. Q3: routing keys to products (renewal duplicates and multiple bases settled).
+2. Q8: remaining part, if any (renewal link settled by Q14; license reference settled).
+3. Q1 (licensee personal data settled by Q15; site label open), Q5, Q6, Q7.
+4. Q17: product dependencies, parked.
