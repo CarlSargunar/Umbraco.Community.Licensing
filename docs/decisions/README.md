@@ -12,9 +12,9 @@ decisions are PDRs here. Cite as PDR-0011, never a bare number.
 was removed, and why, is in [`../deferred-scope.md`](../deferred-scope.md).
 
 A PDR is the full record of its decision. Its source line names the requirement or question
-(R-number, Q-number) in the exploration section of
-`openspec/changes/license-key-management/design.md`, which indexes every requirement and
-question and holds the open ones. The chronological write-up is in git history. A decided PDR
+(R-number, Q-number) indexed in the *Requirements and open questions* section of
+`openspec/changes/license-key-management/design.md`, or, for scope that left the change, in
+[`../deferred-scope.md`](../deferred-scope.md). The chronological write-up is in git history. A decided PDR
 is not yet a spec requirement until the specs are revised.
 
 | PDR | Decision | Status |

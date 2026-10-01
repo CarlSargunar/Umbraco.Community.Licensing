@@ -55,6 +55,31 @@ installed, and how results are shown are the host's concern.
 | `license-examples.md` | `umbraco` rows, example 10 and the Umbraco rejected-at-issue rows removed; example 13's Q17 note removed |
 | `license-key-sourcing` delta spec | Deleted from the change. Its text is reproduced below |
 
+## Requirement and question index
+
+PDRs cite design.md R and Q numbers. These left the change and are indexed here so the
+citations still resolve.
+
+| # | Item | Outcome |
+|---|---|---|
+| R1 | Named collection of license keys per site | D2, D3, D7 |
+| R2 | Inventory across registered products | D5; the per-product evaluation result stays as design.md R12 |
+| R3 | Backoffice screen | D6 |
+| R4 | Renewal link | D10 |
+| R9 | Package self-registration | D4 (PDR-0003) |
+| R13 | Umbraco version range | D1 (PDR-0012) |
+| Q1 | Where does a stored key's human-readable name live? | D7 |
+| Q2 | Shared or per-vendor store? | PDR-0002 (shared), D3 |
+| Q3 | How does a package find its keys? | D8 |
+| Q4 | Inventory: store view or product view? | PDR-0003 (product view), D5 |
+| Q6 | Backoffice screen: view-only or read-write? | D6 |
+| Q7 | Who ships the screen, and what may it display? | D6 |
+| Q8 | Where the renewal link comes from | PDR-0004, D10. The reference half of Q8 stays in design.md |
+| Q10 | Do features overlap the version range? | PDR-0010: orthogonal. Range now D1 |
+| Q12 | Precision of the version range bounds | PDR-0012, D1 |
+| Q14 | What a package declares at registration | PDR-0004, D4 |
+| Q17 | Dependencies between products | D9 |
+
 ## Open questions carried out of the change
 
 | Q | Question | Deferred with |

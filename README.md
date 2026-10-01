@@ -30,7 +30,7 @@ followed. That exploration settled the key's contents and the product behaviour,
 PDR-0001 to PDR-0018 in [`docs/decisions/`](docs/decisions/README.md), with the key schema and
 worked examples in [`docs/license-examples.md`](docs/license-examples.md).
 
-What remains open is indexed in the *Exploration since the proposal* section of
+What remains open is indexed in the *Requirements and open questions* section of
 [`openspec/changes/license-key-management/design.md`](openspec/changes/license-key-management/design.md):
 what the result reports for an unverifiable key (Q5) and superseding edge cases (Q18). Its
 *"Where to resume"* list says what to pick up next. The specs and tasks will be revised against
