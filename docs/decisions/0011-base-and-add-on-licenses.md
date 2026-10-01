@@ -1,6 +1,8 @@
 # PDR-0011: Base and add-on licenses, and how licenses combine
 
-- **Status:** Decided, 2026-09-30
+- **Status:** Decided, 2026-09-30. Amended, 2026-10-01: *base out of Umbraco range* is no
+  longer a reason a license drops out (PDR-0012 deferred, [`docs/deferred-scope.md`](../deferred-scope.md)
+  D1); "the inventory lists" reads as "the evaluation result reports" (D5)
 - **Source:** `openspec/changes/license-key-management/design.md` Q16, Q13
 - **Serves:** site owner (gets what they paid for; one place to see why something stopped), vendor (one combining rule; mistakes fail at issue), implementor (states say which key to fix)
 

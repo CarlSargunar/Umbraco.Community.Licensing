@@ -1,6 +1,7 @@
 # PDR-0003: The inventory has one row per product; packages register
 
-- **Status:** Decided, 2026-09-26
+- **Status:** Decided, 2026-09-26. Deferred, 2026-10-01: the inventory and registration are
+  host-side; see [`docs/deferred-scope.md`](../deferred-scope.md) D4, D5
 - **Source:** `openspec/changes/license-key-management/design.md` Q4, R9
 - **Serves:** site owner, implementor; **Cost to:** vendor (must register the package)
 

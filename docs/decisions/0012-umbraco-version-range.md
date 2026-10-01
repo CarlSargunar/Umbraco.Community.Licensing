@@ -1,6 +1,9 @@
 # PDR-0012: Umbraco version range: base licenses only, majors, inclusive
 
-- **Status:** Decided, 2026-09-30
+- **Status:** Decided, 2026-09-30. Deferred, 2026-10-01: the claim and its check are removed
+  from the current change and from the key schema; see
+  [`docs/deferred-scope.md`](../deferred-scope.md) D1, which also suggests generalising it to
+  a host version range if restored
 - **Source:** `openspec/changes/license-key-management/design.md` Q12, Q16
 - **Serves:** site owner (a routine update never breaks a license), vendor (sells per major)
 

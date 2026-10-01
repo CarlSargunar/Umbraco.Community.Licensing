@@ -1,6 +1,8 @@
 # PDR-0016: Issue and expiry dates are UTC; the core sets the issue time
 
-- **Status:** Decided, 2026-09-30
+- **Status:** Decided, 2026-09-30. Amended, 2026-10-01: the local-time display and the
+  advance expiry warning belong to the deferred inventory ([`docs/deferred-scope.md`](../deferred-scope.md)
+  D5); the UTC rules and the core-set issue time stand
 - **Source:** raised while writing the schema in [`docs/license-examples.md`](../license-examples.md)
 - **Serves:** implementor (one answer on every server), vendor (reissue ordering cannot break), site owner (no dead-on-arrival keys); **Cost to:** site owner west of UTC (up to 12 hours of the stated expiry day)
 

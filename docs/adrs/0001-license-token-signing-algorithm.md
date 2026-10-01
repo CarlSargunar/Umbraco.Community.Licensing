@@ -18,7 +18,7 @@ Personas affected (see `docs/personas.md`):
 
 Sign license tokens with **ECDSA using the P-256 curve** (`System.Security.Cryptography.ECDsa`), and use a **custom fixed-algorithm compact token format** — `base64url(JSON payload) + "." + base64url(signature)` — rather than a generic JWT.
 
-The JSON payload carries `keyId` plus the key schema in `docs/license-examples.md` (product ID, role, license reference, issued time, optional expiry, optional Umbraco major range on base licenses, features). The JSON property names and encodings are to be fixed when this ADR is accepted. The verifier always verifies with ECDSA P-256; the format has no algorithm-negotiation field for an attacker to manipulate.
+The JSON payload carries `keyId` plus the key schema in `docs/license-examples.md` (product ID, role, license reference, issued time, optional expiry, features). The Umbraco major range was removed from the schema on 2026-10-01 (`docs/deferred-scope.md` D1). The JSON property names and encodings are to be fixed when this ADR is accepted. The verifier always verifies with ECDSA P-256; the format has no algorithm-negotiation field for an attacker to manipulate.
 
 ## Alternatives Considered
 
@@ -30,7 +30,7 @@ The JSON payload carries `keyId` plus the key schema in `docs/license-examples.m
 
 - Verification requires no third-party cryptography package; `System.Security.Cryptography` is sufficient on all .NET 10 target platforms.
 - License key strings stay short and single-line, which matters because the vendor emails them to the site owner and the implementor pastes them into config, environment variables or vault secrets.
-- Because the format is custom (not a standard like JWT), no external tooling can inspect/decode a license key without this library or a small compatible decoder; this is an accepted trade-off since there's no interoperability requirement. The implementor therefore depends on the library's own reporting (validation reasons, inventory) to diagnose a failing key.
+- Because the format is custom (not a standard like JWT), no external tooling can inspect/decode a license key without this library or a small compatible decoder; this is an accepted trade-off since there's no interoperability requirement. The implementor therefore depends on the library's own reporting (validation reasons, evaluation result) to diagnose a failing key.
 - Key rotation is supported by embedding a `keyId` in the payload from the start (see the `license-generation` and `license-validation` specs), so this decision does not need to be revisited to add rotation later.
 
 ## Reversal Cost

@@ -8,7 +8,12 @@ decisions in [`decisions/`](decisions/README.md).
 > same change, and adjust the "Last checked against" line. An example that contradicts a PDR is
 > a documentation bug.
 >
-> Last checked against: PDR-0001 to PDR-0018 (2026-09-30).
+> Last checked against: PDR-0001 to PDR-0018 and the scope cut in
+> [`deferred-scope.md`](deferred-scope.md) (2026-10-01).
+
+The Umbraco version range (PDR-0012) was removed from the schema on 2026-10-01
+(`deferred-scope.md` D1). The inventory (D5) is also deferred: where an example says what a
+site "shows", read it as what the library's evaluation result reports for that product.
 
 ## Schema
 
@@ -24,8 +29,6 @@ the signing secret used for rotation.
 | `reference` | license reference | required | required | 10 random characters from uppercase letters and digits without `0 O 1 I L`, shown `LIC-XXXXX-XXXXX`; matched ignoring case, hyphens, spaces. Generated at first issue, kept on reissue; not secret | PDR-0009, PDR-0017 |
 | `issued` | UTC date and time | required | required | Set by the core at signing, never a vendor input. Latest wins among keys with the same reference | PDR-0016 |
 | `expires` | date | optional | optional | Valid until the end of that date in UTC. Omitted means never expires. Rejected if before the current UTC date | PDR-0016 |
-| `umbraco.min` | whole major | optional | **not allowed** | Inclusive; covers every minor, patch, pre-release | PDR-0012 |
-| `umbraco.max` | whole major | optional | **not allowed** | Inclusive; `min` must not exceed `max` | PDR-0012 |
 | `features` | 0..N name / value pairs | optional | optional | See below | PDR-0010, PDR-0013, PDR-0018 |
 
 Feature entries:
@@ -49,7 +52,6 @@ The same schema, by role:
   reference    required                 reference    required
   issued       set by the core          issued       set by the core
   expires      optional                 expires      optional (own term)
-  umbraco      optional  min..max       umbraco      -- rejected at issue --
   features     0..N                     features     0..N
   licenses the product on its own       counts only while a valid base
                                         for the same product is present
@@ -66,15 +68,13 @@ products, references and dates are illustrative.
   reference  LIC-8F3AK-M7RXB
   issued     2026-03-01T09:14Z
   expires    2027-03-01          valid until 2027-03-01 23:59:59 UTC
-  umbraco    17..18              min..max
   features   ecommerce           switch
              max-orders: 500     number
 ```
 
 Text values (`licensed-domain: example.com`) are shown in examples 14 and 15.
 
-`umbraco 17..` means 17 and later; `..18` means up to and including 18; omitted means any
-version. In site evaluations, keys are shortened to reference, role and the fields that matter.
+In site evaluations, keys are shortened to reference, role and the fields that matter.
 Site evaluations assume **now is 2026-10-01** unless stated.
 
 ## 1. Minimal license
@@ -86,7 +86,7 @@ Site evaluations assume **now is 2026-10-01** unless stated.
   issued     2026-01-10T14:02Z
 ```
 
-Never expires, any Umbraco version, no features. Valid. The package asks "is acme.seo-toolkit
+Never expires, no features. Valid. The package asks "is acme.seo-toolkit
 licensed?" and gets yes; "is feature X granted?" is always no (PDR-0010).
 
 ## 2. Typical base license
@@ -97,13 +97,12 @@ licensed?" and gets yes; "is feature X granted?" is always no (PDR-0010).
   reference  LIC-8F3AK-M7RXB
   issued     2026-03-01T09:14Z
   expires    2027-03-01
-  umbraco    17..18
   features   ecommerce
              max-orders: 500
 ```
 
-Valid on Umbraco 17.x and 18.x, including pre-releases, until 2027-03-01 23:59:59 UTC. A site
-owner in Seattle sees "expires 1 Mar 2027, 15:59 your time" (PDR-0016).
+Valid until 2027-03-01 23:59:59 UTC. A host showing this to a site owner in Seattle would say
+"expires 1 Mar 2027, 15:59 your time" (PDR-0016; display is deferred, D5).
 
 ## 3. Renewal: same reference supersedes
 
@@ -139,12 +138,11 @@ The core sets `issued` to the moment of signing, so the correction always wins (
   features   max-orders: 1000       features   ai-assist
 ```
 
-No `umbraco` line: add-ons cannot carry a range; the base's range applies (PDR-0012). Neither
-key licenses acme.commerce on its own (PDR-0011).
+Neither key licenses acme.commerce on its own (PDR-0011).
 
 ## 6. Combined: base + add-ons on one site
 
-Site on Umbraco 18.2 holding examples 2 and 5, plus a second capacity pack:
+Site holding examples 2 and 5, plus a second capacity pack:
 
 ```
   LIC-8F3AK-M7RXB  base    ecommerce, max-orders 500   exp 2027-03-01   valid
@@ -200,22 +198,11 @@ Example 6's site on **2027-03-02**, but the capacity packs were bought with a lo
 *Inactive* is not *expired*. When the base is renewed under `LIC-8F3AK-M7RXB`, both packs count
 again with no reissue (PDR-0011).
 
-## 10. Umbraco major upgrade
+## 10. Umbraco major upgrade (removed)
 
-Example 6's site upgraded to Umbraco 19.0:
-
-```
-  LIC-8F3AK-M7RXB  base    out of range (covers 17-18)
-  LIC-4Z9BE-T6WNH  add-on  inactive: no valid base
-  LIC-2V5C9-HKD3P  add-on  inactive: no valid base
-  LIC-77DQS-9YJ4M  add-on  inactive: no valid base
-  ---------------------------------------------------------------------------------
-  acme.commerce  NOT licensed
-```
-
-The whole product goes out of range, never part of it; one reissued base
-(`LIC-8F3AK-M7RXB`, `umbraco 17..19`) restores everything. A minor or patch update (18.2 to
-18.4) never changes the result (PDR-0012).
+Removed on 2026-10-01 with the Umbraco version range (`deferred-scope.md` D1). The pre-cut
+example, where a base going out of range took the whole product with it, is in git history
+(commit `fcda40b`). Numbering is kept so cross-references stay valid.
 
 ## 11. Two base licenses bought by mistake
 
@@ -259,7 +246,7 @@ even from a third-party vendor:
 ```
 
 It never combines with acme.commerce's licenses. Whether it should be shown as inactive when
-acme.commerce is not licensed is open (design.md Q17).
+acme.commerce is not licensed is deferred (`deferred-scope.md` D9).
 
 ## 14. Text features: domain and tenant
 
@@ -313,9 +300,6 @@ Each of these fails at the vendor; no key is produced. Assumes issuing on 2026-1
 | Input | Reason | Decision |
 |---|---|---|
 | no `role` | Role is required | PDR-0011 |
-| `role add-on` with `umbraco 17..18` | Only base licenses carry a range | PDR-0012 |
-| `umbraco 19..17` | Minimum above maximum | PDR-0012 |
-| `umbraco 17.3..18` | Bounds are whole majors | PDR-0012 |
 | `product commerce` | Product ID must be `vendor.product` | PDR-0017 |
 | `product Acme.Commerce` | Product ID is lowercase | PDR-0017 |
 | `issued` supplied by the vendor | Set by the core at signing | PDR-0016 |
@@ -338,8 +322,9 @@ Each of these fails at the vendor; no key is produced. Assumes issuing on 2026-1
 
 | Question (design.md) | Could affect |
 |---|---|
-| Q1 site label | A label per stored key, alongside its contents |
-| Q3 routing keys to products | How keys in examples 3, 6 and 11 reach acme.commerce |
-| Q5 marking unverified claims | How invalid or unreadable keys appear in evaluations; how the feature conflict in example 15 is shown alongside them |
-| Q17 dependencies between products | Example 13 |
+| Q5 what the result reports for an unverifiable key | How invalid or unreadable keys appear in evaluations; how the feature conflict in example 15 is reported alongside them |
 | Q18 same reference, different role or product | Examples 3 and 4: what supersedes when the reissue changes role, and that superseding is scoped by product |
+
+Deferred questions that could also change these examples when they return (`deferred-scope.md`):
+Q1 site label (a label per stored key), Q3 routing (how keys in examples 3, 6 and 11 reach
+acme.commerce), Q17 product dependencies (example 13), and the Umbraco version range (D1).

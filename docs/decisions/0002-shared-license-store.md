@@ -1,6 +1,7 @@
 # PDR-0002: One license store per site, shared by all vendors
 
-- **Status:** Decided, 2026-09-26
+- **Status:** Decided, 2026-09-26. Deferred, 2026-10-01: removed from the current change with
+  key sourcing; see [`docs/deferred-scope.md`](../deferred-scope.md) D3
 - **Source:** `openspec/changes/license-key-management/design.md` Q2
 - **Serves:** site owner, implementor; **Cost to:** library maintainers (permanent contract)
 

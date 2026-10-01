@@ -2,7 +2,7 @@
 
 ## Status
 
-Draft. Not accepted until the open questions in `openspec/changes/license-key-management/design.md` are settled.
+Deferred, 2026-10-01. Key sourcing, including the Azure Key Vault provider, was removed from the `license-key-management` change (`docs/deferred-scope.md` D2). The change now ships one BCL-only package. This ADR stands as the recommendation for when sourcing returns; it is not accepted.
 
 ## Context
 

@@ -1,6 +1,7 @@
 # PDR-0004: What a package declares when it registers
 
-- **Status:** Decided, 2026-09-28
+- **Status:** Decided, 2026-09-28. Deferred, 2026-10-01: registration is host-side; see
+  [`docs/deferred-scope.md`](../deferred-scope.md) D4, D10
 - **Source:** `openspec/changes/license-key-management/design.md` Q14, Q8
 - **Serves:** site owner
 

@@ -1,8 +1,10 @@
 ## Purpose
 
-Provides the consumer-side API for verifying a license key's signature and evaluating its claims against the running product and Umbraco core version.
+Provides the consumer-side API for verifying a license key's signature and evaluating its claims against the product and the current time.
 
-Serves the **vendor**, whose package checks its license at runtime, and the **implementor** and **site owner**, who act on the result. Personas are defined in `docs/personas.md`.
+Serves the **vendor**, whose product checks its license at runtime, and the **implementor** and **site owner**, who act on the result. Personas are defined in `docs/personas.md`.
+
+Scope note (2026-10-01): evaluating a set of keys for one product (superseding, base and add-on combining, feature combining; design.md R12) is decided in PDRs and `docs/license-examples.md` and is not yet reflected here. The Umbraco version range check was removed from this change (`docs/deferred-scope.md` D1). The caller supplies the key strings; where they come from is outside this change (D2).
 
 ## ADDED Requirements
 
@@ -39,24 +41,16 @@ If a license key encodes an expiry date, the system SHALL reject it once the cur
 - **WHEN** a license key's encoded expiry date is after the current date/time, or no expiry is encoded
 - **THEN** validation SHALL NOT fail on expiry grounds
 
-### Requirement: Supported version range check
-If a license key encodes a supported Umbraco core version range, the system SHALL reject it when the running Umbraco core version falls outside that range. If no version range is encoded, the key SHALL be treated as compatible with any Umbraco core version.
-
-#### Scenario: Version within range
-- **WHEN** a license key encodes a supported version range that includes the running Umbraco core version
-- **THEN** validation SHALL NOT fail on version grounds
-
-#### Scenario: Version outside range
-- **WHEN** a license key encodes a supported version range that excludes the running Umbraco core version
-- **THEN** validation SHALL fail with a version-unsupported result
-
-#### Scenario: No version range encoded
-- **WHEN** a license key encodes no supported version range
-- **THEN** validation SHALL NOT fail on version grounds regardless of the running Umbraco core version
-
 ### Requirement: Distinct validation result reasons
-The system SHALL return a validation result that distinguishes, at minimum: valid, invalid signature, untrusted key ID, product mismatch, expired, and unsupported version, so that a host application can present an accurate outcome.
+The system SHALL return a validation result that distinguishes, at minimum: valid, malformed key, invalid signature, untrusted key ID, product mismatch, and expired, so that a caller can present an accurate outcome.
 
 #### Scenario: Distinct failure reasons
 - **WHEN** validation fails for any of the defined reasons
 - **THEN** the returned result SHALL identify which specific reason caused the failure
+
+### Requirement: Validation never throws on a bad key
+The system SHALL return a result for any input string, including empty, truncated, malformed or tampered keys, and SHALL NOT throw an exception because of the key's content.
+
+#### Scenario: Malformed key
+- **WHEN** a string that is not a well-formed license key is validated
+- **THEN** the system SHALL return a result with a malformed-key reason and SHALL NOT throw
