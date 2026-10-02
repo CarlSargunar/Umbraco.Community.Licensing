@@ -107,7 +107,7 @@ Nothing is implemented, so revising them against the PDRs is a rewrite, not a mi
 | R8 | Release-date gating | dropped | PDR-0015 |
 | R10 | Optional issuing add-on for smaller vendors | decided; separate change | PDR-0005, PDR-0006, PDR-0007 |
 | R11 | The library returns results and never throws on a bad key, so a licensing problem never crashes a page | in `license-validation` | [`docs/personas.md`](../../../docs/personas.md), PDR-0001 |
-| R12 | Evaluation result: for one product and a set of keys, each key's state and the combined entitlement | decided, not yet specified | PDR-0009, PDR-0011, PDR-0010, PDR-0018, PDR-0019, PDR-0020; below |
+| R12 | Evaluation result: for one product and a set of keys, each key's state and the combined entitlement | specified in `license-validation` | PDR-0009, PDR-0011, PDR-0010, PDR-0018, PDR-0019, PDR-0020, PDR-0021; below |
 
 ### Questions
 
@@ -122,6 +122,7 @@ Nothing is implemented, so revising them against the PDRs is a rewrite, not a mi
 | Q16 | How licenses for one product combine | PDR-0011, PDR-0010, PDR-0018 |
 | Q18 | Same reference, different role or product; which keys may supersede | PDR-0009 (amended 2026-10-01) |
 | Q19 | The same key supplied twice; different keys with one reference and one issue time | PDR-0009 (amended 2026-10-02), PDR-0016 |
+| Q20 | Whitespace in a supplied key; a key that verifies but whose contents break the schema | PDR-0021 |
 
 ### R12. Evaluation result
 
@@ -168,7 +169,7 @@ Settled in three parts. The records hold the reasons and the rejected options.
 
 Worked example: `docs/license-examples.md` example 18.
 
-Still to do: `license-validation` and `license-generation` text, in the spec rewrite below. The
+Still to do: `license-generation` text, in the spec rewrite below. The
 key identifier also changes the token format (Technical open questions, above).
 
 ### Q18. Same reference, different role or product (settled 2026-10-01)
@@ -180,7 +181,7 @@ Among those, the latest issued wins regardless of expiry or role, and the evalua
 (R12) reports when a superseded key carried a different role. Worked examples:
 `docs/license-examples.md` examples 5 and 6.
 
-Still to do: `license-validation` text, in the spec rewrite below.
+Specified in `license-validation` (2026-10-02).
 
 ### Q19. The same key twice, and keys issued at the same time (settled 2026-10-02)
 
@@ -196,7 +197,14 @@ reasons and the rejected options.
 
 Worked example: `docs/license-examples.md` example 7.
 
-Still to do: `license-validation` and `license-generation` text, in the spec rewrite below.
+Still to do: `license-generation` text, in the spec rewrite below.
+
+### Q20. Whitespace, and verified keys with bad contents (settled 2026-10-02)
+
+Raised while rewriting the `license-validation` spec. Settled by
+[PDR-0021](../../../docs/decisions/0021-reading-a-key-string.md): all whitespace in a supplied
+key string is removed before reading; a key that verifies but breaks a rule checked at issue is
+reported as *unreadable* (provisional).
 
 ### Prior art: Standard.Licensing
 
@@ -215,10 +223,11 @@ key were rejected (PDR-0006). Deliberately not repeated:
 
 No product question is open in this change.
 
-1. Revise the three delta specs and `tasks.md` against the PDRs and `docs/license-examples.md`
-   (role, reference, key identifier, issue time to the second, features, combining, the
-   superseding, tie and duplicate rules in PDR-0009, and the row states in PDR-0019). R12 can
-   now be specified.
+1. Revise the delta specs and `tasks.md` against the PDRs and `docs/license-examples.md`.
+   `license-validation` is done (2026-10-02). Still to do: `license-generation` (role,
+   reference, key identifier, issue time to the second, features and their issue-time rules),
+   `signing-key-management` (rename the signing key's "key ID" to "signing key ID" so it is not
+   confused with the key identifier), then `tasks.md`.
 2. Propose phase: revise ADR-0001 for the visible key identifier and fix its payload.
 
 `docs/license-examples.md` was renumbered on 2026-10-02. Example numbers in commits before

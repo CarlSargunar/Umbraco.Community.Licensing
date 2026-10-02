@@ -8,9 +8,9 @@ decisions in [`decisions/`](decisions/README.md).
 > same change, and adjust the "Last checked against" line. An example that contradicts a PDR is
 > a documentation bug.
 >
-> Last checked against: PDR-0001 to PDR-0020, including the amendments to PDR-0009, PDR-0011,
-> PDR-0016 and PDR-0017 that settled design.md Q18, Q5 and Q19, and the scope cut in
-> [`deferred-scope.md`](deferred-scope.md) (2026-10-02).
+> Last checked against: PDR-0001 to PDR-0021, including the amendments to PDR-0009, PDR-0011,
+> PDR-0016 and PDR-0017 that settled design.md Q18, Q5 and Q19, PDR-0021 (design.md Q20), and
+> the scope cut in [`deferred-scope.md`](deferred-scope.md) (2026-10-02).
 
 The Umbraco version range (PDR-0012) was removed from the schema on 2026-10-01
 (`deferred-scope.md` D1). The inventory (D5) is also deferred: where an example says what a
@@ -491,6 +491,13 @@ The result, one row per supplied key, in the order supplied:
   checked first, so a mis-paste is reported as one.
 - **First action per reason**: unreadable or not verified, paste again; wrong product, move the
   key; signing key not recognised, update the product, then ask the vendor (PDR-0019).
+- **Whitespace is not a failure.** Had key 1 been wrapped across two lines by an email client,
+  or carried a trailing newline from a settings file, it would still be valid: all whitespace
+  is removed before reading (PDR-0021).
+- **A key that verifies but breaks the schema is *unreadable*.** A key signed by the vendor's
+  trusted signing key with `max-orders: -200`, which the core refuses at issue (example 19),
+  can only come from a faulty vendor tool. It is reported as unreadable with its identifier
+  and grants nothing. Pasting it again does not help; the vendor must reissue (PDR-0021).
 
 ## 19. Rejected when issued
 

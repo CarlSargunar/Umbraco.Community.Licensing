@@ -39,6 +39,7 @@ is not yet a spec requirement until the specs are revised.
 | [0018](0018-text-feature-values.md) | Product features may carry text; text never combines | Decided |
 | [0019](0019-failed-key-reporting.md) | A failed key reports its reason and its claimed identifiers only | Decided |
 | [0020](0020-visible-key-identifier.md) | Every key starts with a visible key identifier | Decided |
+| [0021](0021-reading-a-key-string.md) | Whitespace in a key string is ignored; contents that break the schema are unreadable | Decided |
 
 ## Template
 
