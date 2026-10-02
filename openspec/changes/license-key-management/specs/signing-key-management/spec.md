@@ -1,43 +1,45 @@
 ## Purpose
 
-Provides the issuer-side API for creating signing key pairs, identifying them by key ID, and the consumer-side trusted key set that makes rotation possible.
+Provides the issuer-side API for creating signing key pairs identified by a signing key ID, and the consumer-side set of trusted public keys that makes rotating a signing key possible.
 
-Serves the **vendor**, who owns one private key per product and must rotate it without breaking issued licenses, and the **site owner**, whose licenses keep working through a rotation. Personas are defined in `docs/personas.md`.
+Serves the **vendor**, who owns one private signing key per product and must rotate it without breaking issued licenses, and the **site owner**, whose licenses keep working through a rotation. Personas are defined in `docs/personas.md`.
+
+Terms: the **signing key ID** names a signing key pair. It is not the **key identifier** (`LIC-XXXXX-XXXXX-XXXX`, PDR-0020), which names one license key.
 
 ## ADDED Requirements
 
 ### Requirement: Create a signing key pair
-The system SHALL create a new signing key pair and assign it a key ID, and SHALL make the private key and the public key separately exportable so the private key can be kept in custody and only the public key shipped inside a product.
+The system SHALL create a new signing key pair and assign it a signing key ID, and SHALL make the private key and the public key separately exportable, so the private key can be kept in custody and only the public key shipped inside a product.
 
 #### Scenario: Key pair created
 - **WHEN** a caller requests a new signing key pair
-- **THEN** the system SHALL return a private key, the matching public key and a key ID, each obtainable without the others
+- **THEN** the system SHALL return a private key, the matching public key and a signing key ID, each obtainable without the others
 
-#### Scenario: Public key carries its key ID
+#### Scenario: Public key carries its signing key ID
 - **WHEN** a public key is exported
-- **THEN** its key ID SHALL be exported with it, so a validator can register it as a trusted key without further input
+- **THEN** its signing key ID SHALL be exported with it, so a validator can trust it without further input
 
 ### Requirement: Trusted key set
-The system SHALL let a consumer hold a set of trusted public keys addressed by key ID, and SHALL resolve a license key's embedded key ID against that set during validation.
+The system SHALL let a consumer hold a set of trusted public keys addressed by signing key ID, and SHALL resolve a license key's signing key ID against that set during evaluation.
 
 #### Scenario: Several keys trusted at once
-- **WHEN** a consumer trusts two public keys with different key IDs
-- **THEN** a license signed with either key SHALL validate
+- **WHEN** a consumer trusts two public keys with different signing key IDs
+- **THEN** a license signed with either key SHALL verify
 
 ### Requirement: Rotation
-Adding a new trusted key SHALL NOT invalidate licenses signed with an existing trusted key, and removing a key from the trusted set SHALL cause licenses signed with it to fail validation with an untrusted key ID result.
+Adding a public key to the trusted set SHALL NOT affect licenses signed with a key already trusted. Removing a public key from the trusted set SHALL cause licenses signed with it to be reported as signing key not recognised (PDR-0019).
 
 #### Scenario: New key added
-- **WHEN** a license was signed under key ID A and the consumer adds key ID B to the trusted set
-- **THEN** the license SHALL still validate
+- **WHEN** a license was signed under signing key ID A and the consumer adds signing key ID B to the trusted set
+- **THEN** the license SHALL still verify
 
 #### Scenario: Old key withdrawn
-- **WHEN** a license was signed under key ID A and the consumer removes key ID A from the trusted set
-- **THEN** validation SHALL fail with an untrusted key ID result
+- **WHEN** a license was signed under signing key ID A and the consumer removes A from the trusted set
+- **THEN** the license SHALL be reported as signing key not recognised
 
-### Requirement: Key ID uniqueness within a trusted set
-The system SHALL reject adding a public key to a trusted set under a key ID that is already present with a different public key.
+### Requirement: Signing key ID unique within a trusted set
+The system SHALL reject adding a public key to a trusted set under a signing key ID already held for a different public key.
 
-#### Scenario: Duplicate key ID
-- **WHEN** a consumer adds a public key under a key ID already held for a different public key
+#### Scenario: Duplicate signing key ID
+- **WHEN** a consumer adds a public key under a signing key ID already held for a different public key
 - **THEN** the system SHALL raise an error and the trusted set SHALL be unchanged

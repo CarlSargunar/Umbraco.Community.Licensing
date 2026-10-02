@@ -80,8 +80,8 @@ None. Greenfield.
 - The token format above predates PDR-0020 (2026-10-02). Every key must now start with a
   visible key identifier (`LIC-XXXXX-XXXXX-XXXX`, PDR-0017) that is bound to the signature and
   survives when the rest of the key is cut off. ADR-0001 must be revised for this in the
-  propose phase. Note the naming clash: `keyId` here is the signing key's ID, not the key
-  identifier.
+  propose phase. Naming: the specs call `keyId` the **signing key ID**, distinct from the
+  **key identifier** (PDR-0020); the ADR should use the same terms.
 
 ---
 
@@ -169,7 +169,7 @@ Settled in three parts. The records hold the reasons and the rejected options.
 
 Worked example: `docs/license-examples.md` example 18.
 
-Still to do: `license-generation` text, in the spec rewrite below. The
+Specified in `license-validation` and `license-generation` (2026-10-02). The
 key identifier also changes the token format (Technical open questions, above).
 
 ### Q18. Same reference, different role or product (settled 2026-10-01)
@@ -197,7 +197,7 @@ reasons and the rejected options.
 
 Worked example: `docs/license-examples.md` example 7.
 
-Still to do: `license-generation` text, in the spec rewrite below.
+Specified in `license-validation` and `license-generation` (2026-10-02).
 
 ### Q20. Whitespace, and verified keys with bad contents (settled 2026-10-02)
 
@@ -223,11 +223,7 @@ key were rejected (PDR-0006). Deliberately not repeated:
 
 No product question is open in this change.
 
-1. Revise the delta specs and `tasks.md` against the PDRs and `docs/license-examples.md`.
-   `license-validation` is done (2026-10-02). Still to do: `license-generation` (role,
-   reference, key identifier, issue time to the second, features and their issue-time rules),
-   `signing-key-management` (rename the signing key's "key ID" to "signing key ID" so it is not
-   confused with the key identifier), then `tasks.md`.
+1. Delta specs and `tasks.md` were revised against PDR-0001 to PDR-0021 on 2026-10-02.
 2. Propose phase: revise ADR-0001 for the visible key identifier and fix its payload.
 
 `docs/license-examples.md` was renumbered on 2026-10-02. Example numbers in commits before
