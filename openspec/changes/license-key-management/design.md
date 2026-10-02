@@ -77,6 +77,11 @@ None. Greenfield.
 
 - `keyId` derivation (truncated hash of the public key vs an issuer-assigned label). Either
   satisfies the specs; decide during implementation.
+- The token format above predates PDR-0020 (2026-10-02). Every key must now start with a
+  visible key identifier (`LIC-XXXXX-XXXXX-XXXX`, PDR-0017) that is bound to the signature and
+  survives when the rest of the key is cut off. ADR-0001 must be revised for this in the
+  propose phase. Note the naming clash: `keyId` here is the signing key's ID, not the key
+  identifier.
 
 ---
 
@@ -102,68 +107,96 @@ Nothing is implemented, so revising them against the PDRs is a rewrite, not a mi
 | R8 | Release-date gating | dropped | PDR-0015 |
 | R10 | Optional issuing add-on for smaller vendors | decided; separate change | PDR-0005, PDR-0006, PDR-0007 |
 | R11 | The library returns results and never throws on a bad key, so a licensing problem never crashes a page | in `license-validation` | [`docs/personas.md`](../../../docs/personas.md), PDR-0001 |
-| R12 | Evaluation result: for one product and a set of keys, each key's state and the combined entitlement | decided, not yet specified | PDR-0009, PDR-0011, PDR-0010, PDR-0018; below |
+| R12 | Evaluation result: for one product and a set of keys, each key's state and the combined entitlement | decided, not yet specified | PDR-0009, PDR-0011, PDR-0010, PDR-0018, PDR-0019, PDR-0020; below |
 
 ### Questions
 
 | Q | Question | Outcome |
 |---|---|---|
-| Q5 | What does the evaluation result report for a key that fails verification? | open, below |
+| Q5 | What does the evaluation result report for a key that fails verification? | PDR-0019, PDR-0020 |
 | Q8 | The license reference | PDR-0009 |
 | Q9 | Feature model: explicit list or named tier? | PDR-0010: one concept, a vendor convention |
 | Q11 | Feature name rules | PDR-0013 |
 | Q13 | What one key stands for | PDR-0008: one purchase |
 | Q15 | What the issuing add-on records | PDR-0006 |
 | Q16 | How licenses for one product combine | PDR-0011, PDR-0010, PDR-0018 |
-| Q18 | Same reference, different role or product | open, below |
+| Q18 | Same reference, different role or product; which keys may supersede | PDR-0009 (amended 2026-10-01) |
+| Q19 | The same key supplied twice; different keys with one reference and one issue time | PDR-0009 (amended 2026-10-02), PDR-0016 |
 
 ### R12. Evaluation result
 
-`license-validation` takes **a set of keys and one product ID** and returns each key's role
-and state (valid, inactive, expired, superseded, invalid; PDR-0011) and the combined
-entitlement for the product (PDR-0011, PDR-0010, PDR-0018). Keys for another product are
-reported as wrong product and take no further part.
+`license-validation` takes **a set of keys and one product ID** and returns one row per
+supplied key, in the order supplied, and the combined entitlement for the product (PDR-0011,
+PDR-0010, PDR-0018).
 
-Authenticity and usability are independent axes. A key can be authentic and expired; another
-can be forged. One status word loses the difference between "someone tampered with this" and
-"you need to renew", which call for different actions.
+- Each row names its key by key identifier (PDR-0020) and gives one state: unreadable, wrong
+  product, signing key not recognised, not verified, duplicate, superseded, expired, inactive
+  or valid. The first failing check decides (PDR-0019).
+- A row may also carry a flag, which does not stop the key counting: vendor error on keys tied
+  for latest (PDR-0009), conflict on a text feature (PDR-0018).
+- A verified key's row carries its claims as facts. A key that failed verification carries its
+  reason and its claimed product and identifier only (PDR-0019).
+- A superseded row notes when its role differed from the key that superseded it (PDR-0009).
+- No row contains any part of a key other than its identifier (PDR-0020).
+
+Verification and usability are independent axes. A key can be verified and expired; another
+can fail verification. One status word loses the difference between "this key is not
+genuine or not intact" and "you need to renew", which call for different actions.
 
 ```
-                          AUTHENTIC?
+                           VERIFIED?
                       no              yes
                 +---------------+---------------+
-     USABLE  no | broken /      | expired       |
-                | untrusted     |               |
+     USABLE  no | reason and    | duplicate,    |
+                | claimed       | superseded,   |
+                | identifiers   | expired,      |
+                |               | inactive      |
                 +---------------+---------------+
-             yes|     n/a       |    active     |
+             yes|     n/a       |    valid      |
                 +---------------+---------------+
 ```
 
-### Q5. What does the result report for a key that fails verification? (open)
+### Q5. What does the result report for a key that fails verification? (settled 2026-10-02)
 
-A key that does not verify still has readable claims. They are assertions, not facts:
-"expires 2099" on a forged key must never be returned as if true. Open: whether the result
-carries the reason only, or also the readable claims with an explicit "unverified" marker. Keys
-are bearer tokens, so the result must not reproduce a key in full; the reference (PDR-0009) or
-a short fragment is enough to match a result back to a key.
+Settled in three parts. The records hold the reasons and the rejected options.
 
-### Q18. Same reference, different role or product (open)
+| Part | Outcome | Record |
+|---|---|---|
+| Which claims a failed key reports | Its reason plus claimed product and key identifier. An unverified claim may identify a key, never describe or grant an entitlement | [PDR-0019](../../../docs/decisions/0019-failed-key-reporting.md) |
+| The failure reasons | Unreadable, wrong product, signing key not recognised, not verified, expired. One per key, first failing check wins. "Tampered" is no longer used | PDR-0019; PDR-0011 amended |
+| Matching a row back to its key | Every key starts with a visible key identifier, the reference plus a 4-character key part. Position is the fallback | [PDR-0020](../../../docs/decisions/0020-visible-key-identifier.md); PDR-0017 amended |
 
-Superseding is by license reference: latest issued wins (PDR-0009). Two cases are undefined.
+Worked example: `docs/license-examples.md` example 18.
 
-- **Same reference, different role.** The core keeps no records (PDR-0005), so nothing stops a
-  vendor reissuing an add-on under a base's reference, or the reverse. Latest-wins then
-  replaces a base with an add-on (the product stops being licensed) or an add-on with a base
-  (the site owner gets a product they did not buy). Options: latest wins regardless; the
-  result treats the pair as a conflict; the issuing add-on (PDR-0006) refuses a reissue that
-  changes the role and vendors with their own systems are told to do the same, which follows
-  "mistakes fail at the vendor" (PDR-0010, PDR-0011) but cannot be enforced by the core.
-- **Same reference, different product.** References are random per product (PDR-0017), so two
-  vendors can generate the same one. Superseding must be scoped by product **and** reference.
-  PDR-0009 says "unique per product", which implies this; stating it outright would close
-  this half.
+Still to do: `license-validation` and `license-generation` text, in the spec rewrite below. The
+key identifier also changes the token format (Technical open questions, above).
 
-Touches: PDR-0009, `license-validation`, `docs/license-examples.md` examples 3 and 4.
+### Q18. Same reference, different role or product (settled 2026-10-01)
+
+Settled by the amendment to
+[PDR-0009](../../../docs/decisions/0009-license-reference.md), which holds the reasons and the
+rejected options. Superseding considers only verified keys for the product being evaluated.
+Among those, the latest issued wins regardless of expiry or role, and the evaluation result
+(R12) reports when a superseded key carried a different role. Worked examples:
+`docs/license-examples.md` examples 5 and 6.
+
+Still to do: `license-validation` text, in the spec rewrite below.
+
+### Q19. The same key twice, and keys issued at the same time (settled 2026-10-02)
+
+Raised on 2026-10-01 while settling Q18: PDR-0009 said the latest issued supersedes, and said
+nothing when no key is later. Settled by a second amendment to PDR-0009, which holds the
+reasons and the rejected options.
+
+| Case | Outcome |
+|---|---|
+| The same key supplied more than once | Counts once. Each further copy is reported as *duplicate* |
+| Different keys, one reference, one issue time, none later | Two versions of one license with the order unknown. Both count and combine as usual; each is flagged as a vendor error. The cost falls on the vendor, whose mistake it is, and the site keeps operating |
+| How fine the issue time is | To the second (PDR-0016), so an honest correction never ties |
+
+Worked example: `docs/license-examples.md` example 7.
+
+Still to do: `license-validation` and `license-generation` text, in the spec rewrite below.
 
 ### Prior art: Standard.Licensing
 
@@ -180,7 +213,13 @@ key were rejected (PDR-0006). Deliberately not repeated:
 
 ### Where to resume
 
-1. **Q18**: the superseding edge cases. Changes `license-validation` text.
-2. **Q5**: what the result reports for an unverifiable key; then R12 can be specified.
-3. Revise the three delta specs and `tasks.md` against the PDRs and `docs/license-examples.md`
-   (role, reference, issue time, features, combining), and fix ADR-0001's payload.
+No product question is open in this change.
+
+1. Revise the three delta specs and `tasks.md` against the PDRs and `docs/license-examples.md`
+   (role, reference, key identifier, issue time to the second, features, combining, the
+   superseding, tie and duplicate rules in PDR-0009, and the row states in PDR-0019). R12 can
+   now be specified.
+2. Propose phase: revise ADR-0001 for the visible key identifier and fix its payload.
+
+`docs/license-examples.md` was renumbered on 2026-10-02. Example numbers in commits before
+that date differ; the mapping is at the top of that file.

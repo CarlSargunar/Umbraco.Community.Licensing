@@ -34,7 +34,8 @@ installed, and how results are shown are the host's concern.
   written. Where those PDRs say "the inventory shows" or "the inventory flags", read "the
   evaluation result reports"; the inventory (D5) is a host view over evaluation results.
 - **License states.** PDR-0011's list loses *out of range* (D1). The remaining states are
-  superseded, invalid (tampered, malformed, wrong product, expired), inactive and valid.
+  superseded, invalid, inactive and valid. Since 2026-10-02 the reasons for invalid are
+  unreadable, wrong product, signing key not recognised, not verified and expired (PDR-0019).
 - **Reporting, not throwing.** design.md R11: the library returns results and never throws on
   a bad key. This is a core behaviour, not a host one, and remains in scope.
 - **Signing-key management.** Key pair creation, key IDs, trusted key sets and rotation. Named
@@ -52,7 +53,7 @@ installed, and how results are shown are the host's concern.
 | PDR-0015 | Unchanged. Its reasoning cites PDR-0012 as giving enough commercial control; with D1 deferred that reasoning is weaker. Revisit if D1 is not restored |
 | ADR-0001 | Payload description no longer lists the Umbraco major range |
 | ADR-0002 | Status set to Deferred with D2 |
-| `license-examples.md` | `umbraco` rows, example 10 and the Umbraco rejected-at-issue rows removed; example 13's Q17 note removed |
+| `license-examples.md` | `umbraco` rows, example 10 and the Umbraco rejected-at-issue rows removed; example 13's Q17 note removed. Example numbers here and in D1 are those at the cut. The file was renumbered on 2026-10-02: old 13 is now `license-examples.md` example 15, and old 10 no longer has a number. The mapping is at the top of that file |
 | `license-key-sourcing` delta spec | Deleted from the change. Its text is reproduced below |
 
 ## Requirement and question index
@@ -86,7 +87,7 @@ citations still resolve.
 |---|---|---|
 | Q1 | Where does a stored key's human-readable name live? | D7, D3 |
 | Q3 | How does a package find its keys? | D8 |
-| Q5 | How are unverified claims marked in the inventory? The core part, what the evaluation result reports for a key that fails verification, stays open in design.md | D5 |
+| Q5 | How are unverified claims marked in the inventory? The core part, what the evaluation result reports for a key that fails verification, was settled on 2026-10-02 by PDR-0019 and PDR-0020. How a host displays it remains deferred | D5 |
 | Q6 | Backoffice screen: view-only or read-write? | D6 |
 | Q7 | Who ships the screen, and what may it display? | D6 |
 | Q17 | Dependencies between products | D9 |
@@ -103,15 +104,18 @@ Condensed from design.md as it stood before the cut (full text in git history, c
   product a display name (PDR-0004), the reference is signed and quotable (PDR-0009). The
   label's remaining jobs are the mangled paste and the implementor's own scheme. An environment
   variable is one string, so a label there must live in the variable's name; a vault secret's
-  own name is the only plausible label there.
+  own name is the only plausible label there. Since 2026-10-02 every key starts with a visible
+  key identifier (PDR-0020), which covers the mangled paste. The label's one remaining job is
+  the implementor's own scheme.
 - **Routing (Q3).** Implementor assigns vs system routes. PDR-0009 and PDR-0003 presuppose
   system routing. If adopted, record it with an explicit rule: fields read before verification
   are used only to route and label a row, never trusted until the signature verifies.
 - **Unverified claims (Q5).** Three tiers: unreadable (only the label is knowable), readable
   but not authentic (claims are assertions; "expires 2099" on a forged key must never be shown
   as truth), authentic (claims are facts). Authenticity and usability are independent axes.
-  Keys are bearer tokens: the inventory must never reproduce a key in full; the reference or a
-  short fragment identifies a row.
+  Keys are bearer tokens: the inventory must never reproduce a key in full. Settled for the
+  core on 2026-10-02: the key identifier names a row and no other part of a key is reported
+  (PDR-0020); a failed key reports its reason and claimed identifiers only (PDR-0019).
 - **Screen read-write (Q6).** All planned sources are effectively read-only at runtime. An
   editing screen needs a writable site-owned store and a precedence rule against
   config-sourced keys, and splits deployed keys from runtime state. A view-only screen that

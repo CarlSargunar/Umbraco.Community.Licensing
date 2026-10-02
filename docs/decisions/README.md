@@ -27,16 +27,18 @@ is not yet a spec requirement until the specs are revised.
 | [0006](0006-issuing-add-on-without-personal-data.md) | Optional issuing add-on; no customer personal data | Decided |
 | [0007](0007-signing-secrets-stored-apart.md) | Signing secrets are stored apart from issued keys | Decided |
 | [0008](0008-a-key-stands-for-one-purchase.md) | A license key stands for one purchase | Decided |
-| [0009](0009-license-reference.md) | License reference: same reference supersedes, different ones combine | Decided |
+| [0009](0009-license-reference.md) | License reference: same reference supersedes, different ones combine | Decided; amended 2026-10-01, 2026-10-02 |
 | [0010](0010-product-features.md) | Product features are switches and numbers | Decided; amended by PDR-0018 |
-| [0011](0011-base-and-add-on-licenses.md) | Base and add-on licenses, and how licenses combine | Decided; amended 2026-10-01 |
+| [0011](0011-base-and-add-on-licenses.md) | Base and add-on licenses, and how licenses combine | Decided; amended 2026-10-01, 2026-10-02 |
 | [0012](0012-umbraco-version-range.md) | Umbraco version range: base licenses only, majors, inclusive | Deferred (host-side) |
 | [0013](0013-feature-names.md) | Feature names are restricted; lookups ignore case | Decided |
 | [0014](0014-dropped-kind-of-license.md) | No kind of license (trial / standard) | Dropped |
 | [0015](0015-dropped-release-date-gating.md) | No release-date gating | Dropped |
-| [0016](0016-dates-and-times.md) | Issue and expiry dates are UTC; the core sets the issue time | Decided; amended 2026-10-01 |
-| [0017](0017-identifier-formats.md) | Identifier formats: `vendor.product` and `LIC-XXXXX-XXXXX` | Decided |
+| [0016](0016-dates-and-times.md) | Issue and expiry dates are UTC; the core sets the issue time | Decided; amended 2026-10-01, 2026-10-02 |
+| [0017](0017-identifier-formats.md) | Identifier formats: `vendor.product` and `LIC-XXXXX-XXXXX` | Decided; amended 2026-10-02 |
 | [0018](0018-text-feature-values.md) | Product features may carry text; text never combines | Decided |
+| [0019](0019-failed-key-reporting.md) | A failed key reports its reason and its claimed identifiers only | Decided |
+| [0020](0020-visible-key-identifier.md) | Every key starts with a visible key identifier | Decided |
 
 ## Template
 

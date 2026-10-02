@@ -2,7 +2,9 @@
 
 - **Status:** Decided, 2026-09-30. Amended, 2026-10-01: *base out of Umbraco range* is no
   longer a reason a license drops out (PDR-0012 deferred, [`docs/deferred-scope.md`](../deferred-scope.md)
-  D1); "the inventory lists" reads as "the evaluation result reports" (D5)
+  D1); "the inventory lists" reads as "the evaluation result reports" (D5). Amended,
+  2026-10-02: the reasons a license is invalid are those in PDR-0019; "tampered" and
+  "malformed" are replaced, and "signing key not recognised" is added
 - **Source:** `openspec/changes/license-key-management/design.md` Q16, Q13
 - **Serves:** site owner (gets what they paid for; one place to see why something stopped), vendor (one combining rule; mistakes fail at issue), implementor (states say which key to fix)
 
@@ -16,13 +18,18 @@ packs are add-ons; there is no subtype.
 
 ```
   per license                                per product
+  duplicate (exact copy)        -> ignored
   superseded (same ref, older)  -> ignored   licensed = at least one VALID base
-  invalid (tampered, malformed,              combined = features of VALID bases
-    wrong product, expired,                             + ACTIVE add-ons
-    base out of Umbraco range)  -> drops out   switches: any grants
-  VALID add-on, no VALID base   -> INACTIVE    numbers:  summed
+  invalid (unreadable,                       combined = features of VALID bases
+    wrong product, signing key                          + ACTIVE add-ons
+    not recognised, not verified,              switches: any grants
+    expired)                    -> drops out   numbers:  summed
+  VALID add-on, no VALID base   -> INACTIVE
   otherwise                     -> counts
 ```
+
+The order in which these are decided for one key, and what an invalid key reports, are in
+PDR-0019.
 
 - Two valid base licenses with different references combine like any others; the inventory
   notes "2 base licenses".
