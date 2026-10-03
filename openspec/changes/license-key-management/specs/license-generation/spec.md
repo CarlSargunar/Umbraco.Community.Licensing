@@ -9,7 +9,7 @@ The Umbraco version range claim was removed from this change (`docs/deferred-sco
 ## ADDED Requirements
 
 ### Requirement: Generate a license key from its contents
-The system SHALL accept a product ID, a role, an optional license reference, an optional expiry date, zero or more features, a private signing key and its signing key ID, and SHALL produce a signed key string. It SHALL also return the license reference, the key identifier and the issue time of the key it produced. It SHALL keep no record of the key (PDR-0005).
+The system SHALL accept a product ID, a role, an optional license reference, an optional expiry date, zero or more features and a private signing key, and SHALL produce a signed key string. The signing key ID SHALL be derived from the private key, not supplied by the caller. It SHALL also return the license reference, the key identifier and the issue time of the key it produced. It SHALL keep no record of the key (PDR-0005).
 
 #### Scenario: Minimal base license
 - **WHEN** a caller issues a key with product `acme.seo-toolkit` and role `base` only
@@ -125,7 +125,7 @@ A rejected request SHALL raise an error that identifies every rule the request b
 Every key SHALL carry the signing key ID of the signing key that produced it, readable before the signature is checked, so a validator can choose which trusted public key to verify against.
 
 #### Scenario: Signing key ID present
-- **WHEN** a key is issued with signing key ID A
+- **WHEN** a key is issued with the private key of the signing key pair with signing key ID A
 - **THEN** a validator SHALL be able to read signing key ID A from the key before verifying it
 
 ### Requirement: Private key isolation

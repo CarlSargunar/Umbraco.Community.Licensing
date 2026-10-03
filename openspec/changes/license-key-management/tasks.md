@@ -1,4 +1,4 @@
-**Prerequisite:** ADR-0001 must be revised for the visible key identifier (PDR-0020) and its payload fixed before section 2 starts (design.md, "Technical open questions"). Section 3 onwards does not depend on the wire format except through section 2.
+**Wire format:** ADR-0001 (decided 2026-10-03) fixes the key string, payload, number encoding, signing key ID derivation and reading algorithm. Section 3 onwards does not depend on the wire format except through section 2.
 
 Each worked example in `docs/license-examples.md` is a test case; task 8.1 makes that explicit.
 
@@ -7,13 +7,17 @@ Each worked example in `docs/license-examples.md` is a test case; task 8.1 makes
 - [ ] 1.1 Create the .NET 10 solution with one class library project (generation, validation, signing-key management) and verify `dotnet build` succeeds targeting `net10.0` with no package references beyond the BCL
 - [ ] 1.2 Create an xUnit test project and verify `dotnet test` runs (even with zero tests) against the new solution
 
-## 2. Key string format and cryptography (ADR-0001, revised)
+## 2. Key string format and cryptography (ADR-0001)
 
-- [ ] 2.1 Implement the key contents model (product ID, role, license reference, key part, issue time to the second, optional expiry, typed features, signing key ID) and verify it round-trips through serialization in a unit test
-- [ ] 2.2 Implement ECDSA P-256 signing producing a key string that starts with the key identifier as displayed, followed by the opaque part, with the identifier covered by the signature; verify a unit test that the string is single-line, contains no whitespace and starts with `LIC-XXXXX-XXXXX-XXXX`
-- [ ] 2.3 Implement signature verification against a trusted public key; verify unit tests: valid key accepted; rejected when contents are altered; rejected when the visible identifier is altered; rejected against the wrong public key
-- [ ] 2.4 Implement reading a supplied string: remove all whitespace, read the identifier from the start, read the contents; verify unit tests: a key wrapped across lines with a trailing newline reads as the original; a key cut off after its identifier yields the identifier and no contents; a string with no identifier yields neither (PDR-0021, PDR-0020)
-- [ ] 2.5 Implement the schema check on read contents, reusing the rules in section 3, so a verified key whose contents break a rule is unreadable; verify a unit test with a key signed outside the generation API carrying `max-orders: -200` (PDR-0021)
+- [ ] 2.1 Implement the signing key ID derivation (first 8 bytes of SHA-256 over the SubjectPublicKeyInfo DER, base64url, 11 characters), computable from a public key or a private key; verify unit tests that both give the same ID for one key pair and that two key pairs give different IDs
+- [ ] 2.2 Implement the payload writer and reader: fields `signingKeyId`, `product`, `role`, `issued` (`yyyy-MM-ddTHH:mm:ssZ`), `expires` (`yyyy-MM-dd`, omitted when none), `features` (omitted when none; `true` switch, number, string text), UTF-8 JSON without whitespace; verify it round-trips every field and feature type, and that `"500"` reads back as text and `500` as a number
+- [ ] 2.3 Implement the number encoding: grammar `0` or `[1-9][0-9]*`, optional `.` and 1 to 4 digits, at most 15 digits; issuer strips trailing fractional zeros and writes invariant culture; reader checks the raw token against the grammar, then reads `decimal`, never `double`; verify unit tests: `2.50` written `2.5`, `2.12340` accepted as `2.1234`, `5e2`, `-0`, `007` and `1.23456` rejected on read
+- [ ] 2.4 Implement the strict reader rules: missing required field, unknown top-level field, `expires: null`, an inexact date format, a feature value of `false`, `null`, object or array, and a repeated feature name are each unreadable; verify a unit test for each
+- [ ] 2.5 Implement signing: signing input is the ASCII bytes of `identifier + "." + base64url(payload)`, ECDSA P-256 SHA-256, 64-byte IEEE P1363 signature, base64url without padding; verify a unit test that the key string is single-line, has no whitespace, has three `.`-separated segments and starts with `LIC-XXXXX-XXXXX-XXXX`
+- [ ] 2.6 Implement signature verification against a trusted public key; verify unit tests: valid key accepted; rejected when the payload is altered; rejected when the identifier is altered, including lowercased; rejected against the wrong public key
+- [ ] 2.7 Implement reading a supplied string per ADR-0001: remove all whitespace; take the identifier from the first segment only on a full match of the 20-character uppercase pattern; require three non-empty base64url segments and a 64-byte signature; require `product` and `signingKeyId` strings before verification; verify unit tests for every row of ADR-0001's reading table, and that a key wrapped across lines with a trailing newline reads as the original (PDR-0021, PDR-0020)
+- [ ] 2.8 Implement the schema check on a verified key's contents, reusing the rules in section 3, so a verified key whose contents break a rule is unreadable; verify a unit test with a key signed outside the generation API carrying `max-orders: -200` (PDR-0021)
+- [ ] 2.9 Implement duplicate detection on identical signing input; verify a unit test that two strings with the same identifier and payload and different valid signatures are duplicates
 
 ## 3. Identifiers and value rules
 
@@ -28,7 +32,7 @@ Each worked example in `docs/license-examples.md` is a test case; task 8.1 makes
 
 ## 5. License generation (`license-generation` spec)
 
-- [ ] 5.1 Implement the generation API taking product ID, role, optional reference, optional expiry, features, a private signing key and its signing key ID, with the issue time from an injected `TimeProvider`; return the key string, reference, key identifier and issue time; verify unit tests for the minimal-license, full-contents, first-issue and reissue scenarios, and that the issue time is truncated to the second
+- [ ] 5.1 Implement the generation API taking product ID, role, optional reference, optional expiry, features and a private signing key (the signing key ID derived from it, task 2.1), with the issue time from an injected `TimeProvider`; return the key string, reference, key identifier and issue time; verify unit tests for the minimal-license, full-contents, first-issue and reissue scenarios, and that the issue time is truncated to the second
 - [ ] 5.2 Implement request checking that collects every broken rule (role required, product ID, reference, expiry not before the current UTC date, feature rules) and raises one error naming all of them, producing no key; verify unit tests for each rule, for expiry today accepted, and for a request breaking two rules reporting both
 - [ ] 5.3 Verify by code review and a unit test that no private key material is stored, cached or exposed after a generation call returns, and that the API keeps no record of issued keys
 
@@ -37,7 +41,7 @@ Each worked example in `docs/license-examples.md` is a test case; task 8.1 makes
 - [ ] 6.1 Implement the evaluation entry point taking an ordered list of key strings, a product ID, a trusted key set and a `TimeProvider`, returning one row per string in order plus a product result; verify unit tests for an empty list and for row order
 - [ ] 6.2 Implement the failure checks in order (unreadable, wrong product, signing key not recognised, not verified); verify unit tests for each, and that a wrong-product key signed with an untrusted key is reported as wrong product
 - [ ] 6.3 Implement failed-row reporting: reason plus claimed product and claimed identifier only; verify a unit test that an edited key's expiry and features appear nowhere in the result
-- [ ] 6.4 Implement duplicates (identical signed contents; first counts, later copies name the row they copy); verify unit tests including a copy that differs only in whitespace
+- [ ] 6.4 Implement duplicates (identical signed contents, task 2.9; first counts, later copies name the row they copy); verify unit tests including a copy that differs only in whitespace
 - [ ] 6.5 Implement superseding among verified, non-duplicate keys: same reference, strictly earlier issue time; expiry and role play no part; role-changed note; verify unit tests for `docs/license-examples.md` examples 3 to 6
 - [ ] 6.6 Implement ties for latest: all count, each flagged as vendor error naming the others, flag cleared once a later key exists; verify unit tests for `docs/license-examples.md` example 7
 - [ ] 6.7 Implement the expiry check (valid to the end of the expiry date in UTC) using the injected `TimeProvider`; verify unit tests at 23:59:59 and 00:00:00 the next day, and for a key with no expiry

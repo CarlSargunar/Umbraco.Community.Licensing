@@ -111,5 +111,5 @@ per product decision (PDR-0001 to PDR-0017), with the reasons and the options re
 
 ## Architecture decisions
 
-- [ADR-0001](docs/adrs/0001-license-token-signing-algorithm.md) - license token signing algorithm and format (draft)
+- [ADR-0001](docs/adrs/0001-license-token-signing-algorithm.md) - license key signing algorithm and key string format
 - [ADR-0002](docs/adrs/0002-package-split-for-keyvault-dependency.md) - splitting Azure Key Vault sourcing into a separate package (draft)

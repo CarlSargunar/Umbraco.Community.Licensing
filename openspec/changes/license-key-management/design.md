@@ -3,7 +3,7 @@
 See `proposal.md` for motivation and scope. Greenfield: no existing code or specs. Constraints:
 
 - Validates entirely offline. No licensing server.
-- Key rotation from day one: a key ID is embedded in every token.
+- Signing key rotation from day one: a signing key ID is embedded in every key.
 - No dependency on Umbraco or on any host application. The library takes license key strings,
   a product ID, a set of trusted public keys and a clock, and returns results. Host-side scope
   is parked in [`docs/deferred-scope.md`](../../../docs/deferred-scope.md).
@@ -18,7 +18,7 @@ calling the library at runtime.
 
 **Goals:**
 
-- A concrete signing algorithm and token format, so the specs have one wire format.
+- A concrete signing algorithm and key string format, so the specs have one wire format.
 - Deterministically testable validation: expiry, superseding, combining.
 - A safe way for the issuer to create, identify and rotate signing keys.
 
@@ -30,22 +30,38 @@ calling the library at runtime.
 
 ## Decisions
 
-### Signing algorithm and token format
+### Signing algorithm and key string format
 
-ECDSA P-256 from the BCL, and a custom fixed-algorithm compact token
-(`base64url(payload) + "." + base64url(signature)`) rather than a generic JWT. Rationale and
-alternatives: [ADR-0001](../../../docs/adrs/0001-license-token-signing-algorithm.md) (draft).
-The payload carries the key schema in
-[`docs/license-examples.md`](../../../docs/license-examples.md) plus `keyId`.
+ECDSA P-256 with SHA-256 from the BCL, in a custom fixed-algorithm key string rather than a
+generic JWT. Rationale, alternatives and the reading algorithm:
+[ADR-0001](../../../docs/adrs/0001-license-token-signing-algorithm.md) (decided 2026-10-03).
 
-### Key ID and rotation
+```
+LIC-8F3AK-M7RXB-7Q2D . base64url(payload) . base64url(signature)
+|__________________|   |_________________|
+ key identifier          payload JSON
+|______________________________________|
+ signed: ASCII bytes before the last "."
+```
 
-Every token embeds a short `keyId` chosen by the issuer at generation. The validator holds a
-set of trusted public keys addressed by `keyId` (conceptually
-`IReadOnlyDictionary<string, ECDsa>`). Rotation: trust the new key alongside the old, switch
-generation to the new key, and later withdraw the old key ID once no valid licenses depend on it.
+| Question | Decision |
+|---|---|
+| Binding the key identifier (PDR-0020) | The signing input is `identifier + "." + base64url(payload)`. Reference and key part exist only in the identifier |
+| Telling the identifier from base64url | Split on `.`; the first segment is the identifier only if it fully matches the 20-character uppercase pattern (PDR-0017). Otherwise position only |
+| Numbers (PDR-0010) | Plain JSON number, grammar `0` or `[1-9][0-9]*`, optional `.` and 1 to 4 digits, at most 15 digits; no sign or exponent. Issuer strips trailing fractional zeros; reader checks the grammar on the raw token, then reads `decimal` |
+| Payload fields | `signingKeyId`, `product`, `role`, `issued` (`yyyy-MM-ddTHH:mm:ssZ`), `expires` (`yyyy-MM-dd`, absent = never), `features` (object; JSON type gives the feature type: `true` switch, number, string text). Unknown top-level fields, repeated feature names and inexact dates are unreadable (PDR-0021). No version field |
+| Signing key ID | First 8 bytes of SHA-256 over the public key's SubjectPublicKeyInfo DER, base64url: 11 characters. Derived, never chosen |
 
-**Why:** The key ID is ordinary payload data, so rotation needs no wire-format change later.
+### Signing key ID and rotation
+
+Every key embeds the signing key ID of the key pair that signed it. The ID is derived from the
+public key (above), so key pair creation, the trusted set and generation all compute it; the
+vendor never supplies it, and it cannot be paired with the wrong key. The validator holds a set
+of trusted public keys addressed by signing key ID. Rotation: trust the new key alongside the
+old, switch generation to the new key, and later withdraw the old signing key ID once no valid
+licenses depend on it.
+
+**Why:** The signing key ID is ordinary payload data, so rotation needs no wire-format change.
 
 ### Clock access is injectable
 
@@ -64,7 +80,7 @@ Key Vault provider) is deferred with key sourcing.
   revocation use shorter expiry plus renewal.
 - **Clock rollback defeats expiry.** Whoever runs the server controls its clock. Documented,
   not mitigated.
-- **Private key compromise.** Withdrawing the key ID stops trusting it going forward, but also
+- **Private key compromise.** Withdrawing the signing key ID stops trusting it going forward, but also
   invalidates every legitimate license signed with it until reissued. Inherent to offline
   verification; documented.
 - **No machine/domain binding.** A valid key works on any install. Out of scope.
@@ -75,13 +91,10 @@ None. Greenfield.
 
 ## Technical open questions
 
-- `keyId` derivation (truncated hash of the public key vs an issuer-assigned label). Either
-  satisfies the specs; decide during implementation.
-- The token format above predates PDR-0020 (2026-10-02). Every key must now start with a
-  visible key identifier (`LIC-XXXXX-XXXXX-XXXX`, PDR-0017) that is bound to the signature and
-  survives when the rest of the key is cut off. ADR-0001 must be revised for this in the
-  propose phase. Naming: the specs call `keyId` the **signing key ID**, distinct from the
-  **key identifier** (PDR-0020); the ADR should use the same terms.
+None. Settled 2026-10-03 in ADR-0001: the binding of the key identifier, how it is told apart
+from base64url, the number encoding, the payload field names and encodings, and the signing
+key ID derivation. The `license-generation` spec no longer takes the signing key ID as an
+input; it is derived from the private key.
 
 ---
 
@@ -170,7 +183,8 @@ Settled in three parts. The records hold the reasons and the rejected options.
 Worked example: `docs/license-examples.md` example 18.
 
 Specified in `license-validation` and `license-generation` (2026-10-02). The
-key identifier also changes the token format (Technical open questions, above).
+key identifier's place in the key string, and its binding to the signature, are in ADR-0001
+(Decisions, "Signing algorithm and key string format").
 
 ### Q18. Same reference, different role or product (settled 2026-10-01)
 
@@ -224,7 +238,8 @@ key were rejected (PDR-0006). Deliberately not repeated:
 No product question is open in this change.
 
 1. Delta specs and `tasks.md` were revised against PDR-0001 to PDR-0021 on 2026-10-02.
-2. Propose phase: revise ADR-0001 for the visible key identifier and fix its payload.
+2. Propose phase: ADR-0001 revised for the visible key identifier and its payload fixed
+   (2026-10-03). Next: `opsx:apply`.
 
 `docs/license-examples.md` was renumbered on 2026-10-02. Example numbers in commits before
 that date differ; the mapping is at the top of that file.

@@ -31,8 +31,8 @@ with D1; its text is in git history (commit `fcda40b`).
 
 The logical contents of a license key: what it holds and the rules checked when it is issued.
 This is not the encoding. How contents are encoded and signed is a technology decision
-(ADR-0001, draft), which also adds technical fields not shown here, such as the identifier of
-the signing secret used for rotation.
+(ADR-0001), which also adds technical fields not shown here, such as the signing key ID
+used for rotation.
 
 | Field | Type | Base | Add-on | Rules | Decision |
 |---|---|---|---|---|---|
