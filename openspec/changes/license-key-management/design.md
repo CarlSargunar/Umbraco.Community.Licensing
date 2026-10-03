@@ -49,7 +49,7 @@ LIC-8F3AK-M7RXB-7Q2D . base64url(payload) . base64url(signature)
 | Binding the key identifier (PDR-0020) | The signing input is `identifier + "." + base64url(payload)`. Reference and key part exist only in the identifier |
 | Telling the identifier from base64url | Split on `.`; the first segment is the identifier only if it fully matches the 20-character uppercase pattern (PDR-0017). Otherwise position only |
 | Numbers (PDR-0010) | Plain JSON number, grammar `0` or `[1-9][0-9]*`, optional `.` and 1 to 4 digits, at most 15 digits; no sign or exponent. Issuer strips trailing fractional zeros; reader checks the grammar on the raw token, then reads `decimal` |
-| Payload fields | `signingKeyId`, `product`, `role`, `issued` (`yyyy-MM-ddTHH:mm:ssZ`), `expires` (`yyyy-MM-dd`, absent = never), `features` (object; JSON type gives the feature type: `true` switch, number, string text). Unknown top-level fields, repeated feature names and inexact dates are unreadable (PDR-0021). No version field |
+| Payload fields | `signingKeyId`, `product`, `role`, `vendorTag` (string, absent = none; PDR-0022 pattern checked on the decoded value), `issued` (`yyyy-MM-ddTHH:mm:ssZ`), `expires` (`yyyy-MM-dd`, absent = never), `features` (object; JSON type gives the feature type: `true` switch, number, string text). Unknown top-level fields, repeated feature names and inexact dates are unreadable (PDR-0021). No version field |
 | Signing key ID | First 8 bytes of SHA-256 over the public key's SubjectPublicKeyInfo DER, base64url: 11 characters. Derived, never chosen |
 
 ### Signing key ID and rotation
@@ -91,13 +91,17 @@ None. Greenfield.
 
 ## Technical open questions
 
-- **ADR-0001 must be revised for the vendor tag (PDR-0022, 2026-10-03).** The payload gains an
-  optional field: its name, encoding, absence rule and the reader's strict check.
+None.
 
 Settled 2026-10-03 in ADR-0001: the binding of the key identifier, how it is told apart
 from base64url, the number encoding, the payload field names and encodings, and the signing
 key ID derivation. The `license-generation` spec no longer takes the signing key ID as an
 input; it is derived from the private key.
+
+Settled 2026-10-03 in the ADR-0001 revision for the vendor tag (PDR-0022, Q21): the tag is the
+optional payload field `vendorTag`, a JSON string; absent means none, `null` and `""` are
+unreadable; the reader checks the decoded value against `^[A-Za-z0-9_.#/-]{1,64}\z` and
+accepts escaped JSON forms; System.Text.Json escapes no allowed character on write.
 
 ---
 
@@ -139,7 +143,7 @@ Nothing is implemented, so revising them against the PDRs is a rewrite, not a mi
 | Q18 | Same reference, different role or product; which keys may supersede | PDR-0009 (amended 2026-10-01) |
 | Q19 | The same key supplied twice; different keys with one reference and one issue time | PDR-0009 (amended 2026-10-02), PDR-0016 |
 | Q20 | Whitespace in a supplied key; a key that verifies but whose contents break the schema | PDR-0021 |
-| Q21 | May a vendor sign its own string (e.g. an order ID) into a key, and must it be unique? | PDR-0022: optional vendor tag, not unique, rejected if invalid, reported for verified keys. Re-examines the order ID in the original Q8 (commit `2709cf6`); amends PDR-0006, PDR-0017 |
+| Q21 | May a vendor sign its own string (e.g. an order ID) into a key, and must it be unique? | PDR-0022: optional vendor tag, not unique, rejected if invalid, reported for verified keys. Re-examines the order ID in the original Q8 (commit `2709cf6`); amends PDR-0006, PDR-0017. Wire format: ADR-0001 (`vendorTag`) |
 
 ### R12. Evaluation result
 
@@ -242,11 +246,11 @@ key were rejected (PDR-0006). Deliberately not repeated:
 
 No product question is open in this change.
 
-1. Delta specs and `tasks.md` were revised against PDR-0001 to PDR-0021 on 2026-10-02. The
-   delta specs gained the vendor tag (PDR-0022) on 2026-10-03; `tasks.md` has not.
-2. Propose phase: ADR-0001 revised for the visible key identifier and its payload fixed
-   (2026-10-03). Next: revise ADR-0001 for the vendor tag (PDR-0022) and add its tasks to
-   `tasks.md`, then `opsx:apply`.
+1. Delta specs and `tasks.md` were revised against PDR-0001 to PDR-0021 on 2026-10-02, and
+   against PDR-0022 (vendor tag) on 2026-10-03.
+2. Propose phase: ADR-0001 revised for the visible key identifier, its payload fixed, and
+   revised for the vendor tag (all 2026-10-03). No technical question is open. Next:
+   `opsx:apply`.
 
 `docs/license-examples.md` was renumbered on 2026-10-02. Example numbers in commits before
 that date differ; the mapping is at the top of that file.

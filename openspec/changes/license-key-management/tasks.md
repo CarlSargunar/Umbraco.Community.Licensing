@@ -10,9 +10,9 @@ Each worked example in `docs/license-examples.md` is a test case; task 8.1 makes
 ## 2. Key string format and cryptography (ADR-0001)
 
 - [ ] 2.1 Implement the signing key ID derivation (first 8 bytes of SHA-256 over the SubjectPublicKeyInfo DER, base64url, 11 characters), computable from a public key or a private key; verify unit tests that both give the same ID for one key pair and that two key pairs give different IDs
-- [ ] 2.2 Implement the payload writer and reader: fields `signingKeyId`, `product`, `role`, `issued` (`yyyy-MM-ddTHH:mm:ssZ`), `expires` (`yyyy-MM-dd`, omitted when none), `features` (omitted when none; `true` switch, number, string text), UTF-8 JSON without whitespace; verify it round-trips every field and feature type, and that `"500"` reads back as text and `500` as a number
+- [ ] 2.2 Implement the payload writer and reader: fields `signingKeyId`, `product`, `role`, `vendorTag` (omitted when none), `issued` (`yyyy-MM-ddTHH:mm:ssZ`), `expires` (`yyyy-MM-dd`, omitted when none), `features` (omitted when none; `true` switch, number, string text), UTF-8 JSON without whitespace; verify it round-trips every field and feature type, and that `"500"` reads back as text and `500` as a number
 - [ ] 2.3 Implement the number encoding: grammar `0` or `[1-9][0-9]*`, optional `.` and 1 to 4 digits, at most 15 digits; issuer strips trailing fractional zeros and writes invariant culture; reader checks the raw token against the grammar, then reads `decimal`, never `double`; verify unit tests: `2.50` written `2.5`, `2.12340` accepted as `2.1234`, `5e2`, `-0`, `007` and `1.23456` rejected on read
-- [ ] 2.4 Implement the strict reader rules: missing required field, unknown top-level field, `expires: null`, an inexact date format, a feature value of `false`, `null`, object or array, and a repeated feature name are each unreadable; verify a unit test for each
+- [ ] 2.4 Implement the strict reader rules: missing required field, unknown top-level field, `expires: null`, an inexact date format, a feature value of `false`, `null`, object or array, a repeated feature name, and a `vendorTag` that is `null`, `""`, 65 characters, contains `@` or a space, or decodes to `ABC\n` are each unreadable; verify a unit test for each, and that `"INV\/2026"` is accepted as `INV/2026` (ADR-0001, Vendor tag)
 - [ ] 2.5 Implement signing: signing input is the ASCII bytes of `identifier + "." + base64url(payload)`, ECDSA P-256 SHA-256, 64-byte IEEE P1363 signature, base64url without padding; verify a unit test that the key string is single-line, has no whitespace, has three `.`-separated segments and starts with `LIC-XXXXX-XXXXX-XXXX`
 - [ ] 2.6 Implement signature verification against a trusted public key; verify unit tests: valid key accepted; rejected when the payload is altered; rejected when the identifier is altered, including lowercased; rejected against the wrong public key
 - [ ] 2.7 Implement reading a supplied string per ADR-0001: remove all whitespace; take the identifier from the first segment only on a full match of the 20-character uppercase pattern; require three non-empty base64url segments and a 64-byte signature; require `product` and `signingKeyId` strings before verification; verify unit tests for every row of ADR-0001's reading table, and that a key wrapped across lines with a trailing newline reads as the original (PDR-0021, PDR-0020)
@@ -24,6 +24,7 @@ Each worked example in `docs/license-examples.md` is a test case; task 8.1 makes
 - [ ] 3.1 Implement the product ID rule (`vendor.product`, lowercase) and verify unit tests for `acme.commerce` accepted and `commerce`, `Acme.Commerce` rejected
 - [ ] 3.2 Implement license reference and key part generation from a cryptographically secure random source over the 31-character alphabet, and reference parsing ignoring case, hyphens and spaces; verify unit tests for format, alphabet, `lic-8f3ak m7rxb` parsing to `LIC-8F3AK-M7RXB`, and rejection of `O`, `0`, `1`, `I`, `L` and wrong lengths
 - [ ] 3.3 Implement the feature rules: name rule, at most once per key, switch / number / text types, no explicit `false`; numbers zero or positive with at most 4 decimal places and 15 digits, held exactly; text non-empty, at most 256 characters, no leading or trailing whitespace, no control characters; verify unit tests for every feature row of `docs/license-examples.md` example 19
+- [ ] 3.4 Implement the vendor tag rule (PDR-0022), shared by issue and read: `^[A-Za-z0-9_.#/-]{1,64}\z`, ordinal, no `IgnoreCase`, never cleaned or trimmed; verify unit tests for the accepted and rejected inputs in PDR-0022 and the vendor tag rows of `docs/license-examples.md` example 19, and that `#1001` round-trips through the payload writer unescaped
 
 ## 4. Signing-key management (`signing-key-management` spec)
 
@@ -32,20 +33,21 @@ Each worked example in `docs/license-examples.md` is a test case; task 8.1 makes
 
 ## 5. License generation (`license-generation` spec)
 
-- [ ] 5.1 Implement the generation API taking product ID, role, optional reference, optional expiry, features and a private signing key (the signing key ID derived from it, task 2.1), with the issue time from an injected `TimeProvider`; return the key string, reference, key identifier and issue time; verify unit tests for the minimal-license, full-contents, first-issue and reissue scenarios, and that the issue time is truncated to the second
-- [ ] 5.2 Implement request checking that collects every broken rule (role required, product ID, reference, expiry not before the current UTC date, feature rules) and raises one error naming all of them, producing no key; verify unit tests for each rule, for expiry today accepted, and for a request breaking two rules reporting both
+- [ ] 5.1 Implement the generation API taking product ID, role, optional reference, optional vendor tag, optional expiry, features and a private signing key (the signing key ID derived from it, task 2.1), with the issue time from an injected `TimeProvider`; return the key string, reference, key identifier and issue time; verify unit tests for the minimal-license, full-contents, first-issue and reissue scenarios, that the issue time is truncated to the second, and the vendor tag scenarios: signed unchanged, same tag on two keys, no tag, reissue without a tag carries none
+- [ ] 5.2 Implement request checking that collects every broken rule (role required, product ID, reference, vendor tag (task 3.4), expiry not before the current UTC date, feature rules) and raises one error naming all of them, producing no key; verify unit tests for each rule, for expiry today accepted, and for a request breaking two rules reporting both
 - [ ] 5.3 Verify by code review and a unit test that no private key material is stored, cached or exposed after a generation call returns, and that the API keeps no record of issued keys
 
 ## 6. Per-key evaluation (`license-validation` spec)
 
 - [ ] 6.1 Implement the evaluation entry point taking an ordered list of key strings, a product ID, a trusted key set and a `TimeProvider`, returning one row per string in order plus a product result; verify unit tests for an empty list and for row order
 - [ ] 6.2 Implement the failure checks in order (unreadable, wrong product, signing key not recognised, not verified); verify unit tests for each, and that a wrong-product key signed with an untrusted key is reported as wrong product
-- [ ] 6.3 Implement failed-row reporting: reason plus claimed product and claimed identifier only; verify a unit test that an edited key's expiry and features appear nowhere in the result
+- [ ] 6.3 Implement failed-row reporting: reason plus claimed product and claimed identifier only; verify unit tests that an edited key's expiry and features appear nowhere in the result, and that a failed key's vendor tag appears nowhere in the result
 - [ ] 6.4 Implement duplicates (identical signed contents, task 2.9; first counts, later copies name the row they copy); verify unit tests including a copy that differs only in whitespace
 - [ ] 6.5 Implement superseding among verified, non-duplicate keys: same reference, strictly earlier issue time; expiry and role play no part; role-changed note; verify unit tests for `docs/license-examples.md` examples 3 to 6
 - [ ] 6.6 Implement ties for latest: all count, each flagged as vendor error naming the others, flag cleared once a later key exists; verify unit tests for `docs/license-examples.md` example 7
 - [ ] 6.7 Implement the expiry check (valid to the end of the expiry date in UTC) using the injected `TimeProvider`; verify unit tests at 23:59:59 and 00:00:00 the next day, and for a key with no expiry
 - [ ] 6.8 Implement base and add-on: add-on inactive with no valid base; product licensed when at least one valid base; count of valid bases reported; verify unit tests for `docs/license-examples.md` examples 11 to 13
+- [ ] 6.9 Implement verified-row reporting of the vendor tag, or that the key has none, whatever the row's state; the tag takes no part in duplicates, superseding, combining or feature lookup (PDR-0022); verify unit tests for `docs/license-examples.md` example 20, including two keys with different references sharing a tag combining as separate keys
 
 ## 7. Product result (`license-validation` spec)
 
@@ -56,7 +58,7 @@ Each worked example in `docs/license-examples.md` is a test case; task 8.1 makes
 
 ## 8. Cross-cutting verification
 
-- [ ] 8.1 Encode every site evaluation in `docs/license-examples.md` (examples 1 to 18) as an end-to-end test: create a key pair, issue the keys, evaluate them at the stated time, and assert the rows and product result shown; encode example 19 against generation
+- [ ] 8.1 Encode every site evaluation in `docs/license-examples.md` (examples 1 to 18 and 20) as an end-to-end test: create a key pair, issue the keys, evaluate them at the stated time, and assert the rows and product result shown; encode example 19 against generation
 - [ ] 8.2 Write a rotation test: issue under signing key ID A, trust A and B, verify the key counts; withdraw A, verify the row is signing key not recognised
 - [ ] 8.3 Run `dotnet test` across the full solution and verify all tests pass
 

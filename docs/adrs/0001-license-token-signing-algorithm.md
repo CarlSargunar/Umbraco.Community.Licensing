@@ -2,7 +2,7 @@
 
 ## Status
 
-Decided, 2026-10-03. Revised from the 2026-09 draft for the visible key identifier (PDR-0020); the payload is now fixed. Source: `openspec/changes/license-key-management/design.md`, Technical open questions.
+Decided, 2026-10-03. Revised from the 2026-09 draft for the visible key identifier (PDR-0020); the payload is now fixed. Revised 2026-10-03 for the optional vendor tag (PDR-0022): `vendorTag` field, its strict read, worked examples regenerated. Source: `openspec/changes/license-key-management/design.md`, Technical open questions.
 
 ## Context
 
@@ -13,7 +13,8 @@ The format must meet:
 - **Visible key identifier** (PDR-0020, PDR-0017): the key string starts with `LIC-XXXXX-XXXXX-XXXX` as displayed; an edited identifier fails verification; the identifier is readable when the rest of the key is cut off.
 - **Reading** (PDR-0021): all whitespace is removed before reading; a key that verifies but breaks a rule checked at issue is unreadable.
 - **Failure order** (PDR-0019): unreadable, wrong product, signing key not recognised, not verified. Product and signing key ID must be readable before the signature is checked.
-- **Contents** (`docs/license-examples.md` schema): product, role, reference, key part, issue time to the second (PDR-0016), optional expiry date, typed features (PDR-0010, PDR-0013, PDR-0018). Numbers are summed exactly (PDR-0010).
+- **Contents** (`docs/license-examples.md` schema): product, role, reference, key part, optional vendor tag, issue time to the second (PDR-0016), optional expiry date, typed features (PDR-0010, PDR-0013, PDR-0018). Numbers are summed exactly (PDR-0010).
+- **Vendor tag** (PDR-0022, PDR-0017, PDR-0006): optional, at most one; 1 to 64 characters from `A-Z a-z 0-9 - _ . # /`; signed exactly as supplied, never cleaned. A label only, reported for verified keys only. A verified key whose tag breaks these rules is unreadable (PDR-0021).
 - **Signing key ID** (`signing-key-management` spec): names a signing key pair; the exported public key carries it; a trusted set rejects one ID for two different public keys.
 
 Terms: the **signing key ID** names a signing key pair. The **key identifier** names one license key.
@@ -33,7 +34,7 @@ ECDSA on P-256 with SHA-256 (`System.Security.Cryptography.ECDsa`). The signatur
 ### Key string
 
 ```
-LIC-8F3AK-M7RXB-7Q2D.eyJzaWduaW5nS2V5SWQiOi...ifX0.VCJLlV_p20on8qahy5wAX4mY5A...QaOsTA
+LIC-8F3AK-M7RXB-7Q2D.eyJzaWduaW5nS2V5SWQiOi...ifX0.1AqpE9feDTqwkvVIdd4mRlzJEl...bULr_Q
 |__________________| |_________________________| |_________________________|
  key identifier       base64url(payload)          base64url(signature), 86 chars
 |_______________________________________________|
@@ -51,8 +52,8 @@ LIC-8F3AK-M7RXB-7Q2D.eyJzaWduaW5nS2V5SWQiOi...ifX0.VCJLlV_p20on8qahy5wAX4mY5A...
 UTF-8 JSON, no whitespace. Field order as written by the issuer is not significant to the reader.
 
 ```json
-{"signingKeyId":"4cJP_ZHe37U","product":"acme.commerce","role":"base",
- "issued":"2026-03-01T09:14:22Z","expires":"2027-03-01",
+{"signingKeyId":"0F8NSYaNR_Q","product":"acme.commerce","role":"base",
+ "vendorTag":"SHOP-2026-000123","issued":"2026-03-01T09:14:22Z","expires":"2027-03-01",
  "features":{"ecommerce":true,"max-orders":500,"storage-gb":2.5,"licensed-domain":"example.com"}}
 ```
 
@@ -61,6 +62,7 @@ UTF-8 JSON, no whitespace. Field order as written by the issuer is not significa
 | `signingKeyId` | string (see Signing key ID) | unreadable |
 | `product` | string, PDR-0017 product ID rule | unreadable |
 | `role` | `"base"` or `"add-on"` | unreadable |
+| `vendorTag` | string, PDR-0022 rules (see Vendor tag) | no tag. `null` and `""` are unreadable |
 | `issued` | string, exactly `yyyy-MM-ddTHH:mm:ssZ`, UTC | unreadable |
 | `expires` | string, exactly `yyyy-MM-dd` | never expires. `null` is unreadable |
 | `features` | object, feature name to value | no features; `{}` also means none |
@@ -82,18 +84,26 @@ UTF-8 JSON, no whitespace. Field order as written by the issuer is not significa
 - The issuer passes a `decimal`, removes trailing fractional zeros, checks the rules, and writes it in invariant culture: `2.50` is written `2.5`, `3.0` is written `3`, and `2.12340` is accepted as `2.1234`.
 - The reader checks the raw token text against the grammar before parsing, then reads it as `decimal`. It never goes through `double`. `decimal` holds 28 to 29 significant digits, so values and sums are exact.
 
+**Vendor tag** (PDR-0022):
+
+- In the payload, not in the visible identifier segment, which holds the key identifier only (PDR-0020). Written after `role`; omitted when the key has none.
+- Pattern, on issue and on read: `^[A-Za-z0-9_.#/-]{1,64}\z`, ordinal, without `RegexOptions.IgnoreCase`. `\z`, not `$`: in .NET `$` also matches before a final `\n`, so `"ABC\n"` would pass.
+- On write, System.Text.Json's default encoder escapes none of the 66 allowed characters (checked for `JsonSerializer` and `Utf8JsonWriter` on .NET 10; it escapes `+ < > & ' "` and non-ASCII, none of which are allowed). The signed bytes are the tag exactly as supplied.
+- On read, the check runs on the decoded string (`Utf8JsonReader.GetString()`), as for every other string field. An escaped form such as `"INV\/2026"` or `"#1001"` decodes to `INV/2026` or `#1001` and is accepted; a decoded value breaking the pattern, such as `"ABC\n"`, is unreadable. Only a tool other than the core writes escapes, and the value read is the same either way.
+
 **Read strictly.** All of these make a verified key unreadable (PDR-0021):
 
 - an unknown top-level field;
 - a date not in its exact format;
 - a repeated feature name. System.Text.Json does not reject duplicate properties, so the reader detects them; names are lowercase by rule, so an exact comparison suffices;
+- a `vendorTag` that is `null`, not a string, or whose decoded value fails the vendor tag pattern (`""` and 65 or more characters included);
 - any other rule checked at issue.
 
 Unknown feature *names* are not an error; they are ignored at lookup (PDR-0010). No format version field: rejecting unknown fields means a future format that adds a field is refused by older readers rather than half-read, and its absence means this format.
 
 ### Signing key ID
 
-The first 8 bytes of SHA-256 over the public key's SubjectPublicKeyInfo DER (`ECDsa.ExportSubjectPublicKeyInfo()`), base64url-encoded: 11 characters, e.g. `4cJP_ZHe37U`.
+The first 8 bytes of SHA-256 over the public key's SubjectPublicKeyInfo DER (`ECDsa.ExportSubjectPublicKeyInfo()`), base64url-encoded: 11 characters, e.g. `0F8NSYaNR_Q`.
 
 - Derived, not chosen. Key pair creation returns it. The trusted set computes it from each public key added. Generation computes it from the private key, so the caller supplies only the private key.
 - A trusted set holds one vendor's keys for one product, in practice a handful. At 64 bits the collision chance even at 1,000 keys is about 3 × 10⁻¹⁴. The duplicate-ID rejection in the `signing-key-management` spec still applies, and can only fire on such a collision.
@@ -105,11 +115,11 @@ The first 8 bytes of SHA-256 over the public key's SubjectPublicKeyInfo DER (`EC
 3. **Segments.** The string must have exactly three non-empty segments of valid base64url. The signature segment must decode to exactly 64 bytes. Otherwise the key is unreadable. A key cut off anywhere after its identifier ends here, with its identifier reported.
 4. **Routing claims.** Decode the payload. It must be a JSON object with string `product` and `signingKeyId`. Otherwise the key is unreadable.
 5. **Checks** in PDR-0019 order: wrong product, signing key not recognised (lookup by `signingKeyId`), not verified (ECDSA over the signing input).
-6. **Schema.** A verified key's contents are checked against every rule checked at issue, using the reading rules above. A key that fails is unreadable (PDR-0021).
+6. **Schema.** A verified key's contents are checked against every rule checked at issue, using the reading rules above. A key that fails is unreadable (PDR-0021). The vendor tag is checked only here: a bad tag on a key that fails step 5 is reported by step 5's reason, and its tag is never reported (PDR-0019, PDR-0022).
 
 | Supplied (whitespace removed) | Identifier | Outcome |
 |---|---|---|
-| `LIC-8F3AK-M7RXB-7Q2D.eyJ...fX0.VCJ...sTA` | `LIC-8F3AK-M7RXB-7Q2D` | continues to step 4 |
+| `LIC-8F3AK-M7RXB-7Q2D.eyJ...fX0.1Aq...r_Q` | `LIC-8F3AK-M7RXB-7Q2D` | continues to step 4 |
 | `LIC-8F3AK-M7RXB-7Q2D.eyJzaWdu` (cut off) | `LIC-8F3AK-M7RXB-7Q2D` | unreadable |
 | `LIC-8F3AK-M7RXB-7Q2D` (cut at the dot) | `LIC-8F3AK-M7RXB-7Q2D` | unreadable |
 | `LIC-8F3AK-M7R` (cut inside the identifier) | none | unreadable, position only |
@@ -118,26 +128,49 @@ The first 8 bytes of SHA-256 over the public key's SubjectPublicKeyInfo DER (`EC
 
 ### Worked example
 
-Generated with a real P-256 key pair. The key strings are wrapped here for display; issued keys are one line.
+Generated with a real P-256 key pair (signing key ID `0F8NSYaNR_Q`) and verified against its public key. The key strings are wrapped here for display; issued keys are one line.
 
-Minimal license (`docs/license-examples.md` example 1), 258 characters:
+Minimal license (`docs/license-examples.md` example 1), 248 characters:
 
 ```
-LIC-4HN7T-QW2ZC-9KXM.eyJzaWduaW5nS2V5SWQiOiI0Y0pQX1pIZTM3VSIsInByb2R1Y3QiOiJhY21lLnNlby10
-b29sa2l0Iiwicm9sZSI6ImJhc2UiLCJpc3N1ZWQiOiIyMDI2LTAxLTEwVDE0OjAyOjM3WiJ9.qj_XsW8ca-fwi48R
-uAGN0LyI-NiId_zO4Y49N1kbt1xrYZM7sSq75of41sgkyWNoEaf27p4igI27tln-D0TQsA
+LIC-4HN7T-QW2ZC-9KXM.eyJzaWduaW5nS2V5SWQiOiIwRjhOU1lhTlJfUSIsInByb2R1Y3QiOiJhY21lLnNlby10b
+29sa2l0Iiwicm9sZSI6ImJhc2UiLCJpc3N1ZWQiOiIyMDI2LTAxLTEwVDE0OjAyOjM3WiJ9.hMkCI5CH9V64HedGKZ
+2MinQ2a1QdGUSkh4TS1CPhVMAN8EauLHm-5pHnseh9Tq1x5PAluIWuld-edZJCvX91MQ
 ```
 
-Payload: `{"signingKeyId":"4cJP_ZHe37U","product":"acme.seo-toolkit","role":"base","issued":"2026-01-10T14:02:37Z"}`
+Payload: `{"signingKeyId":"0F8NSYaNR_Q","product":"acme.seo-toolkit","role":"base","issued":"2026-01-10T14:02:37Z"}`
 
 Base license with expiry and all three feature types, 403 characters:
 
 ```
-LIC-8F3AK-M7RXB-7Q2D.eyJzaWduaW5nS2V5SWQiOiI0Y0pQX1pIZTM3VSIsInByb2R1Y3QiOiJhY21lLmNvbW1l
-cmNlIiwicm9sZSI6ImJhc2UiLCJpc3N1ZWQiOiIyMDI2LTAzLTAxVDA5OjE0OjIyWiIsImV4cGlyZXMiOiIyMDI3
-LTAzLTAxIiwiZmVhdHVyZXMiOnsiZWNvbW1lcmNlIjp0cnVlLCJtYXgtb3JkZXJzIjo1MDAsInN0b3JhZ2UtZ2Ii
-OjIuNSwibGljZW5zZWQtZG9tYWluIjoiZXhhbXBsZS5jb20ifX0.VCJLlV_p20on8qahy5wAX4mY5Apn_gYfgdX0t
-QO0_RLQIejISBxLPOTwZkK8AkoYMXbCvXLJL330hMGwQaOsTA
+LIC-8F3AK-M7RXB-7Q2D.eyJzaWduaW5nS2V5SWQiOiIwRjhOU1lhTlJfUSIsInByb2R1Y3QiOiJhY21lLmNvbW1lc
+mNlIiwicm9sZSI6ImJhc2UiLCJpc3N1ZWQiOiIyMDI2LTAzLTAxVDA5OjE0OjIyWiIsImV4cGlyZXMiOiIyMDI3LTA
+zLTAxIiwiZmVhdHVyZXMiOnsiZWNvbW1lcmNlIjp0cnVlLCJtYXgtb3JkZXJzIjo1MDAsInN0b3JhZ2UtZ2IiOjIuN
+SwibGljZW5zZWQtZG9tYWluIjoiZXhhbXBsZS5jb20ifX0.1AqpE9feDTqwkvVIdd4mRlzJElDKeSd288zvR0PBaVu
+ES_rrzmxbtyxkKvFbCUHb0WejL445wY04RML4bULr_Q
+```
+
+Payload: `{"signingKeyId":"0F8NSYaNR_Q","product":"acme.commerce","role":"base","issued":"2026-03-01T09:14:22Z","expires":"2027-03-01","features":{"ecommerce":true,"max-orders":500,"storage-gb":2.5,"licensed-domain":"example.com"}}`
+
+Base license with a vendor tag (`docs/license-examples.md` example 20, the 2026 base key), 379 characters:
+
+```
+LIC-8F3AK-M7RXB-7Q2D.eyJzaWduaW5nS2V5SWQiOiIwRjhOU1lhTlJfUSIsInByb2R1Y3QiOiJhY21lLmNvbW1lc
+mNlIiwicm9sZSI6ImJhc2UiLCJ2ZW5kb3JUYWciOiJTSE9QLTIwMjYtMDAwMTIzIiwiaXNzdWVkIjoiMjAyNi0wMy0
+wMVQwOToxNDoyMloiLCJleHBpcmVzIjoiMjAyNy0wMy0wMSIsImZlYXR1cmVzIjp7ImVjb21tZXJjZSI6dHJ1ZSwib
+WF4LW9yZGVycyI6NTAwfX0.EP9HAvpbFfQj6rMkeUuwqo99VwrZu2tsC_BAX5NZAF9rqjVWll6DohP57B3h8RHRTya
+UIkQDqGdmOCmY0jIiCg
+```
+
+Payload: `{"signingKeyId":"0F8NSYaNR_Q","product":"acme.commerce","role":"base","vendorTag":"SHOP-2026-000123","issued":"2026-03-01T09:14:22Z","expires":"2027-03-01","features":{"ecommerce":true,"max-orders":500}}`
+
+Public key (SubjectPublicKeyInfo, PEM), to verify these examples:
+
+```
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEE9JU1oc/2dr+LcbtihhiLwjORp+7
+UNlgoSeR0g7RiHABsDCZPL7I1Y33osymOTjKsC8Z9h8W6M8lIscmca/tcg==
+-----END PUBLIC KEY-----
 ```
 
 ## Alternatives Considered
@@ -173,6 +206,15 @@ QO0_RLQIejISBxLPOTwZkK8AkoYMXbCvXLJL330hMGwQaOsTA
 - **Ignore unknown fields:** an older reader would ignore a future restricting field and grant more than sold.
 - **`expires: null` for never:** a second way to say never.
 
+**Vendor tag**
+
+- **In the visible identifier segment** (`LIC-...-7Q2D~SHOP-2026-000123`): PDR-0020 reserves that segment for the key identifier, the tag would need a separator rule against its own allowed characters, and a tag in plain sight is read from keys that never verified, which PDR-0022 rules out for the result.
+- **A fourth segment:** a new layout, its own place in the signing input and its own failure cases, for a field the strictly read payload already carries.
+- **Short name (`tag`, `vt`):** a few characters saved; `vendorTag` names the product concept and reads plainly when decoded, as the other field names do.
+- **`vendorTag: null` or `""` for no tag:** a second and third way to say none, as rejected for `expires`.
+- **Reject any escaped JSON string (`Utf8JsonReader.ValueIsEscaped`):** a byte-level rule that only a non-core writer could trip, while the decoded value is the same. Accepting escapes means two encodings of one tag are not duplicates; only a faulty tool can produce that.
+- **Pattern ending `$`:** accepts a decoded trailing `\n`.
+
 **Signing key ID**
 
 - **Label assigned by the issuer (`"2026-q1"`):** readable, but needs format rules and an input; uniqueness is a convention (two keys labelled `v1`); can be exported with the wrong key.
@@ -183,7 +225,9 @@ QO0_RLQIejISBxLPOTwZkK8AkoYMXbCvXLJL330hMGwQaOsTA
 ## Consequences
 
 - Verification needs no third-party package; `System.Security.Cryptography` and `System.Text.Json` are sufficient on every .NET 10 platform.
-- Key strings are single-line, about 260 to 400 characters for typical contents, and survive email wrapping because whitespace is removed on read.
+- Key strings are single-line, about 250 to 400 characters for typical contents, and survive email wrapping because whitespace is removed on read. A vendor tag adds 15 payload bytes (`,"vendorTag":""`) plus its length, times 4/3 in base64url: about 40 characters for a 16-character tag (379 for the tagged worked example), at most about 105 for a 64-character tag (508 for the base example with all three feature types).
+- The reader needs its own vendor tag check on the decoded string; JSON parsing alone accepts any string.
+- `vendorTag` is added before the first release, so no issued key or reader is affected by the rule that a new top-level field breaks older readers.
 - Anyone can base64url-decode the payload and read the claims. They are not secret (PDR-0006 keeps personal data out). Only this library, or a compatible decoder, can verify them.
 - The reader needs its own number grammar check and duplicate-name check; the JSON parser does neither.
 - Adding any top-level field later is a breaking change for older readers by design. A new feature *name* is not.
