@@ -2,7 +2,7 @@
 
 Provides the consumer-side API that evaluates a set of license keys for one product: verifies each key, decides each key's state, and reports the combined entitlement for the product.
 
-Serves the **vendor**, whose product checks its licenses at runtime, the **implementor**, who fixes the key a row names, and the **site owner**, who needs to know what they hold. Personas are defined in `docs/personas.md`. Product decisions: PDR-0009, PDR-0010, PDR-0011, PDR-0013, PDR-0016, PDR-0018, PDR-0019, PDR-0020, PDR-0021; worked examples in `docs/license-examples.md`.
+Serves the **vendor**, whose product checks its licenses at runtime, the **implementor**, who fixes the key a row names, and the **site owner**, who needs to know what they hold. Personas are defined in `docs/personas.md`. Product decisions: PDR-0009, PDR-0010, PDR-0011, PDR-0013, PDR-0016, PDR-0018, PDR-0019, PDR-0020, PDR-0021, PDR-0022; worked examples in `docs/license-examples.md`.
 
 The caller supplies the key strings; where they come from is outside this change (`docs/deferred-scope.md` D2). The Umbraco version range check was removed from this change (D1).
 
@@ -77,22 +77,30 @@ The system SHALL give each row exactly one state, decided by the first check tha
 - **THEN** its row SHALL be valid
 
 ### Requirement: A failed key reports its claimed identifiers only
-A row whose state is unreadable, wrong product, signing key not recognised or not verified SHALL report its reason, its claimed product ID when readable, and its claimed key identifier when readable, each marked as a claim. It SHALL NOT report the key's role, issue time, expiry or features. A failed key SHALL take no part in superseding or combining.
+A row whose state is unreadable, wrong product, signing key not recognised or not verified SHALL report its reason, its claimed product ID when readable, and its claimed key identifier when readable, each marked as a claim. It SHALL NOT report the key's role, issue time, expiry, vendor tag or features. A failed key SHALL take no part in superseding or combining.
 
 #### Scenario: Edited key
 - **WHEN** a key edited to claim `expires 2099-12-31` and `max-orders 999999` is evaluated
 - **THEN** its row SHALL be not verified, SHALL report the claimed product and identifier, and SHALL NOT report the expiry or the feature
+
+#### Scenario: Failed key with a vendor tag
+- **WHEN** a key carrying vendor tag `SHOP-2026-000123` fails verification
+- **THEN** its row SHALL NOT report the vendor tag
 
 #### Scenario: Another product's key
 - **WHEN** a key for `zenith.commerce-shipping` is evaluated for `acme.commerce`
 - **THEN** its row SHALL be wrong product and SHALL report `zenith.commerce-shipping` and its identifier as claims
 
 ### Requirement: A verified key reports its claims
-A row for a verified key SHALL report its product ID, role, key identifier, issue time, expiry (or that it never expires) and features, as facts.
+A row for a verified key SHALL report its product ID, role, key identifier, vendor tag (or that it has none), issue time, expiry (or that it never expires) and features, as facts. The vendor tag SHALL take no part in superseding, combining or feature lookup (PDR-0022).
 
 #### Scenario: Verified key row
 - **WHEN** a verified base key with expiry 2027-03-01 and features `ecommerce` and `max-orders: 500` is evaluated
 - **THEN** its row SHALL report all of those claims, whatever its state
+
+#### Scenario: Vendor tag reported, not used
+- **WHEN** two verified keys with different references both carry vendor tag `SHOP-2026-000123`
+- **THEN** each row SHALL report the tag, and the keys SHALL combine as keys with different references
 
 ### Requirement: Duplicates count once
 When verified keys with identical signed contents are supplied more than once, the first SHALL be evaluated normally and each further copy SHALL be reported as duplicate, naming the row it copies. A duplicate SHALL take no part in superseding or combining.

@@ -1,7 +1,8 @@
 # PDR-0006: Optional issuing add-on; no customer personal data
 
-- **Status:** Decided, 2026-09-28
-- **Source:** `openspec/changes/license-key-management/design.md` R10, Q15
+- **Status:** Decided, 2026-09-28. Amended by PDR-0022, 2026-10-03: the rule that customer
+  personal details never go into a key covers the vendor tag
+- **Source:** `openspec/changes/license-key-management/design.md` R10, Q15; amendment: Q21
 - **Serves:** vendor (small scope, no personal data duties), site owner (keys can be re-sent and renewed)
 
 ## Decision
@@ -13,7 +14,8 @@ Each issued key record holds: product, key contents, dates, which signing secret
 key, and an optional free-text order reference. **No name, email or company.** Lookup by order
 reference is required.
 
-Customer personal details never go into a key.
+Customer personal details never go into a key. This includes the optional vendor tag a vendor
+may sign into a key (PDR-0022, added 2026-10-03).
 
 ## Why
 
@@ -36,3 +38,7 @@ Customer personal details never go into a key.
 
 The order reference field cannot be policed. Its label and guidance must say it is for an order
 reference and must not hold personal data; the responsibility is the vendor's.
+
+The same holds for the vendor tag in the key (PDR-0022), with one difference: a key cannot be
+withdrawn once issued, so personal data put in a tag cannot be removed by deleting a record.
+The issuing API's documentation must say so.

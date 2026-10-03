@@ -91,7 +91,10 @@ None. Greenfield.
 
 ## Technical open questions
 
-None. Settled 2026-10-03 in ADR-0001: the binding of the key identifier, how it is told apart
+- **ADR-0001 must be revised for the vendor tag (PDR-0022, 2026-10-03).** The payload gains an
+  optional field: its name, encoding, absence rule and the reader's strict check.
+
+Settled 2026-10-03 in ADR-0001: the binding of the key identifier, how it is told apart
 from base64url, the number encoding, the payload field names and encodings, and the signing
 key ID derivation. The `license-generation` spec no longer takes the signing key ID as an
 input; it is derived from the private key.
@@ -120,7 +123,7 @@ Nothing is implemented, so revising them against the PDRs is a rewrite, not a mi
 | R8 | Release-date gating | dropped | PDR-0015 |
 | R10 | Optional issuing add-on for smaller vendors | decided; separate change | PDR-0005, PDR-0006, PDR-0007 |
 | R11 | The library returns results and never throws on a bad key, so a licensing problem never crashes a page | in `license-validation` | [`docs/personas.md`](../../../docs/personas.md), PDR-0001 |
-| R12 | Evaluation result: for one product and a set of keys, each key's state and the combined entitlement | specified in `license-validation` | PDR-0009, PDR-0011, PDR-0010, PDR-0018, PDR-0019, PDR-0020, PDR-0021; below |
+| R12 | Evaluation result: for one product and a set of keys, each key's state and the combined entitlement | specified in `license-validation` | PDR-0009, PDR-0011, PDR-0010, PDR-0018, PDR-0019, PDR-0020, PDR-0021, PDR-0022; below |
 
 ### Questions
 
@@ -136,6 +139,7 @@ Nothing is implemented, so revising them against the PDRs is a rewrite, not a mi
 | Q18 | Same reference, different role or product; which keys may supersede | PDR-0009 (amended 2026-10-01) |
 | Q19 | The same key supplied twice; different keys with one reference and one issue time | PDR-0009 (amended 2026-10-02), PDR-0016 |
 | Q20 | Whitespace in a supplied key; a key that verifies but whose contents break the schema | PDR-0021 |
+| Q21 | May a vendor sign its own string (e.g. an order ID) into a key, and must it be unique? | PDR-0022: optional vendor tag, not unique, rejected if invalid, reported for verified keys. Re-examines the order ID in the original Q8 (commit `2709cf6`); amends PDR-0006, PDR-0017 |
 
 ### R12. Evaluation result
 
@@ -148,7 +152,8 @@ PDR-0010, PDR-0018).
   or valid. The first failing check decides (PDR-0019).
 - A row may also carry a flag, which does not stop the key counting: vendor error on keys tied
   for latest (PDR-0009), conflict on a text feature (PDR-0018).
-- A verified key's row carries its claims as facts. A key that failed verification carries its
+- A verified key's row carries its claims as facts, including its vendor tag when it has one
+  (PDR-0022). A key that failed verification carries its
   reason and its claimed product and identifier only (PDR-0019).
 - A superseded row notes when its role differed from the key that superseded it (PDR-0009).
 - No row contains any part of a key other than its identifier (PDR-0020).
@@ -237,9 +242,11 @@ key were rejected (PDR-0006). Deliberately not repeated:
 
 No product question is open in this change.
 
-1. Delta specs and `tasks.md` were revised against PDR-0001 to PDR-0021 on 2026-10-02.
+1. Delta specs and `tasks.md` were revised against PDR-0001 to PDR-0021 on 2026-10-02. The
+   delta specs gained the vendor tag (PDR-0022) on 2026-10-03; `tasks.md` has not.
 2. Propose phase: ADR-0001 revised for the visible key identifier and its payload fixed
-   (2026-10-03). Next: `opsx:apply`.
+   (2026-10-03). Next: revise ADR-0001 for the vendor tag (PDR-0022) and add its tasks to
+   `tasks.md`, then `opsx:apply`.
 
 `docs/license-examples.md` was renumbered on 2026-10-02. Example numbers in commits before
 that date differ; the mapping is at the top of that file.

@@ -2,14 +2,14 @@
 
 Provides the issuer-side API that checks a license key's contents and signs them into a key string a site owner can paste anywhere, without keeping any record of what it issued.
 
-Serves the **vendor**, who issues keys when a site owner buys a license, and the **site owner**, who must never receive a key that is wrong or dead on arrival. Personas are defined in `docs/personas.md`. Product decisions: PDR-0005, PDR-0006, PDR-0009, PDR-0010, PDR-0011, PDR-0013, PDR-0016, PDR-0017, PDR-0018, PDR-0020; key schema and the issue-time rejections in `docs/license-examples.md` (schema, example 19).
+Serves the **vendor**, who issues keys when a site owner buys a license, and the **site owner**, who must never receive a key that is wrong or dead on arrival. Personas are defined in `docs/personas.md`. Product decisions: PDR-0005, PDR-0006, PDR-0009, PDR-0010, PDR-0011, PDR-0013, PDR-0016, PDR-0017, PDR-0018, PDR-0020, PDR-0022; key schema and the issue-time rejections in `docs/license-examples.md` (schema, example 19).
 
 The Umbraco version range claim was removed from this change (`docs/deferred-scope.md` D1). Records of issued keys belong to the optional issuing add-on, a separate change (PDR-0006).
 
 ## ADDED Requirements
 
 ### Requirement: Generate a license key from its contents
-The system SHALL accept a product ID, a role, an optional license reference, an optional expiry date, zero or more features and a private signing key, and SHALL produce a signed key string. The signing key ID SHALL be derived from the private key, not supplied by the caller. It SHALL also return the license reference, the key identifier and the issue time of the key it produced. It SHALL keep no record of the key (PDR-0005).
+The system SHALL accept a product ID, a role, an optional license reference, an optional vendor tag, an optional expiry date, zero or more features and a private signing key, and SHALL produce a signed key string. The signing key ID SHALL be derived from the private key, not supplied by the caller. It SHALL also return the license reference, the key identifier and the issue time of the key it produced. It SHALL keep no record of the key (PDR-0005).
 
 #### Scenario: Minimal base license
 - **WHEN** a caller issues a key with product `acme.seo-toolkit` and role `base` only
@@ -70,6 +70,29 @@ Every key string SHALL start with its key identifier, `LIC-XXXXX-XXXXX-XXXX` (re
 #### Scenario: Edited identifier
 - **WHEN** the identifier at the start of an issued key is changed
 - **THEN** a validator SHALL report the key as not verified
+
+### Requirement: Optional vendor tag
+The system SHALL accept an optional vendor tag: 1 to 64 characters from `A`-`Z`, `a`-`z`, digits and `- _ . # /`. It SHALL sign a supplied tag into the key exactly as supplied, SHALL reject a tag that breaks these rules, and SHALL NOT alter, clean or trim it. It SHALL NOT check the tag for uniqueness, and SHALL NOT carry a tag forward on reissue (PDR-0022).
+
+#### Scenario: Tag signed unchanged
+- **WHEN** a caller issues a key with vendor tag `SHOP-2026-000123`
+- **THEN** a validator trusting the signing key SHALL report vendor tag `SHOP-2026-000123` for that key
+
+#### Scenario: Same tag on two keys
+- **WHEN** a caller issues two keys with vendor tag `#1001`
+- **THEN** both keys SHALL be issued
+
+#### Scenario: Invalid tag rejected, not cleaned
+- **WHEN** a caller issues a key with vendor tag `INV 2026 04`, `jane@acme.com`, an empty tag, or a tag of 65 characters
+- **THEN** the system SHALL reject the request and produce no key
+
+#### Scenario: No tag
+- **WHEN** a caller issues a key without a vendor tag
+- **THEN** the key SHALL carry no vendor tag
+
+#### Scenario: Reissue without a tag
+- **WHEN** a caller reissues under a reference whose earlier key carried a vendor tag, and supplies no tag
+- **THEN** the new key SHALL carry no vendor tag
 
 ### Requirement: Product ID format
 The system SHALL reject a product ID that is not two dot-separated parts of lowercase `a`-`z`, digits and hyphens, each starting with a letter.

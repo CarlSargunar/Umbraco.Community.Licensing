@@ -8,9 +8,10 @@ decisions in [`decisions/`](decisions/README.md).
 > same change, and adjust the "Last checked against" line. An example that contradicts a PDR is
 > a documentation bug.
 >
-> Last checked against: PDR-0001 to PDR-0021, including the amendments to PDR-0009, PDR-0011,
-> PDR-0016 and PDR-0017 that settled design.md Q18, Q5 and Q19, PDR-0021 (design.md Q20), and
-> the scope cut in [`deferred-scope.md`](deferred-scope.md) (2026-10-02).
+> Last checked against: PDR-0001 to PDR-0022, including the amendments to PDR-0009, PDR-0011,
+> PDR-0016 and PDR-0017 that settled design.md Q18, Q5 and Q19, PDR-0021 (design.md Q20),
+> PDR-0022 and its amendments to PDR-0006 and PDR-0017 (design.md Q21), and the scope cut in
+> [`deferred-scope.md`](deferred-scope.md) (2026-10-03).
 
 The Umbraco version range (PDR-0012) was removed from the schema on 2026-10-01
 (`deferred-scope.md` D1). The inventory (D5) is also deferred: where an example says what a
@@ -40,6 +41,7 @@ used for rotation.
 | `role` | `base` or `add-on` | required | required | No default; no other values | PDR-0011 |
 | `reference` | license reference | required | required | 10 random characters from uppercase letters and digits without `0 O 1 I L`, shown `LIC-XXXXX-XXXXX`; matched ignoring case, hyphens, spaces. Generated at first issue, kept on reissue; not secret | PDR-0009, PDR-0017 |
 | `key part` | 4 random characters | required | required | Same alphabet as the reference. Set by the core at every issue including a reissue, never a vendor input. Reference plus key part is the **key identifier**, `LIC-XXXXX-XXXXX-XXXX`, visible at the start of the key string | PDR-0020, PDR-0017 |
+| `vendor tag` | text | optional | optional | 1 to 64 characters from `A-Z a-z 0-9 - _ . # /`; no spaces; kept as supplied. The vendor's own label, e.g. an order ID. Not unique, not carried forward on reissue; an invalid value is rejected, never cleaned. A label only: no effect on superseding, combining or gating. Reported for verified keys only. Never personal data | PDR-0022, PDR-0006 |
 | `issued` | UTC date and time, to the second | required | required | Set by the core at signing, never a vendor input. Among verified keys with the same product and reference, a key supersedes those issued strictly earlier | PDR-0016, PDR-0009 |
 | `expires` | date | optional | optional | Valid until the end of that date in UTC. Omitted means never expires. Rejected if before the current UTC date | PDR-0016 |
 | `features` | 0..N name / value pairs | optional | optional | See below | PDR-0010, PDR-0013, PDR-0018 |
@@ -54,7 +56,8 @@ Feature entries:
 | text | Non-empty; at most 256 characters; no leading or trailing whitespace, line breaks or control characters. Never combined: equal values (exact, case-sensitive) count as one; different values, or text alongside a switch or number under one name, are a conflict | PDR-0018 |
 | not allowed | Explicit `false`; negative or malformed numbers; empty or padded text | PDR-0010, PDR-0018 |
 
-Never in a key: customer name, email, company or any other personal data (PDR-0006).
+Never in a key: customer name, email, company or any other personal data (PDR-0006), including
+in the vendor tag (PDR-0022).
 
 The same schema, by role:
 
@@ -64,6 +67,7 @@ The same schema, by role:
   role         base                     role         add-on
   reference    required                 reference    required
   key part     set by the core          key part     set by the core
+  vendor tag   optional                 vendor tag   optional
   issued       set by the core          issued       set by the core
   expires      optional                 expires      optional (own term)
   features     0..N                     features     0..N
@@ -521,9 +525,50 @@ Each of these fails at the vendor; no key is produced. Assumes issuing on 2026-1
 | `storage-gb: 2.12345` | More than 4 decimal places | PDR-0010 |
 | `max-orders: 500` and `max-orders: 1000` in one key | A name appears at most once per key | PDR-0010 |
 | `Max Orders: 500` | Names are lowercase `a-z`, digits, hyphens, starting with a letter | PDR-0013 |
+| `vendor tag "INV 2026 04"` | No spaces in a vendor tag | PDR-0022 |
+| `vendor tag "jane@acme.com"` | `@` is not allowed in a vendor tag | PDR-0022 |
+| `vendor tag ""` | A vendor tag is not empty; omit it instead | PDR-0022 |
+| vendor tag longer than 64 characters | Keys must stay pasteable | PDR-0022 |
 | a customer's name or email anywhere in the key | No personal data in keys | PDR-0006 |
 
 `expires 2026-10-01` (today) is allowed: valid until 23:59:59 UTC.
+
+## 20. Vendor tag
+
+The vendor's shop issues each key on purchase and signs its order number into it (PDR-0022).
+The 2025 base license was renewed in 2026 under the same reference; one 2026 order bought both
+the renewal and a capacity pack.
+
+```
+  product     acme.commerce               product     acme.commerce
+  role        base                        role        add-on
+  reference   LIC-8F3AK-M7RXB             reference   LIC-4Z9BE-T6WNH
+  vendor tag  SHOP-2026-000123            vendor tag  SHOP-2026-000123
+  issued      2026-03-01T09:14Z           issued      2026-03-01T09:14Z
+  expires     2027-03-01                  expires     2027-03-01
+  features    ecommerce                   features    max-orders: 1000
+              max-orders: 500
+```
+
+The site still holds the 2025 key (tag `SHOP-2025-000087`) and a third key that fails
+verification. The result:
+
+```
+  KEY                    STATE        VENDOR TAG
+  LIC-8F3AK-M7RXB-7Q2D   valid        SHOP-2026-000123
+  LIC-8F3AK-M7RXB-4TQ9   superseded   SHOP-2025-000087
+  LIC-4Z9BE-T6WNH-D4WK   valid        SHOP-2026-000123
+  LIC-2PW9H-KD4NZ-X3MF   not verified (not reported)
+```
+
+- **Two keys share a tag.** One order bought two licenses. Tags are not unique and the library
+  never compares them; the references keep the keys apart and decide what combines.
+- **The renewal has a new tag.** The core keeps nothing, so a reissue carries whatever the
+  vendor passes: here the renewal order. Superseding still runs on the reference.
+- **The failed key reports no tag.** Its tag is an unverified claim and could be anything; the
+  vendor traces it by its key identifier.
+- **Support without the key.** The site owner quotes `SHOP-2026-000123` from the result or
+  their receipt; the vendor finds the order in its shop.
 
 ## Open questions that may change these examples
 
