@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Umbraco.Community.Licensing</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Package">
+    <PackageId>Umbraco.Community.Licensing</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>Carl</Authors>
+    <Description>Offline-verifiable license keys for paid .NET products: issue signed keys (ECDSA P-256), evaluate a set of keys for a product with superseding, add-ons and combined features, and rotate signing keys. No dependencies beyond the .NET base class library; no licensing server.</Description>
+    <PackageTags>licensing;license-key;ecdsa;offline;umbraco</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Umbraco.Community.Licensing.Tests" />
+  </ItemGroup>
+
+</Project>
