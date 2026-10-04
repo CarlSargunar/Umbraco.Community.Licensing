@@ -233,6 +233,9 @@ public sealed class KeyFormatTests : IDisposable
         """{"signingKeyId":"0F8NSYaNR_Q","product":"acme.commerce","role":"base","issued":"2026-03-01T09:14:22Z","features":{"d":" example.com"}}""",
         """{"signingKeyId":"0F8NSYaNR_Q","product":"acme.commerce","role":"base","issued":"2026-03-01T09:14:22Z","features":[]}""",
         """{"signingKeyId":"0F8NSYaNR_Q","product":"acme.commerce","role":"base","role":"base","issued":"2026-03-01T09:14:22Z"}""",
+        // Object or array on a top-level field other than features: routing claims survive (ADR-0001 step 4).
+        """{"signingKeyId":"0F8NSYaNR_Q","product":"acme.commerce","role":"base","issued":"2026-03-01T09:14:22Z","expires":{"date":"2027-03-01"}}""",
+        """{"signingKeyId":"0F8NSYaNR_Q","product":"acme.commerce","role":["base"],"issued":"2026-03-01T09:14:22Z"}""",
     };
 
     [Theory]
@@ -316,6 +319,27 @@ public sealed class KeyFormatTests : IDisposable
         Assert.False(Verify(_vendor.Keys.PublicKey, alteredIdentifier));
         Assert.False(Verify(_vendor.Keys.PublicKey, lowercased));
         Assert.False(Verify(other.PublicKey, signingInput));
+    }
+
+    // P-256 group order n.
+    private const string P256Order = "FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551";
+
+    public static TheoryData<string> DegenerateSignatures => new()
+    {
+        new string('0', 128), // r = s = 0
+        new string('F', 128), // r, s > n
+        P256Order + P256Order, // r = s = n
+    };
+
+    // license-validation spec "Not verified": a trusted, correct-product key whose signature is junk.
+    [Theory]
+    [MemberData(nameof(DegenerateSignatures))]
+    public void Verification_RejectsDegenerateSignature(string signatureHex)
+    {
+        var parts = _vendor.Issue("acme.commerce", LicenseRole.Base).KeyString.Split('.');
+        var forged = parts[0] + "." + parts[1] + "." + Base64UrlText.Encode(Convert.FromHexString(signatureHex));
+
+        Assert.Equal(LicenseKeyState.NotVerified, _vendor.Evaluate("acme.commerce", forged).Rows[0].State);
     }
 
     // 2.7: ADR-0001 reading table.

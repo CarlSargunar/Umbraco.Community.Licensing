@@ -22,6 +22,20 @@ public sealed class SigningKeyTests
         Assert.Equal(pair.SigningKeyId, privateKey.SigningKeyId);
     }
 
+    // Private key read back from custody as DER (signing-key-management spec "Create a signing key pair").
+    [Fact]
+    public void PrivateKey_Pkcs8DerRoundTrips()
+    {
+        using var vendor = new Vendor();
+        using var reimported = SigningPrivateKey.FromPkcs8(vendor.Keys.PrivateKey.ExportPkcs8());
+
+        var key = new LicenseIssuer(vendor.Clock).Issue(
+            new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base }, reimported).KeyString;
+
+        Assert.Equal(vendor.Keys.SigningKeyId, reimported.SigningKeyId);
+        Assert.Equal(LicenseKeyState.Valid, vendor.Evaluate("acme.commerce", key).Rows[0].State);
+    }
+
     [Fact]
     public void PublicExport_CarriesSigningKeyIdAndNoPrivateKey()
     {

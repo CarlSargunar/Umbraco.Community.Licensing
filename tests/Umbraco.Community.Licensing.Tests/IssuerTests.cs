@@ -144,31 +144,34 @@ public sealed class IssuerTests : IDisposable
 
     // 5.2
 
-    public static TheoryData<LicenseRequest, string> InvalidRequests => new()
+    public static TheoryData<LicenseRequest, string, string> InvalidRequests => new()
     {
-        { new LicenseRequest { ProductId = "acme.commerce" }, "Role" },
-        { new LicenseRequest { ProductId = "acme.commerce", Role = (LicenseRole)7 }, "Role" },
-        { new LicenseRequest { ProductId = "commerce", Role = LicenseRole.Base }, "ProductId" },
-        { new LicenseRequest { ProductId = "Acme.Commerce", Role = LicenseRole.Base }, "ProductId" },
-        { new LicenseRequest { Role = LicenseRole.Base }, "ProductId" },
-        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, Reference = "LIC-8F3AK-M7RXO" }, "Reference" },
-        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, Reference = "LIC-8F3AK" }, "Reference" },
-        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, VendorTag = "jane@acme.com" }, "VendorTag" },
-        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, VendorTag = "" }, "VendorTag" },
-        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, Expires = new DateOnly(2026, 9, 30) }, "Expires" },
-        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, Features = [LicenseFeature.Number("max-orders", -200m)] }, "Features" },
-        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, Features = [null!] }, "Features" },
+        { new LicenseRequest { ProductId = "acme.commerce" }, "Role", "required" },
+        { new LicenseRequest { ProductId = "acme.commerce", Role = (LicenseRole)7 }, "Role", "base or add-on" },
+        { new LicenseRequest { ProductId = "commerce", Role = LicenseRole.Base }, "ProductId", "vendor.product" },
+        { new LicenseRequest { ProductId = "Acme.Commerce", Role = LicenseRole.Base }, "ProductId", "vendor.product" },
+        { new LicenseRequest { Role = LicenseRole.Base }, "ProductId", "vendor.product" },
+        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, Reference = "LIC-8F3AK-M7RXO" }, "Reference", "LIC-XXXXX-XXXXX" },
+        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, Reference = "LIC-8F3AK" }, "Reference", "LIC-XXXXX-XXXXX" },
+        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, VendorTag = "jane@acme.com" }, "VendorTag", "1 to 64" },
+        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, VendorTag = "" }, "VendorTag", "1 to 64" },
+        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, Expires = new DateOnly(2026, 9, 30) }, "Expires", "UTC date" },
+        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, Features = [LicenseFeature.Number("max-orders", -200m)] }, "Features", "positive" },
+        { new LicenseRequest { ProductId = "acme.commerce", Role = LicenseRole.Base, Features = [null!] }, "Features", "must not contain null" },
     };
 
+    // license-generation spec "Rejection reports every problem": the message names the rule, not only the field.
     [Theory]
     [MemberData(nameof(InvalidRequests))]
-    public void EachRuleRejected(LicenseRequest request, string field)
+    public void EachRuleRejected(LicenseRequest request, string field, string rule)
     {
         var issuer = new LicenseIssuer(FixedClock.At("2026-10-01T12:00:00Z"));
 
         var error = Assert.Throws<LicenseRequestException>(() => issuer.Issue(request, _vendor.Keys.PrivateKey));
 
-        Assert.Equal(field, Assert.Single(error.Problems).Field);
+        var problem = Assert.Single(error.Problems);
+        Assert.Equal(field, problem.Field);
+        Assert.Contains(rule, problem.Message);
         Assert.Contains(field, error.Message);
     }
 

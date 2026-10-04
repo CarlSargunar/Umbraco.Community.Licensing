@@ -117,6 +117,67 @@ public sealed class RuleTests : IDisposable
         Assert.Single(error.Problems);
     }
 
+    // license-generation spec "Rejection reports every problem": each message names the feature and the rule.
+    public static TheoryData<LicenseFeature[], string?, string> Example19FeatureRules => new()
+    {
+        { new[] { LicenseFeature.Switch("pro", false) }, "pro", "false" },
+        { new[] { LicenseFeature.Text("licensed-domain", "") }, "licensed-domain", "empty" },
+        { new[] { LicenseFeature.Text("licensed-domain", " example.com") }, "licensed-domain", "whitespace" },
+        { new[] { LicenseFeature.Text("licensed-domain", "example.com ") }, "licensed-domain", "whitespace" },
+        { new[] { LicenseFeature.Text("notes", "line one\nline two") }, "notes", "control" },
+        { new[] { LicenseFeature.Text("notes", "tab\there") }, "notes", "control" },
+        { new[] { LicenseFeature.Text("notes", new string('a', 257)) }, "notes", "256" },
+        { new[] { LicenseFeature.Number("max-orders", "5OO") }, "max-orders", "malformed" },
+        { new[] { LicenseFeature.Number("max-orders", -200m) }, "max-orders", "positive" },
+        { new[] { LicenseFeature.Number("max-orders", "-200") }, "max-orders", "positive" },
+        { new[] { LicenseFeature.Number("storage-gb", 2.12345m) }, "storage-gb", "4 decimal places" },
+        { new[] { LicenseFeature.Number("max-orders", 1_000_000_000_000_000m) }, "max-orders", "15 digits" },
+        { new[] { LicenseFeature.Number("max-orders", 500m), LicenseFeature.Number("max-orders", 1000m) }, "max-orders", "once" },
+        { new[] { LicenseFeature.Number("max-orders", 500m), LicenseFeature.Switch("max-orders") }, "max-orders", "once" },
+        { new[] { LicenseFeature.Number("Max Orders", 500m) }, "Max Orders", "lowercase" },
+        { new[] { LicenseFeature.Switch("Pro") }, "Pro", "lowercase" },
+        { new[] { LicenseFeature.Switch("2fa") }, "2fa", "lowercase" },
+        { new[] { LicenseFeature.Switch("") }, "", "lowercase" },
+        { new[] { LicenseFeature.Switch(null!) }, null, "lowercase" },
+    };
+
+    [Theory]
+    [MemberData(nameof(Example19FeatureRules))]
+    public void Features_Example19MessageNamesFeatureAndRule(LicenseFeature[] features, string? name, string rule)
+    {
+        var message = Assert.Single(Reject(features).Problems).Message;
+
+        if (name is not null)
+        {
+            Assert.Contains($"'{name}'", message);
+        }
+
+        Assert.Contains(rule, message);
+    }
+
+    // ADR-0001 Numbers: the grammar applies on issue, including numbers given as text.
+    [Theory]
+    [InlineData("007")]
+    [InlineData("+5")]
+    [InlineData("1.")]
+    [InlineData(".5")]
+    public void Features_NumberTextBreakingGrammarRejected(string text)
+    {
+        var error = Reject(LicenseFeature.Number("max-orders", text));
+
+        Assert.Contains("malformed", Assert.Single(error.Problems).Message);
+    }
+
+    [Fact]
+    public void Features_DecimalNumberTextAccepted()
+    {
+        var issued = _vendor.Issue("acme.commerce", LicenseRole.Base, features: LicenseFeature.Number("storage-gb", "2.5"));
+
+        var value = _vendor.Evaluate("acme.commerce", issued.KeyString).Rows[0].License!.Features["storage-gb"];
+        Assert.Equal(FeatureKind.Number, value.Kind);
+        Assert.Equal(2.5m, value.Number);
+    }
+
     [Fact]
     public void Features_ValidTypesKeptExactly()
     {
