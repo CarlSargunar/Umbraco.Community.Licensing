@@ -2,7 +2,8 @@
 
 - **Status:** Decided, 2026-10-04. Amended, 2026-10-05: the link belongs to the license and is
   kept across renewals; it can be added, changed or removed at any time, to a base of any
-  status; link changes are logged
+  status; link changes are logged. Amended by PDR-0034, 2026-10-05: a reissue that changes a
+  role removes links that no longer join an add-on to a base
 - **Source:** `openspec/changes/issuing-add-on/design.md` Q6; amendment: Q14
 - **Serves:** vendor (sees what a customer bought together), site owner (support can find related
   licenses from one reference)

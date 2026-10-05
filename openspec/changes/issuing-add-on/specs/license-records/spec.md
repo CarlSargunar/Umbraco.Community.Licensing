@@ -5,7 +5,7 @@ sends in, and take a full copy of its records as CSV files.
 
 Serves the **vendor** answering support requests, and the **site owner**, who needs a lost key
 re-sent. Product decisions: PDR-0006, PDR-0009, PDR-0019, PDR-0020, PDR-0026, PDR-0027,
-PDR-0028, PDR-0030.
+PDR-0028, PDR-0030, PDR-0034.
 
 ## ADDED Requirements
 

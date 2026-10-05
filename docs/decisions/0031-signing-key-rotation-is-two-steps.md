@@ -1,6 +1,7 @@
 # PDR-0031: Rotating a signing key is two steps: create pending, then make current
 
-- **Status:** Decided, 2026-10-05
+- **Status:** Decided, 2026-10-05. Amended by PDR-0033, 2026-10-05: which licenses depend on a
+  retired signing key, and the earliest safe withdrawal date
 - **Source:** `openspec/changes/issuing-add-on/design.md` Q19
 - **Serves:** site owner (a key bought after a rotation works on the site they run), implementor
   (no forced product upgrade to install a renewal), vendor (rotation fits its release cycle);
@@ -91,6 +92,6 @@ not in the add-on.
 - After an emergency switch, licenses whose current key was signed by the compromised key keep
   working on sites that still trust it. Moving those site owners to the new key means reissuing
   their keys, which the add-on does not yet offer outside a renewal.
-- How many licenses still depend on a retired key, and which ones, is shown at Make current
-  and on the signing key's details. What counts as depending is an open question for this change
-  (perpetual licenses, and superseded keys a site may still run).
+- How many licenses still depend on a retired key, which ones, and the earliest date its public
+  key can be withdrawn are shown at Make current, at Make current now and on the signing key's
+  details. What counts as depending is PDR-0033.

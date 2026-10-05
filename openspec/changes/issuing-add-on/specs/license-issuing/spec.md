@@ -1,11 +1,11 @@
 ## Purpose
 
-Issues license keys for new sales, add-ons and renewals with the library, from the vendor's
+Issues license keys for new sales, add-ons, renewals and reissues with the library, from the vendor's
 license types, and keeps a record of every key so it can be re-sent and renewed.
 
 Serves the **vendor** and the **site owner**, who must receive a correct key and must be able to
 get it re-sent or renewed. Product decisions: PDR-0006, PDR-0008, PDR-0009, PDR-0011, PDR-0017,
-PDR-0022, PDR-0024, PDR-0025, PDR-0026, PDR-0027, PDR-0029.
+PDR-0022, PDR-0024, PDR-0025, PDR-0026, PDR-0027, PDR-0029, PDR-0034, PDR-0035.
 
 ## ADDED Requirements
 
@@ -13,7 +13,8 @@ PDR-0022, PDR-0024, PDR-0025, PDR-0026, PDR-0027, PDR-0029.
 Every key SHALL be produced by the library's issuing API with the product's current signing key.
 Before signing, the system SHALL check the request with the library and show every problem the
 library reports; it SHALL NOT apply license rules of its own. The system SHALL calculate the
-expiry from the license type and pass it to the library as a date, or as perpetual (PDR-0029).
+expiry from the license type by the add-on's period rule (PDR-0025) and pass it to the library
+as a date, or as perpetual (PDR-0029); the period rule SHALL NOT be part of the library.
 Nothing SHALL be signed or recorded until the vendor confirms a summary of the key's contents.
 
 #### Scenario: Library rejects the request
@@ -33,6 +34,18 @@ this sale. The vendor MAY enter an order reference. The key SHALL get a new lice
 #### Scenario: New sale from a type
 - **WHEN** on 2026-10-04 the vendor issues `Commerce Pro` (12 months, `ecommerce`, `max-orders: 500`) with order reference `SHOP-1001`
 - **THEN** the key SHALL be for `acme.commerce`, role base, expiring 2027-10-03, with those features and vendor tag `SHOP-1001`, and the system SHALL show the key string and its license reference
+
+#### Scenario: Month end, start day missing
+- **WHEN** on 2027-01-31 the vendor issues a 1-month base type
+- **THEN** the expiry SHALL be pre-filled as 2027-02-28
+
+#### Scenario: Month end, start day present
+- **WHEN** on 2027-01-28 the vendor issues a 1-month base type
+- **THEN** the expiry SHALL be pre-filled as 2027-02-27
+
+#### Scenario: Leap day start
+- **WHEN** on 2028-02-29 the vendor issues `Commerce Pro` (12 months)
+- **THEN** the expiry SHALL be pre-filled as 2029-02-28
 
 #### Scenario: Edited at issue
 - **WHEN** the vendor changes `max-orders` to `750` for one sale
@@ -60,6 +73,47 @@ license to a base license of the same product found in the records, whatever its
 - **WHEN** the vendor tries to link an add-on for `acme.commerce` to a base license of `acme.shipping`
 - **THEN** the system SHALL not offer it
 
+### Requirement: Linked add-on aligns to its base
+When the vendor issues or renews an add-on license linked to a base license whose current key
+has an expiry that has not passed, the system SHALL offer two expiries: align to base (the base
+license's current key's expiry), pre-selected, and the type's term (PDR-0025). On renewal,
+align to base SHALL be offered only when the base's expiry is after the add-on's current expiry.
+Otherwise only the type's term SHALL be offered. The chosen expiry SHALL stay editable. The
+summary SHALL show the add-on's expiry beside its base's and, when aligned, the expiry the
+type's term would have given. Renewing a base SHALL NOT change its add-ons (PDR-0035).
+
+#### Scenario: Aligned by default
+- **WHEN** on 2027-04-15 the vendor issues `Extra 1,000 orders` (12 months) linked to base `LIC-8F3AK-M7RXB`, whose current key expires 2027-10-03
+- **THEN** align to base SHALL be pre-selected with expiry 2027-10-03, the type's term SHALL be offered with 2028-04-14, and the summary SHALL show both dates
+
+#### Scenario: Type's term chosen
+- **WHEN** the vendor chooses the type's term for the same add-on
+- **THEN** the key SHALL expire 2028-04-14
+
+#### Scenario: Perpetual type, dated base
+- **WHEN** the vendor issues a perpetual add-on type linked to a base expiring 2027-10-03
+- **THEN** align to base SHALL be pre-selected with 2027-10-03, and perpetual SHALL be offered
+
+#### Scenario: Base perpetual or expired
+- **WHEN** the vendor issues a linked add-on whose base's current key is perpetual, or expired on 2027-03-31
+- **THEN** only the type's term SHALL be offered
+
+#### Scenario: Unlinked add-on
+- **WHEN** the vendor issues an add-on with no link
+- **THEN** only the type's term SHALL be offered
+
+#### Scenario: Renewal aligns to a renewed base
+- **WHEN** on 2027-09-20 the vendor renews a 12-month add-on expiring 2027-09-30, linked to a base expiring 2028-10-03
+- **THEN** align to base SHALL be pre-selected with 2028-10-03, and the type's term SHALL be offered with 2028-09-30
+
+#### Scenario: Renewal never cuts the term
+- **WHEN** the vendor renews an add-on expiring 2028-04-14, linked to a base expiring 2027-10-03
+- **THEN** align to base SHALL NOT be offered, and the expiry SHALL be pre-filled as 2029-04-14
+
+#### Scenario: Base renewal leaves add-ons
+- **WHEN** the vendor renews a base license with linked add-ons
+- **THEN** no add-on key SHALL be issued and no add-on expiry SHALL change
+
 ### Requirement: Renew a license
 The vendor SHALL be able to renew a license found in the records by reissuing it under its
 license reference. The expiry SHALL be calculated by PDR-0025: from the day after the current
@@ -78,6 +132,10 @@ cannot be renewed again. The order reference SHALL be entered afresh, not carrie
 #### Scenario: Early renewal
 - **WHEN** on 2027-03-10 the vendor renews a 12-month license expiring 2027-03-31
 - **THEN** the new key SHALL carry the same license reference and expire 2028-03-31
+
+#### Scenario: Renewal after a month-end expiry
+- **WHEN** on 2027-02-20 the vendor renews a 1-month license expiring 2027-02-28
+- **THEN** the new key SHALL expire 2027-03-31
 
 #### Scenario: Lapsed, continue from old expiry
 - **WHEN** on 2027-05-20 the vendor renews a 12-month license that expired 2027-03-31 and chooses the old expiry
@@ -123,6 +181,53 @@ cannot be renewed again. The order reference SHALL be entered afresh, not carrie
 - **WHEN** the vendor renews a base license and the product has no active base type
 - **THEN** the system SHALL say so, offer to define one, and issue nothing
 
+### Requirement: Reissue a license
+The vendor SHALL be able to reissue a license found in the records, to correct its current key or
+re-sign it with the product's current signing key, under its license reference (PDR-0034).
+Reissue SHALL be offered only when the license's current key is perpetual or has not expired.
+The expiry SHALL be pre-filled from the current key, a date or perpetual, with no period
+calculated. The license type SHALL be kept by default, even if retired; the vendor MAY switch to
+any active type of the same product, of either role, and the role SHALL follow the type.
+Features SHALL be pre-filled from the current key when the type is kept, and from the chosen
+type's defaults when it switches. The order reference SHALL be carried forward from the current
+key. The vendor MAY edit the expiry, features and order reference; the product SHALL NOT change.
+Before confirming, the summary SHALL show every difference from the current key; SHALL say the
+reissue re-signs the same claims under the current signing key when nothing differs; SHALL say,
+when the expiry is shortened or a feature is removed or lowered, that this takes effect only if
+the site installs the new key and that the current key keeps granting the old claims; and SHALL
+say when the expiry and the chosen type's term disagree. None of these SHALL block the reissue.
+A role change SHALL remove the links that no longer join an add-on to a base: an add-on that
+becomes a base loses its link, and add-ons linked to a base that becomes an add-on lose theirs.
+The summary SHALL name each link to be removed, and each removal SHALL be logged (PDR-0026).
+
+#### Scenario: Feature typo corrected
+- **WHEN** on 2026-03-01 the vendor reissues license `LIC-8F3AK-M7RXB`, whose current key has `max-orders: 50` and expires 2027-02-28, changing the feature to `max-orders: 500`
+- **THEN** the new key SHALL carry the same reference, expire 2027-02-28, have `max-orders: 500` and the current key's order reference, and be recorded as kind of issue reissue
+
+#### Scenario: Re-sign only
+- **WHEN** the vendor reissues a perpetual license whose current key was signed by retired key K1, changing nothing
+- **THEN** the summary SHALL say the same claims are re-signed under the current signing key, and the new key SHALL have no expiry and be signed by the current signing key
+
+#### Scenario: Reduction warned
+- **WHEN** the vendor reissues a license and lowers `max-orders` from 1000 to 500
+- **THEN** the summary SHALL say the change takes effect only if the site installs the new key, and the reissue SHALL proceed on confirmation
+
+#### Scenario: Retired type kept
+- **WHEN** the vendor reissues a license whose type `Commerce Pro` has been retired
+- **THEN** `Commerce Pro` SHALL be pre-selected and the reissue SHALL be allowed with it
+
+#### Scenario: Expired license
+- **WHEN** the vendor chooses a license whose current key has expired
+- **THEN** reissue SHALL NOT be offered, and renewal SHALL be
+
+#### Scenario: Add-on corrected to base
+- **WHEN** the vendor reissues an add-on license linked to base `LIC-8F3AK-M7RXB`, choosing a base type
+- **THEN** the summary SHALL name the link to `LIC-8F3AK-M7RXB` as removed, the new key SHALL have role base, and the license SHALL have no link
+
+#### Scenario: Base corrected to add-on
+- **WHEN** the vendor reissues a base license that two add-on licenses link to, choosing an add-on type
+- **THEN** the summary SHALL name both add-ons, and after the reissue neither SHALL be linked to it
+
 ### Requirement: Order reference
 The order reference SHALL be optional, SHALL be signed as the vendor tag and SHALL follow the
 library's vendor tag rule (PDR-0027). The prompt SHALL say it is for an order or invoice number
@@ -135,7 +240,7 @@ and must never hold personal data.
 ### Requirement: Record of every issued key
 For every issued key the system SHALL record: product, license type, role, license reference,
 key identifier, issue time, expiry, features, order reference, signing key ID, the key string,
-and the kind of issue (new sale, add-on or renewal). A license reference's records SHALL be kept
+and the kind of issue (new sale, add-on, renewal or reissue). A license reference's records SHALL be kept
 together as one license; for an add-on, the license holds any link to a base license
 (PDR-0026). No name, email address, company or other personal data SHALL be recorded
 (PDR-0006).
@@ -148,7 +253,7 @@ together as one license; for an add-on, the license holds any link to a base lic
 The vendor SHALL be able to add, change or remove the link from an add-on license to a base
 license at any time after issue. Only base licenses of the same product SHALL be offered,
 whatever their status. The link belongs to the license, so renewing either license SHALL keep
-it. A link change SHALL NOT issue a key (PDR-0026).
+it; a reissue that changes a role removes links as in Reissue a license. A link change SHALL NOT issue a key (PDR-0026).
 
 #### Scenario: Link added later
 - **WHEN** the vendor links an unlinked add-on license to base license `LIC-8F3AK-M7RXB`
@@ -168,7 +273,7 @@ it. A link change SHALL NOT issue a key (PDR-0026).
 
 ### Requirement: No two keys in the same second
 The system SHALL NOT record two keys under one license reference with the same issue time
-(PDR-0009). When a renewal would do so, the system SHALL discard that key unseen, wait until the
+(PDR-0009). When a renewal or reissue would do so, the system SHALL discard that key unseen, wait until the
 next second and issue again.
 
 #### Scenario: Renewal in the same second

@@ -17,7 +17,11 @@ decisions in [`decisions/`](decisions/README.md).
 > and PDR-0030 govern the add-on and change no example (2026-10-05). PDR-0031 (issuing-add-on
 > design.md Q19, two-step rotation) changes no example; example 18 key 6 is the failure it
 > prevents. PDR-0032 (design.md Q20, one location per machine) and its amendments to PDR-0023
-> and PDR-0028 change no example (2026-10-05).
+> and PDR-0028 change no example. PDR-0033 (design.md Q21, retired signing key dependants) and
+> its amendment to PDR-0031 change no example. PDR-0034 (design.md Q22, reissue) and its
+> amendment to PDR-0026 change no example; examples 4 and 5 are the corrections it issues.
+> The PDR-0025 month-end amendment (design.md Q23) is an add-on rule and changes no example.
+> PDR-0035 (design.md Q24, linked add-on aligns to base) changes no example (2026-10-05).
 
 The Umbraco version range (PDR-0012) was removed from the schema on 2026-10-01
 (`deferred-scope.md` D1). The inventory (D5) is also deferred: where an example says what a

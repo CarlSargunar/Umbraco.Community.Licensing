@@ -4,9 +4,12 @@
   from its current key, not its license type; a renewal that produces a perpetual key is flagged
   at the summary; the add-on calculates the date and passes it to the library (PDR-0029).
   Amended, 2026-10-05: only active types are offered; features come from the current key when
-  the type is kept, with differences from the type's defaults shown at the summary
-- **Source:** `openspec/changes/issuing-add-on/design.md` Q5; amendment: Q10, Q11, Q12, Q13
-- **Serves:** site owner (early renewal loses no days), vendor (decides how a lapse is charged)
+  the type is kept, with differences from the type's defaults shown at the summary. Amended,
+  2026-10-05: a start day missing from the target month ends the period on that month's last
+  day; the period rule is the add-on's, never the library's
+- **Source:** `openspec/changes/issuing-add-on/design.md` Q5; amendment: Q10, Q11, Q12, Q13, Q23
+- **Serves:** site owner (early renewal loses no days; a month-end start loses none either),
+  vendor (decides how a lapse is charged; free to use its own period rule outside the add-on)
 
 ## Decision
 
@@ -72,9 +75,30 @@ license cannot be renewed again.
 **Who calculates.** The add-on calculates the expiry date and passes the date, or perpetual, to
 the library. The period rule is an issuing convention, not a license rule (PDR-0023, PDR-0029).
 
-**Month ends.** Adding months to a date clamps to the month's last day. The period after
-2027-01-31 starts 2027-02-01 and one month later ends 2027-02-28. A one-month period starting
-2027-01-31 ends 2027-02-27 (2027-02-28 minus a day). The vendor can override the date.
+**Month ends.** A period of N months starting on day S ends the day before day S of the month N
+months later. When that month has no day S, the period ends on that month's last day.
+
+| Start | Term | Expires | Note |
+|---|---|---|---|
+| 2027-01-28 | 1 | 2027-02-27 | Day before 02-28 |
+| 2027-01-29 | 1 | 2027-02-28 | No 02-29 in 2027: last day |
+| 2027-01-31 | 1 | 2027-02-28 | No 02-31: last day |
+| 2028-01-29 | 1 | 2028-02-28 | 02-29 exists in 2028: the day before |
+| 2028-01-30 | 1 | 2028-02-29 | No 02-30: last day |
+| 2028-02-29 | 12 | 2029-02-28 | No 02-29 in 2029: last day; 365 days |
+| 2027-03-31 | 1 | 2027-04-30 | No 04-31: last day (same result as before) |
+
+A renewal after a month-end expiry starts on the 1st and stays on month ends:
+
+```
+  monthly, sold 2027-01-31:  01-31..02-28, 03-01..03-31, 04-01..04-30, ...
+```
+
+The vendor can override the date.
+
+**The add-on's rule, not the library's.** The library takes a date or perpetual and never a
+term (PDR-0029). This period rule, month ends included, is how the issuing add-on pre-fills that
+date. A vendor issuing through its own tooling may use any rule it likes.
 
 ## Why
 
@@ -104,6 +128,11 @@ the library. The period rule is an issuing convention, not a license rule (PDR-0
 | Always from today | Early renewal loses the days left |
 | Vendor enters the date every time | Error-prone; the common cases are mechanical |
 | Period ends on the same day-of-month (S plus N months) | Gives one day more than the term, and the next renewal drifts |
+| Month ends: add N months clamped to the month's last day, then subtract a day | Starts on the 29th to 31st lose up to 3 days; four starts share one end; a leap-day start gets 364 days; monthly renewals stay on the 27th for good, so the loss repeats |
+| Month ends: anchor renewals to the original sale's day | Needs a stored anchor on the license; the chosen rule already ends the drift |
+| Terms in days (30, 365) | Drifts against calendar months and leap years; sellers and buyers think in months |
+| Month ends: always end on a month's last day | Moves every sale's date and gives up to 30 extra days |
+| Period rule in the library | The library takes a date only (PDR-0029); a vendor with its own tooling keeps its own rule |
 | The license type decides whether a license is perpetual | Can turn a perpetual key into an expiring one; blocks renewing a fixed-term key issued from a perpetual type |
 | Features always from the type's defaults | A negotiated limit silently reverts at renewal |
 | A term stored on the license, repeated at renewal | A second source of truth beside the type; an edited date is not a whole number of months. A one-off term is one date edit at the summary |

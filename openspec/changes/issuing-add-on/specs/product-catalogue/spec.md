@@ -3,8 +3,8 @@
 Holds what the vendor sells: products, the license types offered for each, and each product's
 signing keys, so licenses can be issued from a template with the right key.
 
-Serves the **vendor**. Product decisions: PDR-0023, PDR-0024, PDR-0007, PDR-0011, PDR-0017, PDR-0031, PDR-0032;
-signing keys follow the `signing-key-management` capability.
+Serves the **vendor**. Product decisions: PDR-0023, PDR-0024, PDR-0007, PDR-0011, PDR-0017, PDR-0031, PDR-0032,
+PDR-0033; signing keys follow the `signing-key-management` capability.
 
 ## ADDED Requirements
 
@@ -109,7 +109,7 @@ write its private key file and record the new key as pending; the current key SH
 (PDR-0031). The system SHALL then show the new public key for export and the rotation steps:
 export the new public key, ship a release trusting both keys, make the new key current once
 sites are likely to run that release, and keep trusting the old public key while any license a
-site runs depends on it. Rotation SHALL be refused while the product has a pending key.
+site runs depends on it, until the earliest safe withdrawal shown for it (PDR-0033). Rotation SHALL be refused while the product has a pending key.
 
 #### Scenario: Rotation
 - **WHEN** the vendor rotates the signing key of `acme.commerce`
@@ -123,8 +123,8 @@ site runs depends on it. Rotation SHALL be refused while the product has a pendi
 The vendor SHALL be able to make a product's pending signing key current. Before doing so, the
 system SHALL ask the vendor to confirm that a release trusting the new public key has shipped,
 and SHALL say that keys signed by it fail on sites running an older release. On confirmation the
-pending key SHALL become current and the previous current key retired. The system SHALL show,
-for each retired signing key, how many licenses whose current key it signed are not expired.
+pending key SHALL become current and the previous current key retired. Before confirmation the
+system SHALL show the dependants report for the key being retired (PDR-0033).
 
 #### Scenario: Made current
 - **WHEN** the vendor makes the pending key of `acme.commerce` current and confirms
@@ -134,19 +134,57 @@ for each retired signing key, how many licenses whose current key it signed are 
 - **WHEN** the vendor declines the confirmation
 - **THEN** the pending key SHALL stay pending and the current key SHALL keep signing
 
-#### Scenario: Dependent licenses shown
-- **WHEN** two unexpired licenses' current keys were signed by the key being retired
-- **THEN** the system SHALL report 2 licenses still depending on it
+#### Scenario: Dependants shown before confirming
+- **WHEN** the vendor makes the pending key of `acme.commerce` current and licenses depend on the current key
+- **THEN** the dependants report for the current key SHALL be shown before the confirmation is asked
 
 ### Requirement: Make a new key current now
 For a compromised key or a private key file that cannot be restored, the vendor SHALL be able to
 rotate and make the new key current in one action. The system SHALL warn that every key issued
-afterwards fails on sites that have not installed a release trusting the new public key, and
-SHALL act only on confirmation (PDR-0031).
+afterwards fails on sites that have not installed a release trusting the new public key, SHALL
+show the dependants report for the key being retired, and SHALL act only on confirmation
+(PDR-0031, PDR-0033).
 
 #### Scenario: Emergency switch
 - **WHEN** the vendor chooses make current now for `acme.commerce` and confirms the warning
 - **THEN** a new signing key SHALL be current, the previous key retired, and the new public key shown for export
+
+### Requirement: Licenses depending on a retired signing key
+A recorded key SHALL depend on the signing key that signed it while it is perpetual or its expiry
+is on or after the current UTC date, whether it is its license's current key or superseded. A
+license SHALL depend on a signing key when any of its keys does. For a retired signing key, and
+for the key being retired at make current and make current now, the system SHALL show a
+dependants report: the number of depending licenses, split into perpetual (a perpetual
+depending key), dated (the current key depends, dated) and superseded only (only superseded keys
+depend); and the earliest safe withdrawal, which SHALL be the day after the latest expiry among
+the depending keys, "not while perpetual licenses depend on it" when any depending key is
+perpetual, and "now" when nothing depends on it. On request it SHALL list each depending license
+with its product, reference, and each depending key's identifier, expiry and whether it is
+current or superseded. The report SHALL NOT block any action (PDR-0033).
+
+#### Scenario: Superseded key still depends
+- **WHEN** on 2027-03-01 key K1 of `acme.commerce` is retired, and license A's key a1, signed by K1 and expiring 2027-06-30, was renewed by a2, signed by K2 and expiring 2028-06-30
+- **THEN** license A SHALL be counted as superseded only, and with no other dependants the earliest safe withdrawal SHALL be 2027-07-01
+
+#### Scenario: Perpetual key depends for good
+- **WHEN** license B's only key is perpetual and signed by retired key K1
+- **THEN** license B SHALL be counted as perpetual, and the earliest safe withdrawal for K1 SHALL be "not while perpetual licenses depend on it"
+
+#### Scenario: Expired key does not depend
+- **WHEN** on 2027-03-01 license C's only key is signed by K1 and expired on 2026-12-31
+- **THEN** license C SHALL NOT be counted or listed as depending on K1
+
+#### Scenario: Nothing depends
+- **WHEN** no recorded key signed by retired key K1 is perpetual or unexpired
+- **THEN** the report SHALL show 0 licenses and earliest safe withdrawal "now"
+
+#### Scenario: Expiry today still depends
+- **WHEN** on 2027-06-30 a key signed by K1 expires 2027-06-30
+- **THEN** its license SHALL still depend on K1 and the earliest safe withdrawal SHALL be no earlier than 2027-07-01
+
+#### Scenario: List on request
+- **WHEN** the vendor asks for the list of licenses depending on K1
+- **THEN** each depending license SHALL be shown with its product and reference, and each depending key with its identifier, expiry and whether it is current or superseded
 
 ### Requirement: Discard a pending key
 The vendor SHALL be able to discard a pending signing key. The system SHALL remove its record

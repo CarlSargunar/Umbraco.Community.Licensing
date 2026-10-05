@@ -37,17 +37,17 @@ tracked in conversation as U1 to U8.
 | Q18 | How are features exported to CSV? (U8) | PDR-0028 amendment: separate features files, six files in all |
 | Q19 | How does a signing key rotation avoid issuing keys sites cannot verify yet? | PDR-0031: two steps, pending then make current; emergency make current now |
 | Q20 | How does the add-on find its data and private keys on a new machine? | PDR-0032: one location per machine, default `<home>/.<toolname>`; folders are machine settings; key files by name; checked at setup, start and issue; signing key export |
+| Q21 | Which licenses depend on a retired signing key, and when can its public key be withdrawn? | PDR-0033: every recorded key signed by it that is perpetual or unexpired, current or superseded; report counts, earliest safe withdrawal and a list on request; never blocks. Amends PDR-0031 |
+| Q22 | Should the add-on reissue a license outside a renewal? | PDR-0034: Reissue under the same reference keeps terms by default; corrects claims or role, or re-signs; order reference carried forward; reductions warned; role change removes stale links. Amends PDR-0026 |
+| Q23 | How does a period end when its start day does not exist in the target month? | PDR-0025 amendment: on that month's last day (2027-01-31 + 1 month ends 2027-02-28; 2028-02-29 + 12 months ends 2029-02-28); the add-on's rule, never the library's |
+| Q24 | Should a linked add-on offer its base's expiry? | PDR-0035: yes, pre-selected, beside the type's term; only for a dated, unexpired base; on renewal only when it does not cut the current term; base renewal leaves add-ons alone |
 
 ### Open
 
-From the review of 2026-10-05. Numbered Q21 onward when taken up.
+From the review of 2026-10-05. Numbered Q25 onward when taken up.
 
 | Topic | Question |
 |---|---|
-| Rotation dependants | Which licenses count as depending on a retired signing key: perpetual licenses, and superseded keys that have not expired? When can the old public key be withdrawn? |
-| Correction reissue | The library corrects a wrong claim by reissuing under the same reference (PDR-0009, `license-examples.md` example 4). Should the add-on offer a correction reissue outside a renewal? The proposal currently calls correction "not possible offline" |
-| Month ends | PDR-0025 clamps then subtracts a day, so periods starting on 28 to 31 January all end 27 February, and 12 months from 2028-02-29 is 364 days. Keep, or end on the target month's last day when the start day does not exist? Spec scenarios needed either way |
-| Add-on aligned to base | Should a linked add-on offer the base's current expiry as an alternative pre-fill? |
 | What the site owner receives | Should the add-on produce a copyable block (product, type, reference, expiry, order reference, key) instead of a bare key string? |
 | Reference unique per product | `license-records` "Find a license" assumes a reference is unique overall; it is unique per product (PDR-0017). Show every match with its product; match a key identifier with its claimed product |
 | Smaller items | Data folder move and the `logs` folder; un-retiring a license type; logging a product ID prefix change; what "Inspect a key" shows for the Umbraco version range (PDR-0012, deferred); PDR-0028 rejected table cites re-import, but there is no import |
