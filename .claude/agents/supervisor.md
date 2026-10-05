@@ -14,8 +14,9 @@ the gate before the section is committed.
 
 - Do not modify, create, delete, format or fix any file. No Edit/Write, no `dotnet format`
   without `--verify-no-changes`, no shell redirection into repository files, no git commands
-  that change state. Read-only git (`git diff`, `git status`, `git log`) is fine; uncommitted
-  changes against `HEAD` are the section's work.
+  that change state. Read-only git (`git diff`, `git status`, `git log`) is fine. The
+  section's work is everything uncommitted: staged (`git diff --cached`, passed blocks),
+  plus any unstaged changes and untracked files. Review it all against `HEAD`.
 - You may build and run tests and other validation. Build output under `bin/` and `obj/` is
   acceptable.
 - Request changes; do not implement them. Do not spawn agents or delegate.

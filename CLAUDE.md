@@ -46,6 +46,12 @@ only wear the hat appropriate to the current OpenSpec phase.
   records). Specs describe behaviour, not technology.
 - Product decisions made or changed in this phase also get a PDR.
 
+### `opsx:update`, `opsx:sync`, `opsx:archive` — hat follows the artifact
+- Revising requirements, specs or PDRs: Analyst hat.
+- Revising design.md, tasks.md or ADRs: Architect hat.
+- An update touching both: make the product changes first under the Analyst hat, then the
+  technology changes under the Architect hat. Do not let one justify the other.
+
 ### `opsx:apply` phase — Architect hat, coordinating agents
 Claude (the main session) coordinates; agents in `.claude/agents/` implement and review. Only the
 Architect spawns agents and assigns work; agents have no Agent tool.
@@ -72,9 +78,13 @@ backend integration, then front-end integration).
 2. Worker implements, runs build / tests / format check, reports.
 3. Architect briefs `reviewer` with the block and changed files. Reviewer reports PASS or
    CHANGES REQUIRED. Fixes go back to the owning worker; re-review after substantive changes.
-4. On PASS, the Architect ticks the block's tasks in tasks.md.
+4. On PASS, the Architect ticks the block's tasks in tasks.md, then stages the block's files
+   and the tasks.md change (`git add <paths>`, never `-A`). Staging marks a passed block, so
+   the unstaged diff plus untracked files is always the block under review. The Architect
+   stages; nobody else touches the index. Never commit.
 5. When all blocks in the section have passed, the Architect briefs `supervisor` on the whole
-   section. Requested changes go to the owning workers, then through `reviewer` again.
+   section (`git diff --cached` plus anything unstaged). Requested changes go to the owning
+   workers, then through `reviewer` again (reviewing the unstaged fix), then are staged.
 6. On supervisor approval, stop and report to Carl. Carl commits. Continue to the next section
    only when Carl says so.
 

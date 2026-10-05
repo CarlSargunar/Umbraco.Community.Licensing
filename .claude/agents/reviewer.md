@@ -15,6 +15,9 @@ report to the Architect.
   without `--verify-no-changes`, no shell redirection into repository files, no git commands
   that change state (commit, add, stash, reset, checkout, restore). Read-only git
   (`git diff`, `git status`, `git log`) is fine.
+- Blocks that already passed are staged. The block under review is the unstaged diff
+  (`git diff`) plus untracked files (`git ls-files --others --exclude-standard`). Use
+  `git diff --cached` only for context on earlier blocks; do not review it.
 - You may build and run tests and other validation. Build output under `bin/` and `obj/` is
   acceptable.
 - Recommend fixes; do not implement them. Do not spawn agents or delegate.
