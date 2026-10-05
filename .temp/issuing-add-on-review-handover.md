@@ -1,116 +1,90 @@
-# Handover: issuing-add-on spec review (2026-10-05)
+# Handover: issuing-add-on spec review (updated 2026-10-05, end of session 2)
 
-Phase: `opsx:explore`, Analyst hat. Nothing in `openspec/` or `docs/` has been changed by this
-review. Resume with `/opsx:explore issuing-add-on` and point at this file.
+Phase: `opsx:explore`, Analyst hat. Resume with `/opsx:explore issuing-add-on` and point at this
+file. Work one gap at a time: problem, personas, recommendation, alternatives table, Carl
+decides, then save.
 
 ## Change state
 
 ```
-  proposal.md   done
-  specs/        done (6 capabilities, 671 lines)
-  design.md     MISSING (never in git)
+  proposal.md   done (PDR ranges fixed to PDR-0023..PDR-0032)
+  specs/        done (6 capabilities)
+  design.md     PARTIAL: only "Requirements and open questions" (Q1-Q20 index + Open table).
+                openspec status shows it done; other sections are Architect work for opsx:propose
   tasks.md      MISSING
-  PDR-0023 .. PDR-0030 decided; ADR-0003 .. ADR-0005 decided
+  PDR-0023 .. PDR-0032 decided; ADR-0003 .. ADR-0005 decided
 ```
 
-Read for context: `openspec/changes/issuing-add-on/proposal.md`, all `specs/*/spec.md`,
-`docs/decisions/0023`..`0030`, `docs/personas.md`.
+All edits uncommitted. `openspec validate issuing-add-on` passes.
 
-## Findings
+## Done this session
 
-Ordered by significance. "Decision" = needs Carl (product). "Fix" = record/spec correction.
+| Item | Outcome | Records |
+|---|---|---|
+| F1 design.md missing | Rebuilt Q1-Q18 from PDR source lines as design.md's Questions table (wording is a summary, not original). Open items listed unnumbered | design.md |
+| G1 rotation signed with a key sites don't trust yet (new finding) | Two-step rotation: Rotate -> pending (exportable, signs nothing) -> Make current after shipping a release trusting both. Emergency "make current now" with warning. Discard pending. At most one pending | PDR-0031 (Q19); `product-catalogue`, `activity-logging` specs |
+| G2 new machine forces rotation (handover F2) | One location per machine, default `<home>/.<toolname>`, any folder allowed; `data/` + `signing-keys/` siblings. Folders are machine settings (per-user settings file), never in DB; default saved as "default" and resolved against home. Key files named by product + signing key ID, looked up in folder. Checks at setup, every start, at issue; remedies in order: change folder, restore, make pending current, make current now. Export signing keys (backup action, PDR-0007 guards). Import = manual copy, documented later. Move data folder / change keys folder kept | PDR-0032 (Q20); amends PDR-0023, PDR-0028; PDR-0031 consequence updated; `issuing-setup` rewritten, `product-catalogue`, `activity-logging` specs |
+| B3 PDR-0006 lacks PDR-0027 mention | Closed, no change: PDR-0022 already amended PDR-0006 for the vendor tag | - |
+| Index, examples | Decision index rows for PDR-0031, PDR-0032, PDR-0023 status; `license-examples.md` "Last checked against" updated | - |
 
-### F1. design.md does not exist (Fix, blocks traceability)
-- PDR-0023..PDR-0030 cite `issuing-add-on/design.md` Q1..Q18 as source; ADR-0003..ADR-0005
-  cite its "Decisions" section. The file is not in the working tree or git history
-  (`git log --all -- openspec/changes/issuing-add-on/design.md` is empty).
-- Open question for Carl: does the Q list exist anywhere, or was it only in conversation?
-- `proposal.md` lists PDR-0023..PDR-0029; omits PDR-0030 (cited by `license-records` spec).
-- design.md itself is Architect work (`opsx:propose` / `opsx:update`); the Q list is product record.
+## Corrections to the original findings
 
-### F2. New machine forces key rotation (Decision)
-- `issuing-setup` spec, "Change the signing keys folder": each signing key keeps the absolute
-  file location recorded at creation.
-- Restore on a new machine (other drive letter, user name, or OS) -> every key reports
-  "Missing private key file" (`product-catalogue` spec) -> "restore or rotate". Restoring to a
-  Windows path on macOS is impossible, so rotation is forced: a product release with a new
-  public key, cost borne by implementor and site owner. Conflicts with persona priority.
-- Options:
-  a. Re-point a signing key to a file; accepted only if it matches the recorded public key
-     (the existing check already compares).
-  b. Store locations relative to the signing keys folder; changing the folder re-points all keys.
-- Likely outcome: amend PDR-0023 or PDR-0007-related rules; edit `issuing-setup` and
-  `product-catalogue` specs.
+- **F3 month ends was not undefined.** PDR-0025 "Month ends" defines clamp, then minus a day.
+  The gap: unequal periods (one-month terms starting Jan 28-31 all end Feb 27; 12 months from
+  2028-02-29 is 364 days) and no spec scenario.
+- **F6 aimed at the wrong thing.** The real gap is a correction reissue: the library corrects a
+  wrong claim by reissuing under the same reference (PDR-0009, `license-examples.md` example 4),
+  the add-on has no way to do it, and the proposal's out-of-scope line wrongly calls correction
+  "not possible offline".
 
-### F3. Month arithmetic at month end undefined (Decision)
-- PDR-0025: period runs to "the day before S plus N months". No rule when day S does not exist
-  in the target month.
-  ```
-  new sale 2027-01-31, 1 month:  clamp -> S+1m 2027-02-28 -> expires 2027-02-27
-                                 overflow -> 2027-03-03   -> expires 2027-03-02
-  renewal then starts 2027-02-28 -> anchor drifts 31st -> 27th
-  new sale 2028-02-29, 12 months -> 2029-02-27 or 2029-02-28?
-  ```
-- No scenario in `license-issuing` starts a period on day 29-31.
-- Candidate rule: when the start day does not exist in the target month, the period ends on
-  the target month's last day. Needs scenarios for 31st, 30th, 29 Feb, and chained renewals.
-- Likely outcome: amend PDR-0025; add scenarios to `license-issuing`; update
-  `docs/license-examples.md` if it carries date examples.
+## Next: G3 rotation dependants (recommendation already presented, awaiting Carl)
 
-### F4. Rotation undercounts dependants on the old key (Decision)
-- `product-catalogue` "Rotate the signing key" counts licenses whose current key is "not expired".
-- Perpetual licenses: included or not? Undefined. They depend on the old public key forever;
-  should be reported separately, with "old key can never be withdrawn while these exist".
-- Superseded but unexpired keys: an early renewal leaves the old key valid for weeks; a site
-  owner who has not installed the renewal still depends on the old public key. Withdrawing it
-  breaks a paying site (primary persona).
-- Likely outcome: amend rotation requirement and its scenarios.
+- Problem: "Make the pending key current" counts licenses whose *current* key the retired key
+  signed and is not expired. Misses superseded-but-unexpired keys (early renewal not yet
+  installed: site still runs the old key) and leaves perpetual unclear (depends forever).
+- Recommendation: a license depends on a signing key while **any** of its keys signed by it has
+  not expired; perpetual never expires. Report at Make current and on a retired key's details:
+  counts (dated, with last end date; perpetual, never ends), the date the old public key can be
+  withdrawn from releases, license list on request. Perpetual message points to reissue (G4).
+- Alternatives: current keys only with perpetual counted; count without date; leave perpetual
+  out; track installed keys per site (out of scope, offline).
+- Touches: PDR-0031 amendment (rule, withdrawal date, rotation step 5); `product-catalogue`
+  "Make the pending key current" and its scenarios.
 
-### F5. Reference unique per product, search assumes unique overall (Fix)
-- PDR-0017 / `license-issuing`: references unique per product, not across records.
-- `license-records` "Find a license" scenario: "SHALL show license" (singular). Same reference
-  can exist in two products -> show every match with its product.
-- "Inspect a key": a key identifier match must also match the claimed product.
+## Remaining after G3 (design.md "Open" table), suggested order
 
-### F6. No way to mark a mistaken issue (Decision)
-- Correction and revocation are out of scope (offline). A key issued in error and never sent
-  stays an active license, counts in rotation dependants (F4), appears in searches.
-- Option: records-only "void, never delivered" marker; does not claim revocation.
-- Decide: in this change, or defer to `docs/deferred-scope.md`.
+1. **G4 correction reissue** (see above). Decide: offer in this change, or defer to
+   `docs/deferred-scope.md`. Linked to G3 (perpetual dependants) and PDR-0031 emergency path.
+2. **G5 month ends**: keep PDR-0025 rule or end on the target month's last day when the start
+   day does not exist; add scenarios for 31st, 30th, 29 Feb and chained renewals.
+3. **G6 add-on aligned to base** (handover F7): linked add-on offers base's current expiry as an
+   alternative pre-fill.
+4. **G7 what the site owner receives** (handover F8): copyable block (product, type, reference,
+   expiry, order reference, key) instead of a bare key string; re-send for base + linked add-ons.
+5. **F5 reference unique per product**: `license-records` "Find a license" shows every match with
+   its product; "Inspect a key" matches key identifier with claimed product.
+6. **Smaller items**: data folder move and `logs`; un-retiring a license type; logging a product
+   ID prefix change; "Inspect a key" and the deferred Umbraco version range (PDR-0012);
+   PDR-0028 rejected table cites re-import but there is no import.
 
-### F7. Add-on not aligned to base expiry (Decision)
-- Linked add-on pre-fills today + own term. Mid-term add-on sales usually want to end with the
-  base, so the site owner renews once a year, not on two dates.
-- Option: when linked, offer the base's current expiry as an alternative pre-fill. An issuing
-  convention, so it belongs in the add-on (PDR-0023 amendment, PDR-0029).
+## Saving each decision
 
-### F8. Site owner receives a bare key string (Decision, small)
-- `license-issuing` "Key shown once issued" is vendor-facing. Site owner persona "needs to
-  know what they have".
-- Option: copyable block with product, license type, reference, expiry, order reference, key.
-  Re-send could produce one block for a base license plus its linked add-ons.
+PDR (next Q number Q21, next PDR-0033) or amendment; spec edits; a row in design.md Questions
+(remove from Open); decision index; `license-examples.md` "Last checked against" line; proposal
+PDR ranges. Run `openspec validate issuing-add-on`. Ask before writing.
 
-### Smaller items
-- `issuing-setup` "Move the data folder": copies the database; the `logs` folder is not mentioned.
-- `product-catalogue`: can a retired license type be un-retired? Unspecified.
-- `activity-logging`: product ID prefix change after setup not in the logged actions.
-- `license-records` "Inspect a key": PDR-0012 Umbraco version range. What does the add-on show
-  without a site context?
-- PDR-0028 Rejected table cites "easier to re-import"; there is no import (own export or other).
+## Architect follow-ups (opsx:update / opsx:propose, not explore)
 
-## Suggested order
-1. F1 (find or reconstruct the Q list; it is the source for every new PDR).
-2. Decisions F2, F3, F4, F6 (bigger product impact), then F7, F8.
-3. Fixes F5 and the smaller items.
+- ADR-0004: `SigningKey.PrivateKeyPath` becomes a file name; settings file holds the data and
+  signing keys folders (PDR-0032). Signing key state (pending/current/retired) and made-current
+  time (PDR-0031).
+- Tool name for `<home>/.<toolname>`: decide in `opsx:propose`.
+- Rest of design.md (Context, Goals, Decisions, Risks, Migration) and tasks.md.
 
-Per CLAUDE.md: each settled decision gets a PDR or PDR amendment, spec edits, a design.md
-cross-reference, and a `docs/license-examples.md` "Last checked against" update. Ask before writing.
+## Agent setup work (from session 1, unchanged)
 
-## Agent setup work done this session (context)
-- `CLAUDE.md`: added `opsx:update / sync / archive` hat rule (hat follows the artifact);
-  apply flow step 4-5 now stages each passed block (`git add <paths>`, Architect only, never commit).
-- `.claude/agents/reviewer.md`: reviews unstaged diff + untracked files; staged = earlier blocks.
-- `.claude/agents/supervisor.md`: reviews everything uncommitted against `HEAD`.
+- Done: `CLAUDE.md` hat rule for update/sync/archive; apply flow stages each passed block;
+  reviewer reviews unstaged + untracked; supervisor reviews everything uncommitted vs `HEAD`.
 - Proposed, not yet approved:
   - `openspec/config.yaml`: `operations.apply.guidance` (delegate to agents, do not tick
     directly) and `rules.tasks` (verify clause per task; sections never mix library and web work).
@@ -121,4 +95,4 @@ cross-reference, and a `docs/license-examples.md` "Last checked against" update.
   - Move the delta-megalith `autoMode` block out of global `~/.claude/settings.json`.
   - PreToolUse hook enforcing read-only for reviewer and supervisor (optional).
   - Name the ADR-0002 Key Vault package explicitly in `worker-library`.
-- Deferred by Carl: untracking `.temp/` (he will remove it later); web worker projects come later.
+- Deferred by Carl: untracking `.temp/`; web worker projects come later.

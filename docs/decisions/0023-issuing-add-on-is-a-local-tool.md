@@ -3,7 +3,9 @@
 - **Status:** Decided, 2026-10-04. Amended by PDR-0029, 2026-10-04: license rules are the
   library's; issuing conventions such as terms and renewal periods are the add-on's. Amended,
   2026-10-05: one copy per data folder; a database is created in a folder given for one run only
-  when the vendor agrees
+  when the vendor agrees. Amended by PDR-0032, 2026-10-05: setup asks for one location holding
+  both folders, default `<home>/.<toolname>`; both folders are machine settings, never in the
+  database
 - **Source:** `openspec/changes/issuing-add-on/design.md` Q1, Q2, Q3; amendment: Q10, Q16, Q17
 - **Serves:** vendor (no server to run; guided first use), site owner (keys can be re-sent and
   renewed); **Cost to:** vendor (backs up two folders)
@@ -18,9 +20,9 @@ database.
 |---|---|
 | Users | One vendor, one person at a time. No accounts, no sharing over a network |
 | One copy per data folder | A second copy started on a data folder already in use refuses to start and says another copy is open. Copies on different data folders may run side by side |
-| First run | A guided setup asks for the data folder, the signing keys folder and the vendor's product ID prefix. Nothing else runs until setup is complete |
-| Data folder | Chosen by the vendor; defaults to a per-user application folder. Holds the database and the log. Can be moved later, with its records |
-| Signing keys folder | Chosen by the vendor. Holds one private key file per signing key. Must not be the data folder or inside it, and the data folder must not be inside it (PDR-0007) |
+| First run | A guided setup asks for one location for the data and signing keys (PDR-0032) and the vendor's product ID prefix. Nothing else runs until setup is complete |
+| Data folder | `data` under the chosen location (PDR-0032). Holds the database and the log. Can be moved later, with its records |
+| Signing keys folder | `signing-keys` under the chosen location (PDR-0032). Holds one private key file per signing key. Must not be the data folder or inside it, and the data folder must not be inside it (PDR-0007) |
 | Product ID prefix | The vendor part of `vendor.product` (PDR-0017). Pre-fills new product IDs; editable per product |
 | Missing data | If the data folder or its database is missing at start, the tool says so and offers to locate it or run setup again. It never silently starts an empty database. A data folder given for one run that holds no database gets one only if the vendor agrees; the default is no |
 | Rule checking | Every license rule is the library's. The add-on asks the library and shows the library's reasons |

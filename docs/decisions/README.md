@@ -43,7 +43,7 @@ is not yet a spec requirement until the specs are revised.
 | [0020](0020-visible-key-identifier.md) | Every key starts with a visible key identifier | Decided |
 | [0021](0021-reading-a-key-string.md) | Whitespace in a key string is ignored; contents that break the schema are unreadable | Decided |
 | [0022](0022-vendor-tag.md) | Optional vendor tag: the vendor's own label, signed into the key | Decided |
-| [0023](0023-issuing-add-on-is-a-local-tool.md) | The issuing add-on is a local, interactive tool for one vendor | Decided; amended by PDR-0029, amended 2026-10-05 |
+| [0023](0023-issuing-add-on-is-a-local-tool.md) | The issuing add-on is a local, interactive tool for one vendor | Decided; amended by PDR-0029, amended 2026-10-05, amended by PDR-0032 |
 | [0024](0024-license-types-are-templates.md) | License types are templates, editable at issue | Decided; amended 2026-10-05 |
 | [0025](0025-renewal-continues-the-period.md) | A renewal continues the period; after a lapse the vendor chooses | Decided; amended 2026-10-04, 2026-10-05 |
 | [0026](0026-add-on-record-may-link-to-base.md) | An add-on license record may link to a base license record | Decided; amended 2026-10-05 |
@@ -51,6 +51,8 @@ is not yet a spec requirement until the specs are revised.
 | [0028](0028-export-and-log-contents.md) | CSV export includes key strings; the log never does | Decided; amended 2026-10-05 |
 | [0029](0029-expiry-is-stated-never-implied.md) | A key's expiry is stated when issuing, never implied | Decided |
 | [0030](0030-license-status-in-the-add-on.md) | A license in the add-on has one of four statuses, read from its current key | Decided |
+| [0031](0031-signing-key-rotation-is-two-steps.md) | Rotating a signing key is two steps: create pending, then make current | Decided |
+| [0032](0032-one-location-per-machine.md) | Data and signing keys live under one location, chosen per machine | Decided |
 
 ## Template
 

@@ -11,13 +11,19 @@ vendor tooling that leaves every license rule to the library.
 - New **issuing add-on**: an interactive console tool for one vendor, distributed as a .NET
   tool, persisting to a small local database in a folder the vendor chooses. It never checks a
   license rule itself; the library decides.
-- **First-run setup**: chooses the data folder, the signing keys folder (kept apart from the
-  data, PDR-0007) and the vendor's product ID prefix. The data folder can be moved later.
+- **First-run setup**: chooses one location, default `<home>/.<toolname>`, holding a data folder
+  and a signing keys folder kept apart (PDR-0007, PDR-0032), and the vendor's product ID prefix.
+  Folders are machine settings, never in the database, so a restore on a new machine needs no
+  path fixing; signing key files are checked at setup and at every start. The data folder can be
+  moved later.
 - **Product catalogue**: products, and per product, **license types**: templates with a name, a
   role (base or add-on), a term in months or perpetual, and default features. Editable at issue
   (PDR-0024).
 - **Signing keys per product**: created with the product, private key written to a PEM file in
-  the signing keys folder, never to the database. Public key export. Rotation.
+  the signing keys folder, never to the database. Public key export. Signing key export as a backup
+  (PDR-0032). Two-step rotation: a new
+  key is pending until the vendor makes it current, after shipping a release that trusts it
+  (PDR-0031).
 - **Issuing**: new sale (base), add-on (optionally linked to a base license record, PDR-0026)
   and renewal (continues the period; on a lapse the vendor chooses, PDR-0025). An optional order
   reference is signed into the key as the vendor tag (PDR-0027). Safeguards from PDR-0009 and
@@ -34,9 +40,9 @@ vendor tooling that leaves every license rule to the library.
 - **Library change** (`license-generation`): a request states its expiry as a date or perpetual,
   exactly one; an omitted expiry no longer means perpetual (PDR-0029). The add-on calculates
   dates from license type terms and passes the result.
-- New product decisions PDR-0023 to PDR-0029; PDR-0006 amended by PDR-0027; PDR-0023 and
-  PDR-0025 amended. New technology
-  decisions ADR-0003 to ADR-0005.
+- New product decisions PDR-0023 to PDR-0032. Amended: PDR-0006 (by PDR-0027), PDR-0023 (by
+  PDR-0029, PDR-0032 and on 2026-10-05), PDR-0024, PDR-0025, PDR-0026, PDR-0028 (on 2026-10-05
+  and by PDR-0032). New technology decisions ADR-0003 to ADR-0005.
 
 Out of scope:
 
@@ -71,5 +77,5 @@ Out of scope:
 - Two public additions to the core library's issuing API, and one breaking change: a request
   without a stated expiry is rejected. The library is unreleased. No change to the key format or
   to evaluation.
-- Docs: PDR-0023 to PDR-0029, PDR-0006, PDR-0023 and PDR-0025 amendments, ADR-0003 to ADR-0005, decision index,
+- Docs: PDR-0023 to PDR-0032 and the amendments above, ADR-0003 to ADR-0005, decision index,
   `docs/license-examples.md` "Last checked against" line, README status.

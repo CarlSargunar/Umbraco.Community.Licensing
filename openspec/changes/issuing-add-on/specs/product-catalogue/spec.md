@@ -3,7 +3,7 @@
 Holds what the vendor sells: products, the license types offered for each, and each product's
 signing keys, so licenses can be issued from a template with the right key.
 
-Serves the **vendor**. Product decisions: PDR-0023, PDR-0024, PDR-0007, PDR-0011, PDR-0017;
+Serves the **vendor**. Product decisions: PDR-0023, PDR-0024, PDR-0007, PDR-0011, PDR-0017, PDR-0031, PDR-0032;
 signing keys follow the `signing-key-management` capability.
 
 ## ADDED Requirements
@@ -71,19 +71,33 @@ existing licenses (PDR-0024).
 - **THEN** the system SHALL refuse and say why
 
 ### Requirement: Signing keys per product
-Each product SHALL have exactly one current signing key used for issuing, and any number of
-earlier ones. For each, the records SHALL hold the signing key ID, the public key, the private
-key file's location and when it was created and retired. The private key SHALL be written only
-to a file in the signing keys folder, readable only by the current user where the operating
-system supports it, and SHALL NOT be written to the database, the log or an export (PDR-0007).
+Each product SHALL have exactly one current signing key used for issuing, at most one pending
+signing key that signs nothing, and any number of retired ones (PDR-0031). For each, the records
+SHALL hold the signing key ID, the public key, the private key file's name, its state, and
+when it was created, made current and retired. The file name SHALL be made from the product ID
+and the signing key ID, and the file SHALL be looked up in the signing keys folder in use; no
+folder or path SHALL be recorded (PDR-0032). Wherever signing keys are listed, each SHALL show
+its state, and whether its file is usable. The private key SHALL be written only to a file in
+the signing keys folder, readable only by the current user where the operating system supports
+it, and SHALL NOT be written to the database, the log or the records export (PDR-0007,
+PDR-0028).
 
 #### Scenario: Private key not in records
 - **WHEN** a product's signing key is created
-- **THEN** the database SHALL hold its signing key ID, public key and file location, and no private key material
+- **THEN** the database SHALL hold its signing key ID, public key and file name, and no private key material or path
+
+#### Scenario: Key file found after a move
+- **WHEN** the private key files are copied to another folder and the signing keys folder is changed to it
+- **THEN** issuing SHALL read each key file from the new folder by its file name
 
 ### Requirement: Export the public key
 The vendor SHALL be able to show any of a product's public keys as PEM and write it to a file,
-labelled with its signing key ID and whether it is current, for shipping inside the product.
+labelled with its signing key ID and its state (pending, current or retired), for shipping
+inside the product.
+
+#### Scenario: Export pending public key
+- **WHEN** the vendor exports the pending public key of `acme.commerce`
+- **THEN** the system SHALL show and, if asked, write the PEM labelled pending
 
 #### Scenario: Export current public key
 - **WHEN** the vendor exports the current public key of `acme.commerce`
@@ -91,25 +105,88 @@ labelled with its signing key ID and whether it is current, for shipping inside 
 
 ### Requirement: Rotate the signing key
 The vendor SHALL be able to rotate a product's signing key. Rotation SHALL create a new key pair,
-write its private key file, make it current for issuing, and mark the previous key retired. It
-SHALL then show the new public key for export and the rotation steps: ship the new public key
-alongside the old, and withdraw the old one only once no valid license depends on it. For each
-earlier signing key the system SHALL show how many licenses whose current key it signed are not
-expired.
+write its private key file and record the new key as pending; the current key SHALL keep signing
+(PDR-0031). The system SHALL then show the new public key for export and the rotation steps:
+export the new public key, ship a release trusting both keys, make the new key current once
+sites are likely to run that release, and keep trusting the old public key while any license a
+site runs depends on it. Rotation SHALL be refused while the product has a pending key.
 
 #### Scenario: Rotation
 - **WHEN** the vendor rotates the signing key of `acme.commerce`
-- **THEN** keys issued afterwards SHALL be signed with the new key, and earlier keys SHALL remain recorded against the old one
+- **THEN** a pending signing key SHALL be recorded with its private key file in the signing keys folder, and keys issued afterwards SHALL still be signed with the current key
+
+#### Scenario: Second rotation refused
+- **WHEN** the vendor rotates the signing key of a product that has a pending key
+- **THEN** the system SHALL refuse, name the pending key, and offer to make it current or discard it
+
+### Requirement: Make the pending key current
+The vendor SHALL be able to make a product's pending signing key current. Before doing so, the
+system SHALL ask the vendor to confirm that a release trusting the new public key has shipped,
+and SHALL say that keys signed by it fail on sites running an older release. On confirmation the
+pending key SHALL become current and the previous current key retired. The system SHALL show,
+for each retired signing key, how many licenses whose current key it signed are not expired.
+
+#### Scenario: Made current
+- **WHEN** the vendor makes the pending key of `acme.commerce` current and confirms
+- **THEN** keys issued afterwards SHALL be signed with it, the previous key SHALL be retired, and earlier keys SHALL remain recorded against the key that signed them
+
+#### Scenario: Not confirmed
+- **WHEN** the vendor declines the confirmation
+- **THEN** the pending key SHALL stay pending and the current key SHALL keep signing
 
 #### Scenario: Dependent licenses shown
-- **WHEN** two unexpired licenses' current keys were signed by the retired key
+- **WHEN** two unexpired licenses' current keys were signed by the key being retired
 - **THEN** the system SHALL report 2 licenses still depending on it
+
+### Requirement: Make a new key current now
+For a compromised key or a private key file that cannot be restored, the vendor SHALL be able to
+rotate and make the new key current in one action. The system SHALL warn that every key issued
+afterwards fails on sites that have not installed a release trusting the new public key, and
+SHALL act only on confirmation (PDR-0031).
+
+#### Scenario: Emergency switch
+- **WHEN** the vendor chooses make current now for `acme.commerce` and confirms the warning
+- **THEN** a new signing key SHALL be current, the previous key retired, and the new public key shown for export
+
+### Requirement: Discard a pending key
+The vendor SHALL be able to discard a pending signing key. The system SHALL remove its record
+and tell the vendor which private key file to delete by hand. A current or retired key SHALL NOT
+be discardable.
+
+#### Scenario: Pending key discarded
+- **WHEN** the vendor discards the pending key of `acme.commerce`
+- **THEN** the product SHALL have no pending key, the current key SHALL be unchanged, and the system SHALL name the private key file to delete
+
+### Requirement: Export signing keys
+The vendor SHALL be able to copy every signing key's private key file to a folder it chooses, as
+a backup, and SHALL be shown each file's product, signing key ID and state. The system SHALL
+refuse a folder that is the data folder, inside it or contains it (PDR-0007), SHALL warn that the
+files can sign keys for every product, and SHALL ask before overwriting an existing file. This
+export SHALL be separate from the records export (PDR-0028, PDR-0032).
+
+#### Scenario: Keys exported
+- **WHEN** the vendor exports signing keys to an empty folder outside the data folder and accepts the warning
+- **THEN** every private key file SHALL be copied there, and the system SHALL list each with its product, signing key ID and state
+
+#### Scenario: Data folder refused
+- **WHEN** the vendor chooses a folder inside the data folder
+- **THEN** the system SHALL refuse, naming the rule, and copy nothing
+
+#### Scenario: Missing file
+- **WHEN** a retired key's file is missing at export
+- **THEN** the system SHALL copy the others and name the missing file
 
 ### Requirement: Missing private key file
 When issuing needs a signing key whose private key file is missing, unreadable, or does not
-match the recorded public key, the system SHALL refuse to issue, name the file, and tell the
-vendor to restore it from backup or rotate the signing key.
+match the recorded public key, the system SHALL refuse to issue and name the file and the folder
+searched. It SHALL then offer, in this order: change the signing keys folder; restore the file
+from backup and try again; make the product's pending key current, if one exists; make a new key
+current now, with its warning (PDR-0031, PDR-0032).
 
 #### Scenario: File missing
 - **WHEN** the vendor issues a key and the current signing key's file has been deleted
-- **THEN** no key SHALL be issued or recorded, and the message SHALL name the file
+- **THEN** no key SHALL be issued or recorded, the message SHALL name the file, and the remedies SHALL be offered with changing the signing keys folder first and making a new key current now last
+
+#### Scenario: Pending key offered
+- **WHEN** the current signing key's file is missing and the product has a pending key
+- **THEN** the system SHALL offer to make the pending key current, with the warning for keys issued before sites upgrade

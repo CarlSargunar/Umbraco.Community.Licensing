@@ -14,7 +14,10 @@ decisions in [`decisions/`](decisions/README.md).
 > [`deferred-scope.md`](deferred-scope.md) (2026-10-03). Then PDR-0023 to PDR-0030 from the
 > `issuing-add-on` change, including PDR-0027's amendment to PDR-0006 and the amendments to
 > PDR-0023 to PDR-0026 and PDR-0028 (issuing-add-on design.md Q10 to Q18); PDR-0023 to PDR-0028
-> and PDR-0030 govern the add-on and change no example (2026-10-05).
+> and PDR-0030 govern the add-on and change no example (2026-10-05). PDR-0031 (issuing-add-on
+> design.md Q19, two-step rotation) changes no example; example 18 key 6 is the failure it
+> prevents. PDR-0032 (design.md Q20, one location per machine) and its amendments to PDR-0023
+> and PDR-0028 change no example (2026-10-05).
 
 The Umbraco version range (PDR-0012) was removed from the schema on 2026-10-01
 (`deferred-scope.md` D1). The inventory (D5) is also deferred: where an example says what a

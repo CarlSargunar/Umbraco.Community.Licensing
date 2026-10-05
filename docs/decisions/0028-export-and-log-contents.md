@@ -1,7 +1,8 @@
 # PDR-0028: CSV export includes key strings; the log never does
 
 - **Status:** Decided, 2026-10-04. Amended, 2026-10-05: features are exported in their own files,
-  six files in all
+  six files in all. Amended by PDR-0032, 2026-10-05: the records export never holds private keys;
+  backing up the private key files is a separate action, Export signing keys
 - **Source:** `openspec/changes/issuing-add-on/design.md` Q8, Q9; amendment: Q18
 - **Serves:** vendor (a full copy of its records in a portable form; a log of what it did)
 
@@ -11,7 +12,7 @@
 table: products, license types, license type features, signing keys (public part only), issued
 keys and issued key features. Each features file has one row per feature, naming the license
 type or key identifier it belongs to. Issued keys include the key string. Before writing, the tool warns that the files hold working keys and should be kept like
-the data folder. Private keys are never exported; the database does not hold them (PDR-0007).
+the data folder. Private keys are never in the records export; the database does not hold them (PDR-0007). Backing up the private key files is a separate action, Export signing keys (PDR-0032).
 
 **Log.** Every action is logged with when it happened and the identifiers it touched: setup,
 data folder moves, product, license type and signing key changes, add-on link changes, issues (license reference,

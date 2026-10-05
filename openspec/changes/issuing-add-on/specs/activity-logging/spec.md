@@ -3,7 +3,7 @@
 Keeps a record of what the issuing add-on did and what went wrong, for the vendor's own
 troubleshooting, without the log becoming a source of working keys.
 
-Serves the **vendor**. Product decision: PDR-0028.
+Serves the **vendor**. Product decisions: PDR-0028, PDR-0032.
 
 ## ADDED Requirements
 
@@ -16,8 +16,8 @@ files older than 30 days removed. Each entry SHALL have a UTC timestamp, a level
 - **THEN** an entry SHALL be appended to that day's log file
 
 ### Requirement: Actions logged
-The system SHALL log setup, data folder moves, signing keys folder changes, product, license type
-and signing key changes, add-on link changes (both license references), every issued key (product, role, license reference, key identifier,
+The system SHALL log setup, data folder moves, signing keys folder changes, signing key file checks that fail, product, license type
+and signing key changes (rotation, make current, make current now, discard pending), signing key exports (folder and signing key IDs), add-on link changes (both license references), every issued key (product, role, license reference, key identifier,
 expiry, order reference, signing key ID), every reveal of a key string (key identifier only),
 inspections (state and key identifier), exports (folder and row counts) and errors.
 
