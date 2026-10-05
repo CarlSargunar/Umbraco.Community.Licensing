@@ -3,7 +3,7 @@
 - **Status:** Decided, 2026-09-28. Amended, 2026-10-01: superseding is scoped to one product;
   only a key that verifies supersedes; the latest issued wins even when the reissue changes
   the role. Amended, 2026-10-02: a key supersedes only keys issued strictly earlier; keys tied
-  for latest both count and are flagged as a vendor error; exact copies of one key count once
+  for latest both count and are flagged as a vendor error; exact copies of one key count once. Amended by PDR-0038, 2026-10-05: keys carry no role, so the role clauses (latest wins whatever its role; the role-change note) no longer apply; a reissue may change any purchase (PDR-0037)
 - **Source:** `openspec/changes/license-key-management/design.md` Q8; amendments: Q18, Q19
 - **Serves:** site owner, implementor, vendor
 

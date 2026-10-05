@@ -1,7 +1,7 @@
 # PDR-0010: Product features are switches and numbers
 
 - **Status:** Decided, 2026-09-30. Amended by PDR-0018, 2026-09-30: text values are allowed
-  and never combine
+  and never combine. Amended by PDR-0037, 2026-10-05: features belong to purchases; a name appears at most once per purchase, and features combine across purchases in one key as they do between licenses
 - **Source:** `openspec/changes/license-key-management/design.md` R7, Q9, Q10, Q16
 - **Serves:** vendor (gate capabilities and sell limits), site owner (later additions reach existing licenses; adding a key never reduces what they hold)
 

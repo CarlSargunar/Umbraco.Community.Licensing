@@ -1,7 +1,7 @@
 # PDR-0019: A failed key reports its reason and its claimed identifiers only
 
 - **Status:** Decided, 2026-10-02. Amended the same day: the *duplicate* state and the flags
-  were added to the list (design.md Q19)
+  were added to the list (design.md Q19). Amended by PDR-0038, 2026-10-05: state 8 *inactive* and the *role changed* flag are removed; a failed key never reports its purchases
 - **Source:** `openspec/changes/license-key-management/design.md` Q5
 - **Serves:** site owner (never shown a false entitlement; can quote which purchase is broken), implementor (each failure names a key and a first action), vendor (nothing in a failed key can be read as a feature); **Cost to:** site owner (a failed key does not say what it would have granted)
 
@@ -19,7 +19,8 @@ entitlement.
 
 A key that fails verification reports its **reason**, its **claimed product ID** and its
 **claimed key identifier** (PDR-0020), worded as claims ("claims to be"). It never reports its
-role, issue time, expiry or features.
+purchases, issue time or expiry (amended by PDR-0038; was: role, issue time, expiry or
+features).
 
 **One state per key, first failing check wins.**
 
@@ -33,13 +34,12 @@ role, issue time, expiry or features.
   5  exact copy of a key earlier in the list     -> duplicate      PDR-0009
   6  older key under the same reference          -> superseded     PDR-0009
   7  past its expiry date                        -> expired        PDR-0016
-  8  add-on with no valid base                   -> inactive       PDR-0011
      otherwise                                   -> valid
 ```
 
 A row may also carry a flag. A flag is not a state and does not stop a key counting: *vendor
-error* on keys tied for latest and *role changed* on a superseded key (both PDR-0009), and
-*conflict* on a text feature (PDR-0018).
+error* on keys tied for latest (PDR-0009) and *conflict* on a text feature (PDR-0018). State 8
+*inactive* and the *role changed* flag were removed by PDR-0038.
 
 A wrong-product key is always reported with claimed identifiers only. Whether it would verify
 is not this product's question.

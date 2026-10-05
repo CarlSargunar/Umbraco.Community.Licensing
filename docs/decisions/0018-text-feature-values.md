@@ -1,6 +1,6 @@
 # PDR-0018: Product features may carry text; text never combines
 
-- **Status:** Decided, 2026-09-30. Amends PDR-0010, which rejected text values
+- **Status:** Decided, 2026-09-30. Amends PDR-0010, which rejected text values. Amended by PDR-0037, 2026-10-05: within one key, text that differs between purchases is rejected at issue; between keys this rule stands
 - **Source:** `openspec/changes/license-key-management/design.md` R7, Q16
 - **Serves:** vendor (carry a domain, an external identifier or other vendor data the library
   does not model); implementor (a conflict names the keys involved); **Cost to:** site owner (a

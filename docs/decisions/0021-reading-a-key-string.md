@@ -1,6 +1,6 @@
 # PDR-0021: Whitespace in a key string is ignored; contents that break the schema are unreadable
 
-- **Status:** Decided, 2026-10-02. The second rule is provisional: revisit if vendors meet it
+- **Status:** Decided, 2026-10-02. The second rule is provisional: revisit if vendors meet it. Amended by PDR-0037, 2026-10-05: the schema now includes purchases; a missing base purchase or an unknown purchase kind makes a verified key unreadable
 - **Source:** `openspec/changes/license-key-management/design.md` Q20
 - **Serves:** implementor (a key wrapped or padded by email or a config file still works), site owner (never shown an entitlement the core would refuse to issue); **Cost to:** vendor (a key its own tool mis-built is reported as unreadable, with "paste again" as the first action)
 
@@ -11,7 +11,7 @@ line breaks, at either end or anywhere inside. A key never contains whitespace, 
 cannot change a correctly copied key.
 
 **Contents that break the schema.** A key that verifies but whose contents break a rule
-checked at issue is reported as *unreadable*. Examples: a missing or unknown role, a negative
+checked at issue is reported as *unreadable*. Examples: no base purchase or an unknown purchase kind (PDR-0037), a negative
 or malformed number, a feature name in capitals, a name repeated in one key, text with a line
 break. Its identifier is reported if its start is readable, as for any unreadable key
 (PDR-0019, PDR-0020). It takes no part in superseding or combining.

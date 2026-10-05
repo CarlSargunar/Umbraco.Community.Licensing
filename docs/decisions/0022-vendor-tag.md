@@ -1,6 +1,6 @@
 # PDR-0022: Optional vendor tag: the vendor's own label, signed into the key
 
-- **Status:** Decided, 2026-10-03
+- **Status:** Decided, 2026-10-03. Amended by PDR-0037, 2026-10-05: the tag labels a purchase, not a key; at most one per purchase
 - **Source:** `openspec/changes/license-key-management/design.md` Q21
 - **Serves:** vendor (a key leads straight to its own order record, without the add-on or a
   stored mapping), site owner (can match a key to the order number on their receipt);
@@ -13,13 +13,13 @@ as its shop's order ID or a payment-provider ID. The core signs it into the key 
 
 | Aspect | Rule |
 |---|---|
-| Presence | Optional; at most one per key. Omitted means the key has none |
+| Presence | Optional; at most one per purchase (PDR-0037). Omitted means the purchase has none |
 | Characters | `A-Z a-z 0-9` and `- _ . # /`. No spaces |
 | Length | 1 to 64 characters |
 | Case | Kept as supplied |
 | Invalid value | Rejected when passed in, with an error naming the rule, like every other input. Never cleaned or altered |
 | Unique | Not required, not checked |
-| On reissue | Not carried forward. The vendor passes it again, or a new one (e.g. the renewal order) |
+| On reissue | The core carries nothing forward. A reissue prefilled from the current key keeps each earlier purchase with its tag (PDR-0036); a new purchase gets its own |
 | Effect | None. A label only: never used for superseding, combining, gating or matching |
 | Reported | In the evaluation result for **verified** keys only, beside the key identifier |
 

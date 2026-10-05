@@ -148,6 +148,10 @@ Condensed from design.md as it stood before the cut (full text in git history, c
   live in the name, so it gives the site label (D7) a home. One section shared by every vendor
   (PDR-0002). Separator for C cannot be whitespace (PDR-0021).
 
+  Since 2026-10-05 a site holds one key per product (PDR-0036), replaced in place at each
+  purchase; several keys per product remain possible only for licenses bought separately
+  (PDR-0038). Shape B (named entries) then maps one name to one product.
+
   Compared: Standard.Licensing (github.com/junian/Standard.Licensing) has one signed XML
   license per product, no product ID, role, reference or combining, and stores it as a `.lic`
   file; add-ons there mean reissuing the one license or the vendor merging several itself.

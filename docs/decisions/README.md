@@ -15,7 +15,7 @@ A PDR is the full record of its decision. Its source line names the requirement 
 (R-number, Q-number) indexed in the *Requirements and open questions* section of the design.md
 of the change that raised it: `license-key-management` (PDR-0001 to PDR-0022, archived under
 `openspec/changes/archive/2026-10-04-license-key-management/`) or `issuing-add-on` (PDR-0023
-onwards), or, for scope that left the change, in
+to PDR-0035), `one-key-per-product` (PDR-0036 onwards), or, for scope that left the change, in
 [`../deferred-scope.md`](../deferred-scope.md). The chronological write-up is in git history. A decided PDR
 is not yet a spec requirement until the specs are revised.
 
@@ -28,21 +28,21 @@ is not yet a spec requirement until the specs are revised.
 | [0005](0005-core-signs-only.md) | The core issuing API signs only and keeps no records | Decided |
 | [0006](0006-issuing-add-on-without-personal-data.md) | Optional issuing add-on; no customer personal data | Decided; amended by PDR-0022 |
 | [0007](0007-signing-secrets-stored-apart.md) | Signing secrets are stored apart from issued keys | Decided |
-| [0008](0008-a-key-stands-for-one-purchase.md) | A license key stands for one purchase | Decided |
-| [0009](0009-license-reference.md) | License reference: same reference supersedes, different ones combine | Decided; amended 2026-10-01, 2026-10-02 |
-| [0010](0010-product-features.md) | Product features are switches and numbers | Decided; amended by PDR-0018 |
-| [0011](0011-base-and-add-on-licenses.md) | Base and add-on licenses, and how licenses combine | Decided; amended 2026-10-01, 2026-10-02 |
+| [0008](0008-a-key-stands-for-one-purchase.md) | A license key stands for one purchase | Superseded by PDR-0036 |
+| [0009](0009-license-reference.md) | License reference: same reference supersedes, different ones combine | Decided; amended 2026-10-01, 2026-10-02, amended by PDR-0038 |
+| [0010](0010-product-features.md) | Product features are switches and numbers | Decided; amended by PDR-0018, amended by PDR-0037 |
+| [0011](0011-base-and-add-on-licenses.md) | Base and add-on licenses, and how licenses combine | Superseded by PDR-0038 |
 | [0012](0012-umbraco-version-range.md) | Umbraco version range: base licenses only, majors, inclusive | Deferred (host-side) |
 | [0013](0013-feature-names.md) | Feature names are restricted; lookups ignore case | Decided |
 | [0014](0014-dropped-kind-of-license.md) | No kind of license (trial / standard) | Dropped |
 | [0015](0015-dropped-release-date-gating.md) | No release-date gating | Dropped |
 | [0016](0016-dates-and-times.md) | Issue and expiry dates are UTC; the core sets the issue time | Decided; amended 2026-10-01, 2026-10-02 |
 | [0017](0017-identifier-formats.md) | Identifier formats: `vendor.product` and `LIC-XXXXX-XXXXX` | Decided; amended 2026-10-02, 2026-10-03 |
-| [0018](0018-text-feature-values.md) | Product features may carry text; text never combines | Decided |
-| [0019](0019-failed-key-reporting.md) | A failed key reports its reason and its claimed identifiers only | Decided |
+| [0018](0018-text-feature-values.md) | Product features may carry text; text never combines | Decided; amended by PDR-0037 |
+| [0019](0019-failed-key-reporting.md) | A failed key reports its reason and its claimed identifiers only | Decided; amended by PDR-0038 |
 | [0020](0020-visible-key-identifier.md) | Every key starts with a visible key identifier | Decided |
-| [0021](0021-reading-a-key-string.md) | Whitespace in a key string is ignored; contents that break the schema are unreadable | Decided |
-| [0022](0022-vendor-tag.md) | Optional vendor tag: the vendor's own label, signed into the key | Decided |
+| [0021](0021-reading-a-key-string.md) | Whitespace in a key string is ignored; contents that break the schema are unreadable | Decided; amended by PDR-0037 |
+| [0022](0022-vendor-tag.md) | Optional vendor tag: the vendor's own label, signed into the key | Decided; amended by PDR-0037 |
 | [0023](0023-issuing-add-on-is-a-local-tool.md) | The issuing add-on is a local, interactive tool for one vendor | Decided; amended by PDR-0029, amended 2026-10-05, amended by PDR-0032 |
 | [0024](0024-license-types-are-templates.md) | License types are templates, editable at issue | Decided; amended 2026-10-05 |
 | [0025](0025-renewal-continues-the-period.md) | A renewal continues the period; after a lapse the vendor chooses | Decided; amended 2026-10-04, 2026-10-05 (twice) |
@@ -56,6 +56,9 @@ is not yet a spec requirement until the specs are revised.
 | [0033](0033-retired-key-dependants.md) | A retired signing key's dependants are its unexpired and perpetual keys | Decided |
 | [0034](0034-reissue-corrects-a-license.md) | The add-on reissues a license to correct it or re-sign it, keeping its terms | Decided |
 | [0035](0035-linked-add-on-aligns-to-base.md) | A linked add-on's expiry defaults to its base's expiry | Decided |
+| [0036](0036-one-key-per-product.md) | One license key per product holds every purchase; a new purchase replaces the key | Decided |
+| [0037](0037-purchases-in-a-license.md) | A license lists its purchases: one base, any number of add-ons | Decided |
+| [0038](0038-licenses-for-one-product-combine.md) | Licenses for one product combine; there are no roles between keys | Decided |
 
 ## Template
 

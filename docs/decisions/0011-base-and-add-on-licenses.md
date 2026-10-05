@@ -1,6 +1,6 @@
 # PDR-0011: Base and add-on licenses, and how licenses combine
 
-- **Status:** Decided, 2026-09-30. Amended, 2026-10-01: *base out of Umbraco range* is no
+- **Status:** Superseded by PDR-0038, 2026-10-05: keys carry no role; every license holds its base purchase (PDR-0037), so the *inactive* state is gone. Combining between licenses is restated in PDR-0038. Was: Decided, 2026-09-30. Amended, 2026-10-01: *base out of Umbraco range* is no
   longer a reason a license drops out (PDR-0012 deferred, [`docs/deferred-scope.md`](../deferred-scope.md)
   D1); "the inventory lists" reads as "the evaluation result reports" (D5). Amended,
   2026-10-02: the reasons a license is invalid are those in PDR-0019; "tampered" and

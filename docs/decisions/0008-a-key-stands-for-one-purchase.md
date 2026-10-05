@@ -1,6 +1,6 @@
 # PDR-0008: A license key stands for one purchase
 
-- **Status:** Decided, 2026-09-28
+- **Status:** Superseded by PDR-0036, 2026-10-05: one key per product holds every purchase. Was: Decided, 2026-09-28
 - **Source:** `openspec/changes/license-key-management/design.md` Q13
 - **Serves:** site owner (buy from anywhere), vendor (sell add-ons and capacity separately)
 
