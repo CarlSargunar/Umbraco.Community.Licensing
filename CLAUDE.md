@@ -46,5 +46,37 @@ only wear the hat appropriate to the current OpenSpec phase.
   records). Specs describe behaviour, not technology.
 - Product decisions made or changed in this phase also get a PDR.
 
-### `opsx:apply` phase
-- Sub-agent workflow not yet defined.
+### `opsx:apply` phase — Architect hat, coordinating agents
+Claude (the main session) coordinates; agents in `.claude/agents/` implement and review. Only the
+Architect spawns agents and assigns work; agents have no Agent tool.
+
+| Agent | Model | Owns / does |
+|---|---|---|
+| `worker-library` | Sonnet | Core library, issuing add-on (CLI / .NET tool), their tests |
+| `worker-backend` | Sonnet | Web backend (server-side) and its tests. None exists yet |
+| `worker-frontend` | Sonnet | Web front-end (client-side, build tooling) and its tests. None exists yet |
+| `reviewer` | Sonnet | Reviews each completed block. Read-only; may run tests |
+| `supervisor` | Opus | Reviews each completed section before commit. Read-only; may run tests |
+
+Ownership follows project folders. Tests follow code ownership. The Architect owns `docs/`,
+`openspec/`, `README.md`, `CLAUDE.md`, `.claude/` and does documentation tasks in tasks.md
+directly. When a web project is created, the Architect names its folders in the worker briefs.
+
+**Blocks.** Contiguous tasks from one tasks.md section; a meaningful unit; as small as practical;
+one worker. Split where work crosses library / backend / front-end boundaries (library API, then
+backend integration, then front-end integration).
+
+**Flow, per section:**
+1. Assign blocks one at a time (sequential; shared working tree). Brief: change name, task
+   numbers with source, context files, owned folders, any approved cross-boundary work.
+2. Worker implements, runs build / tests / format check, reports.
+3. Architect briefs `reviewer` with the block and changed files. Reviewer reports PASS or
+   CHANGES REQUIRED. Fixes go back to the owning worker; re-review after substantive changes.
+4. On PASS, the Architect ticks the block's tasks in tasks.md.
+5. When all blocks in the section have passed, the Architect briefs `supervisor` on the whole
+   section. Requested changes go to the owning workers, then through `reviewer` again.
+6. On supervisor approval, stop and report to Carl. Carl commits. Continue to the next section
+   only when Carl says so.
+
+Out-of-scope findings from any agent come to the Architect, who decides: fold into a block,
+add a task (via `opsx:update`), defer, or raise with Carl if it is a product decision.
