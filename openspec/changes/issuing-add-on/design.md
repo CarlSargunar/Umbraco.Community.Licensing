@@ -1,3 +1,7 @@
+> **Parked, 2026-10-05.** Exploration paused by the Product Owner. Decided: Q1 to Q24
+> (PDR-0023 to PDR-0035). Open items: design.md "Open". design.md is partial; no tasks.md.
+> Resume with `opsx:explore issuing-add-on`.
+
 > **Partial.** Only *Requirements and open questions* is written. Context, Goals / Non-Goals,
 > Decisions, Risks / Trade-offs and Migration Plan are Architect work for `opsx:propose` /
 > `opsx:update`. ADR-0003 to ADR-0005 cite the Decisions section, which does not exist yet.
@@ -42,12 +46,21 @@ tracked in conversation as U1 to U8.
 | Q23 | How does a period end when its start day does not exist in the target month? | PDR-0025 amendment: on that month's last day (2027-01-31 + 1 month ends 2027-02-28; 2028-02-29 + 12 months ends 2029-02-28); the add-on's rule, never the library's |
 | Q24 | Should a linked add-on offer its base's expiry? | PDR-0035: yes, pre-selected, beside the type's term; only for a dated, unexpired base; on renewal only when it does not cut the current term; base renewal leaves add-ons alone |
 
+### Architect follow-ups
+
+For `opsx:update` / `opsx:propose`, from decisions already made:
+
+- ADR-0004: `SigningKey.PrivateKeyPath` becomes a file name made from the product ID and signing
+  key ID; folders are held in the per-user settings file, not the database (PDR-0032).
+- ADR-0004: the settings file location and the default `<home>/.<toolname>` (PDR-0032) need the
+  tool's name, chosen in `opsx:propose`.
+
 ### Open
 
 From the review of 2026-10-05. Numbered Q25 onward when taken up.
 
 | Topic | Question |
 |---|---|
-| What the site owner receives | Should the add-on produce a copyable block (product, type, reference, expiry, order reference, key) instead of a bare key string? |
+| What the site owner receives | Should the add-on produce a copyable block (product, type, reference, expiry, order reference, key) instead of a bare key string? Explored 2026-10-05, not decided. Leaning: one plain-text block per sale, shown at issue and at re-send: product and type, role, reference, key identifier, expiry (`never` when perpetual), features, order reference, then the key alone on its last line; an add-on adds `needs a base license for <product>` and its linked base; a renewal or reissue names the key it replaces and says the old key can stay installed. Action lines must not assume how the site stores keys: that is deferred (`deferred-scope.md` D2, D3, and its note "How implementors save keys"). Option: a combined block per base listing each linked license's current key and what the keys give together, computed by the library's combining rules; leaning later. No sending from the add-on (needs email addresses, PDR-0006) |
 | Reference unique per product | `license-records` "Find a license" assumes a reference is unique overall; it is unique per product (PDR-0017). Show every match with its product; match a key identifier with its claimed product |
 | Smaller items | Data folder move and the `logs` folder; un-retiring a license type; logging a product ID prefix change; what "Inspect a key" shows for the Umbraco version range (PDR-0012, deferred); PDR-0028 rejected table cites re-import, but there is no import |

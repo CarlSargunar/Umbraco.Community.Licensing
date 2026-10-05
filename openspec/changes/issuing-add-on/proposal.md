@@ -1,3 +1,7 @@
+> **Parked, 2026-10-05.** Exploration paused by the Product Owner. Decided: Q1 to Q24
+> (PDR-0023 to PDR-0035). Open items: design.md "Open". design.md is partial; no tasks.md.
+> Resume with `opsx:explore issuing-add-on`.
+
 ## Why
 
 Most Umbraco package authors are small and have no shop system. The core library signs keys

@@ -131,6 +131,30 @@ Condensed from design.md as it stood before the cut (full text in git history, c
   so the claim is not named for one host. PDR-0012's rules (base only, whole majors, inclusive,
   either bound optional, contiguous) do not depend on the host being Umbraco.
 
+- **How implementors save keys (2026-10-05).** Raised while exploring what the issuing add-on
+  gives the site owner (`issuing-add-on` design.md "Open", What the site owner receives). Notes,
+  no decision. A site holds several keys per product (base, add-ons, capacity; PDR-0008,
+  PDR-0011), each a bearer token used unchanged in every environment, so a renewal or a new
+  add-on means storing one more key everywhere. Implementors use appsettings.json, environment
+  variables and Azure Key Vault, often differing per environment. Three shapes:
+
+  | Shape | appsettings / env var / Key Vault | Add-on / renewal | Finding a failing key |
+  |---|---|---|---|
+  | A. List | `Licensing:Keys:[0..n]` / `Licensing__Keys__0` / `Licensing--Keys--0` | Append / replace by position | By position; removing one shifts the rest |
+  | B. Named entries | `Licensing:Keys:acme-commerce` / `Licensing__Keys__acme-commerce` / `Licensing--Keys--acme-commerce` | Add a name / replace the value under its name | By the implementor's name, plus the key identifier |
+  | C. One value | `Licensing__Keys = LIC-...,LIC-...` | Edit the string | By key identifier; a stray edit breaks every vendor's keys |
+
+  Leaning B: readable in environment variables and vault secret names, where a label can only
+  live in the name, so it gives the site label (D7) a home. One section shared by every vendor
+  (PDR-0002). Separator for C cannot be whitespace (PDR-0021).
+
+  Compared: Standard.Licensing (github.com/junian/Standard.Licensing) has one signed XML
+  license per product, no product ID, role, reference or combining, and stores it as a `.lic`
+  file; add-ons there mean reissuing the one license or the vendor merging several itself.
+  Umbraco's own paid products reportedly take keys from appsettings under `Umbraco:Licenses`,
+  one per product; unverified, and one key per product does not fit several keys per product
+  without a list under each name. Check before relying on it.
+
 ## `license-key-sourcing` delta spec, as removed
 
 ```
