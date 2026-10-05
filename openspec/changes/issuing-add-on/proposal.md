@@ -31,7 +31,11 @@ vendor tooling that leaves every license rule to the library.
   private key (PDR-0028).
 - **Library additions** (`license-generation`): check a license request without signing it, and
   read a license reference, so the add-on validates with the library's own rules.
-- New product decisions PDR-0023 to PDR-0028; PDR-0006 amended by PDR-0027. New technology
+- **Library change** (`license-generation`): a request states its expiry as a date or perpetual,
+  exactly one; an omitted expiry no longer means perpetual (PDR-0029). The add-on calculates
+  dates from license type terms and passes the result.
+- New product decisions PDR-0023 to PDR-0029; PDR-0006 amended by PDR-0027; PDR-0023 and
+  PDR-0025 amended. New technology
   decisions ADR-0003 to ADR-0005.
 
 Out of scope:
@@ -56,8 +60,7 @@ Out of scope:
 
 ### Modified Capabilities
 - `license-generation`: adds checking a request without signing, and reading a license
-  reference. Its base spec is in the unarchived `license-key-management` change; archive that
-  change first.
+  reference; requires the expiry to be stated as a date or perpetual.
 
 ## Impact
 
@@ -65,7 +68,8 @@ Out of scope:
   `tests/Umbraco.Community.Licensing.Issuing.Tests`; both added to the solution.
 - New dependencies, in the add-on only: Spectre.Console, EF Core with SQLite, Serilog
   (ADR-0003 to ADR-0005). The core library stays BCL-only.
-- Two public additions to the core library's issuing API; no change to the key format or to
-  evaluation.
-- Docs: PDR-0023 to PDR-0028, PDR-0006 amendment, ADR-0003 to ADR-0005, decision index,
+- Two public additions to the core library's issuing API, and one breaking change: a request
+  without a stated expiry is rejected. The library is unreleased. No change to the key format or
+  to evaluation.
+- Docs: PDR-0023 to PDR-0029, PDR-0006, PDR-0023 and PDR-0025 amendments, ADR-0003 to ADR-0005, decision index,
   `docs/license-examples.md` "Last checked against" line, README status.

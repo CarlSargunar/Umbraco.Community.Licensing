@@ -5,18 +5,29 @@ sends in, and take a full copy of its records as CSV files.
 
 Serves the **vendor** answering support requests, and the **site owner**, who needs a lost key
 re-sent. Product decisions: PDR-0006, PDR-0009, PDR-0019, PDR-0020, PDR-0026, PDR-0027,
-PDR-0028.
+PDR-0028, PDR-0030.
 
 ## ADDED Requirements
 
 ### Requirement: List licenses
-The vendor SHALL be able to list licenses, optionally filtered by product and by status: active,
-expiring within 30 days, expired, perpetual. Each row SHALL show product, license type, role,
-license reference, current key's expiry and order reference.
+The vendor SHALL be able to list licenses, optionally filtered by product and by status. Each
+license SHALL have exactly one status, read from its current key against the current UTC date
+(PDR-0030): perpetual (no expiry), active (expires more than 30 days after today), expiring
+(expires today or within the next 30 days) or expired (expired before today). Each row SHALL
+show product, license type, role, license reference, status, current key's expiry and order
+reference.
 
 #### Scenario: Expiring filter
 - **WHEN** today is 2027-03-10 and a license's current key expires 2027-03-31
-- **THEN** it SHALL appear under expiring within 30 days
+- **THEN** its status SHALL be expiring, and it SHALL appear under expiring and not under active
+
+#### Scenario: Expires today
+- **WHEN** today is 2027-03-10 and a license's current key expires 2027-03-10
+- **THEN** its status SHALL be expiring
+
+#### Scenario: Perpetual is not active
+- **WHEN** a license's current key has no expiry
+- **THEN** its status SHALL be perpetual, and it SHALL NOT appear under active
 
 ### Requirement: Find a license
 The vendor SHALL be able to find licenses by license reference or key identifier, matched
@@ -73,7 +84,9 @@ if so, whether that key is the license's current key.
 
 ### Requirement: Export to CSV
 The vendor SHALL be able to export all records to a folder it chooses, as one CSV file each for
-products, license types, signing keys and issued keys. Issued keys SHALL include the key string;
+products, license types, license type features, signing keys, issued keys and issued key
+features (PDR-0028). Each features file SHALL have one row per feature, naming the license type
+or key identifier it belongs to. Issued keys SHALL include the key string;
 signing keys SHALL include the public key and never private key material. Before writing, the
 system SHALL warn that the files contain working keys. Files SHALL be UTF-8 with a header row,
 dates in ISO 8601 UTC, and quoting as RFC 4180. The system SHALL NOT overwrite existing files
@@ -81,7 +94,11 @@ without asking.
 
 #### Scenario: Export
 - **WHEN** the vendor exports to an empty folder and accepts the warning
-- **THEN** four CSV files SHALL be written, and the issued keys file SHALL have one row per recorded key including its key string
+- **THEN** six CSV files SHALL be written, and the issued keys file SHALL have one row per recorded key including its key string
+
+#### Scenario: Features exported
+- **WHEN** the vendor exports a key with features `ecommerce` and `max-orders: 500`
+- **THEN** the issued key features file SHALL have two rows for that key identifier, one per feature
 
 #### Scenario: Existing files
 - **WHEN** the export folder already holds files with the export's names

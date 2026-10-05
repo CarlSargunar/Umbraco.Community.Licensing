@@ -23,6 +23,9 @@ persona it serves and check it does not harm another.
   `docs/license-examples.md` (schema and examples) in the same change, and its
   "Last checked against" line.
 
+## Temp folder
+Ignore anything in the .temp folder - that's where I keep my temporary notes
+
 # Roles & Workflow
 
 ## Product Owner

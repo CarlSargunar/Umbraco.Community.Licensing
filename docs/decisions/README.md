@@ -12,8 +12,10 @@ decisions are PDRs here. Cite as PDR-0011, never a bare number.
 was removed, and why, is in [`../deferred-scope.md`](../deferred-scope.md).
 
 A PDR is the full record of its decision. Its source line names the requirement or question
-(R-number, Q-number) indexed in the *Requirements and open questions* section of
-`openspec/changes/license-key-management/design.md`, or, for scope that left the change, in
+(R-number, Q-number) indexed in the *Requirements and open questions* section of the design.md
+of the change that raised it: `license-key-management` (PDR-0001 to PDR-0022, archived under
+`openspec/changes/archive/2026-10-04-license-key-management/`) or `issuing-add-on` (PDR-0023
+onwards), or, for scope that left the change, in
 [`../deferred-scope.md`](../deferred-scope.md). The chronological write-up is in git history. A decided PDR
 is not yet a spec requirement until the specs are revised.
 
@@ -41,6 +43,14 @@ is not yet a spec requirement until the specs are revised.
 | [0020](0020-visible-key-identifier.md) | Every key starts with a visible key identifier | Decided |
 | [0021](0021-reading-a-key-string.md) | Whitespace in a key string is ignored; contents that break the schema are unreadable | Decided |
 | [0022](0022-vendor-tag.md) | Optional vendor tag: the vendor's own label, signed into the key | Decided |
+| [0023](0023-issuing-add-on-is-a-local-tool.md) | The issuing add-on is a local, interactive tool for one vendor | Decided; amended by PDR-0029, amended 2026-10-05 |
+| [0024](0024-license-types-are-templates.md) | License types are templates, editable at issue | Decided; amended 2026-10-05 |
+| [0025](0025-renewal-continues-the-period.md) | A renewal continues the period; after a lapse the vendor chooses | Decided; amended 2026-10-04, 2026-10-05 |
+| [0026](0026-add-on-record-may-link-to-base.md) | An add-on license record may link to a base license record | Decided; amended 2026-10-05 |
+| [0027](0027-order-reference-is-the-vendor-tag.md) | The add-on's order reference is signed as the vendor tag | Decided |
+| [0028](0028-export-and-log-contents.md) | CSV export includes key strings; the log never does | Decided; amended 2026-10-05 |
+| [0029](0029-expiry-is-stated-never-implied.md) | A key's expiry is stated when issuing, never implied | Decided |
+| [0030](0030-license-status-in-the-add-on.md) | A license in the add-on has one of four statuses, read from its current key | Decided |
 
 ## Template
 

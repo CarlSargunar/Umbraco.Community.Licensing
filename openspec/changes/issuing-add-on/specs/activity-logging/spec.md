@@ -17,7 +17,7 @@ files older than 30 days removed. Each entry SHALL have a UTC timestamp, a level
 
 ### Requirement: Actions logged
 The system SHALL log setup, data folder moves, signing keys folder changes, product, license type
-and signing key changes, every issued key (product, role, license reference, key identifier,
+and signing key changes, add-on link changes (both license references), every issued key (product, role, license reference, key identifier,
 expiry, order reference, signing key ID), every reveal of a key string (key identifier only),
 inspections (state and key identifier), exports (folder and row counts) and errors.
 

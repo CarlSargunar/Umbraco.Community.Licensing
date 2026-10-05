@@ -79,11 +79,38 @@ NOT create an empty database without the vendor choosing to.
 
 ### Requirement: Data folder for one run
 The system SHALL accept a data folder at start, overriding the saved one for that run only.
-If that folder holds no database, the system SHALL run setup for it.
+If that folder holds no database, the system SHALL say so and ask whether to create one there,
+defaulting to no. Only on yes SHALL it run setup for that folder; that setup's answers SHALL be
+stored with the new database, and the saved data folder SHALL stay unchanged (PDR-0023).
 
 #### Scenario: Override
-- **WHEN** the vendor starts the tool with another data folder
+- **WHEN** the vendor starts the tool with another data folder that holds a database
 - **THEN** the system SHALL use that folder for the run and leave the saved settings unchanged
+
+#### Scenario: No database, declined
+- **WHEN** the vendor starts the tool with a data folder that holds no database and accepts the default
+- **THEN** the system SHALL create nothing and exit
+
+#### Scenario: No database, accepted
+- **WHEN** the vendor starts the tool with a data folder that holds no database and chooses to create one
+- **THEN** the system SHALL run setup for that folder, and the next start without a folder SHALL use the saved data folder
+
+### Requirement: One copy per data folder
+The system SHALL NOT run two copies against the same data folder at once. A copy started on a
+data folder already in use SHALL say that another copy is open and exit without changing
+anything. Copies on different data folders MAY run at the same time (PDR-0023).
+
+#### Scenario: Second copy refused
+- **WHEN** the tool is open on a data folder and the vendor starts it again on the same folder
+- **THEN** the second copy SHALL say another copy is open and exit
+
+#### Scenario: Different folders
+- **WHEN** the tool is open on one data folder and the vendor starts it on another
+- **THEN** both copies SHALL run
+
+#### Scenario: Copy closed unexpectedly
+- **WHEN** a copy ended without closing normally and the vendor starts the tool on the same folder
+- **THEN** the new copy SHALL start
 
 ### Requirement: Move the data folder
 The vendor SHALL be able to move the data to a new folder. The system SHALL copy the database

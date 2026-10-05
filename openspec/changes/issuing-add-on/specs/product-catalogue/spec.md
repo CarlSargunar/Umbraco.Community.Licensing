@@ -56,14 +56,15 @@ library's feature rules (PDR-0024).
 - **THEN** the system SHALL reject it with the library's reason
 
 ### Requirement: Editing and retiring license types
-Editing a license type SHALL affect only keys issued afterwards. Its role SHALL NOT change once a
+Editing a license type SHALL affect only keys issued afterwards; a renewal that keeps its type
+takes features from the license's current key (PDR-0025). Its role SHALL NOT change once a
 license has been issued from it. A type with issued licenses SHALL NOT be deleted; it SHALL be
-retirable, which hides it from new sales and add-ons but keeps it for existing licenses and
-their renewals.
+retirable, which hides it from new sales, add-ons and renewals but keeps it as the record of
+existing licenses (PDR-0024).
 
 #### Scenario: Retired type
 - **WHEN** the vendor retires `Commerce Pro`
-- **THEN** it SHALL not be offered for a new sale, and existing `Commerce Pro` licenses SHALL still be renewable
+- **THEN** it SHALL not be offered for a new sale or a renewal, existing `Commerce Pro` licenses SHALL still show it as their type, and they SHALL be renewable by switching to an active base type
 
 #### Scenario: Role change refused
 - **WHEN** the vendor changes the role of a type with issued licenses
