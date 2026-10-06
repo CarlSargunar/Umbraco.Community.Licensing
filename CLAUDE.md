@@ -19,6 +19,10 @@ persona it serves and check it does not harm another.
 - Statuses: Decided, Dropped, Superseded by, Amended by, Deferred. Deferred means the decision
   stands but its feature left the current change and is listed in `docs/deferred-scope.md`.
 - Cross-reference every record from the design.md section that made the call.
+- `docs/decisions/README.md` indexes every PDR with its current status. Update its row in the
+  same change whenever a PDR is added or its status line changes (amended, superseded,
+  deferred, dropped, or given a "to revisit" note), so the index and the status lines never
+  disagree. `docs/adrs/README.md` does the same for ADRs.
 - When a PDR is added, changed, superseded or deferred, or an open question is settled, update
   `docs/license-examples.md` (schema and examples) in the same change, and its
   "Last checked against" line.
