@@ -1,3 +1,7 @@
+> **Stale (2026-10-06).** Written for the purchase-list shape, which design.md "Exploration pass
+> 2026-10-06" Q11 replaced. Regenerate with `opsx:update` before `opsx:apply`; section 1 must be
+> redone.
+
 Owners: section 1 and tasks 6.3 and 6.4 are Architect documentation tasks; sections 2 to 6 otherwise
 belong to `worker-library` (`src/Umbraco.Community.Licensing`, `tests/Umbraco.Community.Licensing.Tests`).
 Each worked example in `docs/license-examples.md` is a test case (task 6.1).

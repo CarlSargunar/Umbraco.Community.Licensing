@@ -153,4 +153,45 @@ Owner on 2026-10-05.
 Amended: PDR-0009, PDR-0010, PDR-0018, PDR-0019, PDR-0021, PDR-0022 (status lines name the
 amending PDR).
 
-No open product or technical questions.
+Open questions: see "Exploration pass 2026-10-06" below.
+
+### Exploration pass 2026-10-06 (Analyst)
+
+**Status: decisions not yet applied.** proposal.md, both delta specs, the Decisions section
+above, tasks.md, PDR-0036 to PDR-0038, the PDR amendments, ADR-0001 and
+`docs/license-examples.md` still describe the purchase-list shape (Q2, Q3). Apply this pass with
+`opsx:update` before `opsx:apply`: product records first (Analyst), then design.md, ADR-0001 and
+tasks.md (Architect). tasks.md section 1 was ticked against the superseded shape and must be
+redone.
+
+Reviewed the assumptions not confirmed during `opsx:propose`, then reopened Q2 and Q3.
+
+| Q | Question | Outcome |
+|---|---|---|
+| Q8 | Purchase name rules | Confirmed: required, 1-64 characters, no edge whitespace, line breaks or control characters, one plain string in the vendor's language, display only. **Moot after Q11**; the rule is reused by Q14 |
+| Q9 | Purchase date future check | Rule b: reject a date more than one day after the current UTC date, so every time zone's "today" passes and typos such as 2062 are caught. A purchase ahead of a future launch is dated the order day; the later term is expressed by the expiry (PDR-0016 rejected "valid from"; PDR-0029 leaves terms to the vendor). Rejected: a (not after today UTC; rejects real orders east of UTC), c (no check). **Moot after Q11** |
+| Q10 | Text conflict between purchases in one key | Confirmed: rejected at issue. **Moot after Q11**: no combining within a key |
+| Q11 | Does base vs add-on, or a purchase list, earn its place in one key? | **No. Shape 3: a key holds one feature set for its license; no purchase list, no kind.** Adding an add-on = the vendor reissues under the same reference with features edited (e.g. `max-orders` 1500 -> 2500); a refund edits them back. Purchase history lives in the vendor's records. The site owner's needs in `docs/personas.md` (licensed for, about to expire, missing) are met without a list; "what did I buy" entered only through this change's proposal. Supersedes the Q2 and Q3 outcomes; PDR-0037 to be dropped or superseded. Rejected: shape 1 (purchases with kind, the plan as proposed), shape 2 (purchases without kind; kind only fed an "exactly one base" check the vendor controls anyway) |
+| Q12 | How is a key tied back to the purchaser? | Existing fields: the license reference (stable across reissues, PDR-0009) and a **key-level** vendor tag (PDR-0022 restored to its form before the PDR-0037 amendment). Guidance, not a rule: the tag holds a stable customer or account ID; the reference links the license's history in the vendor's records |
+| Q13 | Reissue from the current key | Prefill product, reference, expiry, features, vendor tag and display name (Q14); the vendor edits. Risk stated in the PDR: the presented key may not be the latest; a vendor reissuing from an old key (e.g. forwarded from an old email) supersedes the newer key and drops features bought since. Option a: guidance only ("reissue from the key installed on the site"; records close the gap). Carl intends the `issuing-add-on` change to keep those records. Rejected: b (report a later key among those supplied; already the *superseded* state when every key is supplied), c (records required; breaks the no-records case PDR-0036 serves) |
+| Q14 | Display name for the license | Optional key-level display name, e.g. `Commerce Pro`. Rules from Q8: 1-64 characters, no edge whitespace, line breaks or control characters, one language, signed as supplied, never trimmed. Display only: no part in superseding, combining or feature lookup. Serves a generic licensing screen that cannot know the vendor's feature labels; with two licenses each row shows its own name. Rejected: no name (a generic screen shows IDs and raw feature names only), labels per feature (grows every key; labels belong to the product) |
+| Q15 | Multi-value text | Required (e.g. several licensed domains). **Its own value type ("text set", name not final)**, not delimited text: delimited text is one value under the text rule, so `a\|b` vs `b\|a`, or a base domain plus an "Extra domain" add-on on another key, would conflict. Text sets combine **between keys** by union; within a key the vendor writes the final set. Folded into this change (rather than a later change) because the combiner, payload, examples and both specs are rewritten here anyway. Delimiter comparison, for one-line input or display only (tooling, not the key): pipe is safest inside values (never in domains, emails or valid URLs), comma most familiar but common in URLs and names |
+| Q16 | Text set beside single text under one name | Conflict: one name has one type, as with text beside a number. A vendor who issued single text reissues with a set under the same reference. Rejected: text treated as a set of one (a coercion rule; inconsistent with text vs text conflicting) |
+| Q17 | Text set equality | Exact (same characters, same case), as single text (PDR-0018). The vendor normalises, e.g. lowercases domains, at issue. Rejected: case-insensitive (differs from single text; wrong for case-sensitive IDs; which spelling to report; culture rules) |
+| Q18 | Text set: empty, duplicates, limits | **Open. Proposed, not confirmed:** empty set rejected at issue (omit the feature, as with `false`, PDR-0010); the same value twice in one set rejected, not deduplicated (PDR-0022 "reject, not clean"); each value follows the single-text rules (PDR-0018); order has no meaning but values are reported in the order issued; no limit on the number of values (no limit on features either), with a guidance note on key length (about 25 key characters per 15-character domain; switch to a number such as `max-domains` when a set grows to hundreds) |
+
+Still open, in this order:
+
+1. Q18: confirm the five proposed rows.
+2. Text set reading: how a site reads a set (membership check, and whether that check may
+   ignore case; listing the values).
+3. Assumption from `opsx:propose`: adding features to an expired license requires renewing it
+   in the same reissue (the library rejects a past expiry, PDR-0016). Still applies under Q11.
+4. Assumption from `opsx:propose`: PDR-0029 (expiry stated as a date or perpetual) stays with
+   `issuing-add-on`.
+5. What survives of PDR-0036 and PDR-0038 under Q11. Expected: PDR-0036 stands, with "purchase
+   appended" read as "features edited"; PDR-0038 stands; PDR-0010's "a name at most once in a
+   key" restored; PDR-0019 and PDR-0021 lose their purchase wording. The proposal's prior-art
+   paragraph (Standard.Licensing) now matches the chosen shape.
+
+The assumption "no purchase limit per key" is moot under Q11.
