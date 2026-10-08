@@ -1,8 +1,2 @@
 <Solution>
-  <Folder Name="/src/">
-    <Project Path="src/Umbraco.Community.Licensing/Umbraco.Community.Licensing.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/Umbraco.Community.Licensing.Tests/Umbraco.Community.Licensing.Tests.csproj" />
-  </Folder>
 </Solution>

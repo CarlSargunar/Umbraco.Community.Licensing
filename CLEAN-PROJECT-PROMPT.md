@@ -1,10 +1,10 @@
 # Clean-project prompt: offline license key library for .NET
 
-Extracted 2026-10-08 from `Umbraco.Community.Licensing`: the archived change
-`2026-10-04-license-key-management` (PDR-0001 to PDR-0022, ADR-0001) and the
-`one-key-per-product` change, using the shape settled in its design.md "Exploration pass
-2026-10-06" (Q8 to Q23). That pass replaced the purchase-list shape (PDR-0037), which the old
-project's PDRs, specs and examples still describe. Where the old records and this prompt
+Extracted 2026-10-08 from this repository before the reset. The old records (archived change
+`2026-10-04-license-key-management`, the `one-key-per-product` change, PDRs, ADRs, examples)
+were deleted in commit `a0b218a` and survive only in git history before it. The shape below is
+the one settled in `one-key-per-product` design.md "Exploration pass 2026-10-06", which replaced
+the purchase-list shape the old records still describe. Where the old records and this prompt
 disagree, this prompt wins.
 
 Everything below the line is the prompt.
@@ -63,7 +63,7 @@ Every requirement serves at least one persona and harms none. When interests con
 
 ## 4. Fixed technology decisions
 
-Decided in the old project's ADR-0001. Do not reopen them without a new reason.
+Decided in the old project's signing ADR. Do not reopen them without a new reason.
 
 | Decision | Choice | Why |
 |---|---|---|
@@ -116,7 +116,7 @@ Feature type is the JSON token type:
 | array of strings | text set |
 | `false`, `null`, object, any other array | unreadable |
 
-`displayName` and the text set array encoding are new since ADR-0001 and are proposed, not
+`displayName` and the text set array encoding are new since that ADR and are proposed, not
 confirmed (section 10).
 
 **Numbers.** Grammar on issue and read: `0` or `[1-9][0-9]*`, optional `.` and 1 to 4 digits,
