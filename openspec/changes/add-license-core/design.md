@@ -1,0 +1,156 @@
+## Context
+
+Greenfield. The repository holds only `docs/personas.md`, root config (`Directory.Build.props`:
+net10.0, nullable, warnings as errors), an empty `Umbraco.Community.Licensing.slnx` and agent
+definitions. Requirements come from `CLEAN-PROJECT-PROMPT.md` (2026-10-09); see proposal.md
+for motivation and specs/ for behaviour. Constraints: BCL only in the library, xUnit,
+cross-platform, no host dependency.
+
+## Bar
+
+**Production.** The library is published for other vendors, gates paid features and is
+security-relevant (signature verification). Every spec scenario has a test; tampering and
+garbage inputs are tested; public API is documented (ADR-0003); example key strings in the docs
+are verified by tests (ADR-0005).
+
+## Requirements
+
+Numbered for decision-record source lines. Behaviour is in specs/.
+
+| R | Requirement | Spec | Personas | Records |
+|---|---|---|---|---|
+| R1 | Issue a license: request → key string, reference, identifier, issue time; no records | license-generation | Vendor | PDR-0001 |
+| R2 | Contents and issue rules: product ID, reference, key part, issue time, expiry, display name, vendor tag, features, length limits, optional feature definitions; every problem listed | license-generation | Vendor; site owner (no personal data, clear expiry, no feature lost to a typo) | PDR-0004 to PDR-0012, PDR-0014, PDR-0016, PDR-0017 |
+| R3 | Reissue from a verified license | license-generation | Vendor, site owner | PDR-0013 |
+| R4 | Evaluate zero or one key for one product: ordered states, claims vs facts, never throws on key content | license-validation | Implementor, site owner, site visitor, backoffice editor | PDR-0001, PDR-0002, PDR-0003 |
+| R5 | Feature lookup on a valid key | license-validation | Vendor, site owner | PDR-0010 |
+| R6 | Signing keys: create, derived ID, export/import, trusted set, rotation | signing-key-management | Vendor, implementor | PDR-0015, ADR-0001 |
+| R7 | Key string survives email and fits an environment variable; strict read | license-generation, license-validation | Implementor, site owner, site visitor | ADR-0001, ADR-0002, PDR-0017 |
+| R8 | Worked examples kept in step with the library | (docs) | All | ADR-0005 |
+
+Persona check: no requirement harms a higher-priority persona. The costs of one key per product
+(PDR-0001) fall on the vendor and implementor, with mitigations recorded there.
+
+## Questions settled in this change
+
+| Q | Question | Answer | Record |
+|---|---|---|---|
+| Q1 | Empty or whitespace-only key: missing or unreadable? | Missing (Carl, 2026-10-09) | PDR-0003 |
+| Q2 | Reissue from an old key: is guidance enough? | Guidance only (Carl, 2026-10-09) | PDR-0013 |
+| Q3 | Package and namespace name | `Umbraco.Community.Licensing.Core` (Carl, 2026-10-09) | ADR-0003 |
+| Q4 | Personal data: enforce or guide? | Guidance only; field rules are the only enforcement (Carl, 2026-10-09) | PDR-0014 |
+| Q5 | Payload names and `expires` format | Confirmed as seeded | ADR-0002 |
+| Q6 | Public API surface | As ADR-0004 | ADR-0004 |
+| Q7 | Example key strings | From the library, published throwaway key pair, example tests | ADR-0005 |
+| Q8 | Expiry with a fraction of a second | Rejected naming `expires`, not rounded (Carl, 2026-10-09) | PDR-0007 |
+| Q9 | Feature lookup of the wrong type | Answers not granted (Carl, 2026-10-09) | PDR-0010 |
+| Q10 | Invalid product ID given to evaluation | Product ID given when the evaluator is created; invalid ID raises there, at startup. Evaluation never throws (Carl, 2026-10-09) | PDR-0002, ADR-0004 |
+| Q11 | Can issuing block a wrong feature type? | Optional feature definitions at issue: wrong type and undefined names rejected; empty list = no features (Carl, 2026-10-09) | PDR-0016, ADR-0004 |
+| Q12 | Length limits | Issue and read: product ID 64, feature name 64, 50 features, key string 32,767 (Carl, 2026-10-09) | PDR-0017, ADR-0002 |
+
+## Decisions
+
+### Components
+
+```
+  src/Umbraco.Community.Licensing.Core/
+    Signing/      SigningKeyPair, SigningPrivateKey, SigningPublicKey, TrustedSigningKeys
+    Issuing/      LicenseRequest, LicenseExpiry, FeatureList & values, FeatureType,
+                  FeatureDefinitions, LicenseIssuer, IssuedLicense,
+                  LicenseIssueException, LicenseProblem
+    Evaluation/   LicenseEvaluator, LicenseResult, LicenseState, VerifiedLicense
+    Format/       (internal) identifier & alphabet, content rules, payload writer,
+                  strict payload reader, key string envelope, random source
+```
+
+Folders are internal organisation; all public types share the root namespace (ADR-0004).
+Dependency direction: Issuing and Evaluation → Format and Signing; Format → nothing public.
+The content rules are one internal component used by both the issuer (to reject) and the strict
+reader (to mark unreadable), so issue and read never disagree.
+
+### Signing and envelope — ADR-0001
+
+ECDSA P-256 / SHA-256 / P1363, custom three-segment string with the identifier inside the
+signing input, signing key ID from SHA-256 of SPKI. Private key PKCS#8 PEM; public key
+`<id>.<base64url SPKI>`. Verification imports a short-lived `ECDsa` per call for thread safety.
+
+### Payload and strict read — ADR-0002
+
+`Utf8JsonWriter` / `Utf8JsonReader`, own duplicate-name tracking, raw number grammar, exact
+date-time format, lengths in Unicode scalar values, length limits on both sides (PDR-0017),
+key string length checked before any decoding. A lenient routing read extracts `product`
+and `signingKeyId` before verification; the strict read runs only on verified payloads.
+
+### Packaging, naming, clock, dependencies — ADR-0003
+
+One package `Umbraco.Community.Licensing.Core`. `TimeProvider` injected. Library: no
+dependencies. Tests: `xunit.v3`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk`
+(approved by Carl, 2026-10-09).
+
+### Public API — ADR-0004
+
+Nullable request fields so missing values are reported as problems; non-nullable verified read
+types; one `LicenseIssueException` listing every problem; optional `FeatureDefinitions` passed
+per issue call; `LicenseEvaluator` created per product (product ID checked at construction);
+`LicenseResult` with state, claims, verified license and three lookups.
+
+### Evaluation flow
+
+```
+ new LicenseEvaluator(productId, trustedKeys, clock)
+   productId invalid ─────────────────────────────► throw ArgumentException (startup)
+
+ Evaluate(keyString)                                 never throws
+   null / empty after whitespace removal ─────────► Missing
+   identifier = prefix if it matches, else none
+   longer than 32,767 characters ─────────────────► Unreadable (+ identifier), not decoded
+   3 segments, base64url canonical, sig 64 bytes,
+   routing read (product, signingKeyId) ── fail ──► Unreadable (+ identifier)
+   product ≠ evaluator's product ─────────────────► WrongProduct (+ claims)
+   signingKeyId ∉ trusted ────────────────────────► SigningKeyNotRecognised (+ claims)
+   verify(signing input, sig) ── fail ────────────► NotVerified (+ claims)
+   strict read ── fail ───────────────────────────► Unreadable (+ claims)
+   now (truncated to second) > expires ───────────► Expired (+ VerifiedLicense)
+   ───────────────────────────────────────────────► Valid (+ VerifiedLicense)
+```
+
+Everything in `Evaluate` runs inside one guard: an unexpected exception from
+decoding or crypto becomes *unreadable* rather than escaping (personas: site visitor). The guard
+is a safety net; tests assert the specific paths do not rely on it.
+
+### Examples and tests — ADR-0005
+
+Published throwaway key pair `Nb_sm4Fxh5c`; an explicit generator test with an internal seam
+fixing the key part; committed key strings evaluated by always-run tests; a test that each
+string appears in `docs/license-examples.md`.
+
+## Test strategy
+
+Follows from the production bar; detail in ADR-0005.
+
+| Level | What |
+|---|---|
+| Unit | Each internal component (identifier, rules, writer, reader, envelope, signing, trusted set) |
+| Spec | At least one test per `#### Scenario` in specs/, named after it |
+| Adversarial | Byte-flip every position of a valid key; hostile-string list; never valid, never throws |
+| Culture | `tr-TR`, `de-DE` for lookups and number writing |
+| Examples | Committed key strings from `docs/license-examples.md` evaluate as documented |
+
+Validation command for every block: `dotnet test Umbraco.Community.Licensing.slnx`.
+
+## Risks / Trade-offs
+
+- [Format is permanent once keys ship] → ADR-0001 and ADR-0002 reviewed before apply; examples
+  exercise every field type.
+- [ECDSA signature malleability gives a second valid string per key] → Same identifier and
+  contents; keys are bearer tokens. Accepted in ADR-0001.
+- [Published example private key] → Trusted only in tests; ADR-0005 and the examples doc say
+  so in bold.
+- [No CI matrix in this change] → BCL-only, no paths in the library; CI is a later change.
+- [Clock rollback, no revocation, no binding] → Inherent offline limits, documented in the
+  README (PDR-0001, PDR-0015).
+
+## Migration Plan
+
+None: first release. No package is published by this change; publishing is Carl's step.
+

@@ -17,7 +17,7 @@ persona it serves and check it does not harm another.
 
 # Decision records
 
-No records exist yet. Each folder or file below is created with the first record that needs it.
+Each folder or file below is created with the first record that needs it.
 
 - **PDR** (`docs/decisions/`): a product decision. How the library behaves, as a site owner,
   implementor or vendor experiences it. Written under the Analyst hat. Template in
