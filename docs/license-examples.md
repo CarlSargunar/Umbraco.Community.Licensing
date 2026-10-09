@@ -2,8 +2,8 @@
 
 Schema and worked examples. An example that contradicts a PDR is a documentation bug.
 
-Last checked against: PDR-0001 to PDR-0017, ADR-0001 to ADR-0005 (2026-10-09, change
-`add-license-core`, propose phase, after review update). Key strings are added by `add-license-core` tasks.md
+Last checked against: PDR-0001 to PDR-0022, ADR-0001 to ADR-0005 (2026-10-09, change
+`add-license-core`, explore review, design.md Q13 to Q19). Key strings are added by `add-license-core` tasks.md
 section 7 and verified by the example tests (ADR-0005).
 
 > **Example signing key `Nb_sm4Fxh5c` is public** (ADR-0005). It exists so these strings can be
@@ -38,8 +38,12 @@ Payload (ADR-0002):
 
 Key string (ADR-0001): `<key identifier>.<base64url payload>.<base64url signature>`.
 
-Evaluation states (PDR-0002): missing, unreadable, wrong product, signing key not recognised,
-not verified, expired, valid. Licensed only when valid.
+Evaluation states (PDR-0002, PDR-0018): missing, unreadable, wrong product, signing key not
+recognised, not verified, not supported, expired, valid. Licensed only when valid. A key whose
+text before the first `.` is not a valid identifier is unreadable (PDR-0020).
+
+Feature lookups (PDR-0019): switch, number, text; each answers only for a feature of its own
+type on a valid key. Evaluation may run on every request (PDR-0022).
 
 ## Examples
 
@@ -88,7 +92,9 @@ is installed (no revocation).
 sees one key.
 
 **10. Adding to an expired license.** Prefilled expiry `2026-09-01T23:59:59Z` is rejected naming
-`expires`; the vendor sets a new expiry. Perpetual licenses are unaffected.
+`expires`; the vendor sets a new expiry. Perpetual licenses are unaffected. The reissue request
+keeps product `acme.commerce` and reference `LIC-8F3AK-M7RXB`; neither can be changed on it
+(PDR-0021).
 
 **11. Failed keys.** Each environment evaluating `acme.commerce`:
 ```
@@ -100,8 +106,13 @@ sees one key.
   demo     not verified                claims to be LIC-8F3AK-M7RXB-P6TY for acme.commerce   (edited: expires 2099, max-orders 999999)
   new      missing                     (setting empty: "" — PDR-0003)
   copy     unreadable                  claims to be LIC-8F3AK-M7RXB-7Q2D                     (pasted 40,000 characters of a log with it)
+  typo     unreadable                  no claims                                             (identifier hand-edited to ...-7Q2O)
+  old      not supported               claims to be LIC-8F3AK-M7RXB-W4TN for acme.commerce   (key from a newer vendor tool, product not updated)
 ```
-Only prod is licensed. The edited key's claims appear nowhere. A key wrapped across lines or with
+Only prod is licensed. The edited key's claims appear nowhere. *Not supported* means the key is
+intact and signed by a trusted key; the first action is to update the product, not to paste
+again. A product shipped with no trusted keys fails when evaluation is set up, before any key is
+read (PDR-0018). A key wrapped across lines or with
 a trailing newline is still valid.
 
 **12. Trial.** No trial kind. A short expiry, optionally a `trial` switch the product checks.
@@ -134,6 +145,15 @@ Allowed: `expires 2026-10-01` (date alone, today); `expires 2026-10-01T08:00:00Z
 `licensed-domains: "a.com,A.com"`; `discount-rate: 0.15`. Not expressible in the API, so not
 rejectable: supplying `issued` or a key part; stating two expiries. Not detected (PDR-0014):
 a customer name in a display name or text feature — the vendor documentation forbids it.
+
+**15. Cached result.** A product evaluates at 10:00 a key expiring `2027-03-01T12:00:00Z` and keeps
+the *valid* result. At `12:00:01` the kept result still reads valid; a new evaluation reads
+*expired*. Evaluating on every request avoids this (PDR-0022).
+
+**16. Routine rotation.** Perpetual `LIC-4HN7T-QW2ZC-...` was signed by key A. The vendor trusts
+key B alongside A and issues with B from then on, never withdrawing A. The perpetual key stays
+valid. A is withdrawn only if its private key is compromised, after which every key it signed
+reads *signing key not recognised* until reissued (PDR-0015).
 
 ## Key strings
 

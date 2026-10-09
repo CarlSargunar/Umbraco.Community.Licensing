@@ -61,7 +61,8 @@ key-string content, and are raised to the caller.
 
 ### Requirement: Trusted set of public keys
 A product SHALL hold its trusted public keys as a set addressed by signing key ID. The set MAY
-hold several keys and MAY be empty. Adding a key already held SHALL leave the set unchanged and
+hold several keys. It MAY be empty while it is built; setting up evaluation with an empty set is
+a configuration error (see license-validation). Adding a key already held SHALL leave the set unchanged and
 raise no error. Adding a different key under an ID already held SHALL raise an error and leave
 the set unchanged. Withdrawing an ID SHALL remove its key; withdrawing an ID not held SHALL
 leave the set unchanged.
@@ -79,9 +80,11 @@ leave the set unchanged.
 - **THEN** an error is raised and the set is unchanged
 
 ### Requirement: Rotation
-A vendor SHALL be able to rotate signing keys by trusting the new public key alongside the old,
-switching issuing to the new private key, and withdrawing the old ID once no valid licenses
-depend on it. Adding a key SHALL NOT change the evaluation of any license signed with a key
+A vendor SHALL be able to rotate signing keys by trusting the new public key alongside the old
+and switching issuing to the new private key. Routine rotation SHALL NOT require withdrawing the
+old ID: its public key MAY stay trusted indefinitely. A vendor MAY withdraw an ID; the vendor
+documentation SHALL reserve this for a compromised private key, followed by reissuing every key
+it signed. Adding a key SHALL NOT change the evaluation of any license signed with a key
 already trusted. A license signed by a withdrawn key SHALL evaluate as *signing key not
 recognised*.
 
@@ -89,6 +92,11 @@ recognised*.
 - **WHEN** a product trusts old key A and new key B
 - **THEN** a license signed by A and a license signed by B both evaluate as valid (if not
   expired and for this product)
+
+#### Scenario: Perpetual key after routine rotation
+- **WHEN** a vendor has rotated from key A to key B without withdrawing A, and a perpetual license
+  signed by A is evaluated
+- **THEN** the state is *valid*
 
 #### Scenario: Old key withdrawn
 - **WHEN** key A is withdrawn and a license signed by A is evaluated

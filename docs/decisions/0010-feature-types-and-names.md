@@ -1,6 +1,6 @@
 # PDR-0010: Feature types, name rule and lookup
 
-- Status: Decided
+- Status: Amended by PDR-0019
 - Date: 2026-10-09
 - Source: `add-license-core` design.md R2, R5, Q9 (`CLEAN-PROJECT-PROMPT.md` section 12, decision 5)
 - Personas: vendor (flags and limits), site owner (a paid feature is never silently missed).

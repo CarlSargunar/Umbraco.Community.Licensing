@@ -21,10 +21,10 @@ Numbered for decision-record source lines. Behaviour is in specs/.
 |---|---|---|---|---|
 | R1 | Issue a license: request → key string, reference, identifier, issue time; no records | license-generation | Vendor | PDR-0001 |
 | R2 | Contents and issue rules: product ID, reference, key part, issue time, expiry, display name, vendor tag, features, length limits, optional feature definitions; every problem listed | license-generation | Vendor; site owner (no personal data, clear expiry, no feature lost to a typo) | PDR-0004 to PDR-0012, PDR-0014, PDR-0016, PDR-0017 |
-| R3 | Reissue from a verified license | license-generation | Vendor, site owner | PDR-0013 |
-| R4 | Evaluate zero or one key for one product: ordered states, claims vs facts, never throws on key content | license-validation | Implementor, site owner, site visitor, backoffice editor | PDR-0001, PDR-0002, PDR-0003 |
-| R5 | Feature lookup on a valid key | license-validation | Vendor, site owner | PDR-0010 |
-| R6 | Signing keys: create, derived ID, export/import, trusted set, rotation | signing-key-management | Vendor, implementor | PDR-0015, ADR-0001 |
+| R3 | Reissue from a verified license | license-generation | Vendor, site owner | PDR-0013, PDR-0021 |
+| R4 | Evaluate zero or one key for one product: ordered states, claims vs facts, never throws on key content | license-validation | Implementor, site owner, site visitor, backoffice editor | PDR-0001, PDR-0002, PDR-0003, PDR-0018, PDR-0020, PDR-0022 |
+| R5 | Feature lookup on a valid key | license-validation | Vendor, site owner | PDR-0010, PDR-0019 |
+| R6 | Signing keys: create, derived ID, export/import, trusted set, rotation | signing-key-management | Vendor, implementor, site owner | PDR-0015, PDR-0018, ADR-0001 |
 | R7 | Key string survives email and fits an environment variable; strict read | license-generation, license-validation | Implementor, site owner, site visitor | ADR-0001, ADR-0002, PDR-0017 |
 | R8 | Worked examples kept in step with the library | (docs) | All | ADR-0005 |
 
@@ -47,6 +47,13 @@ Persona check: no requirement harms a higher-priority persona. The costs of one 
 | Q10 | Invalid product ID given to evaluation | Product ID given when the evaluator is created; invalid ID raises there, at startup. Evaluation never throws (Carl, 2026-10-09) | PDR-0002, ADR-0004 |
 | Q11 | Can issuing block a wrong feature type? | Optional feature definitions at issue: wrong type and undefined names rejected; empty list = no features (Carl, 2026-10-09) | PDR-0016, ADR-0004 |
 | Q12 | Length limits | Issue and read: product ID 64, feature name 64, 50 features, key string 32,767 (Carl, 2026-10-09) | PDR-0017, ADR-0002 |
+| Q13 | A verified key whose contents this product cannot read: unreadable ("paste again") or its own state? | New state *not supported* after *not verified*; claims only; first action update the product, then ask the vendor (Carl, 2026-10-09) | PDR-0018 |
+| Q14 | Switch lookup vs presence query of any type | Typed lookups only (switch, number, text); no presence query; a switch is granted only when the feature holds a switch (Carl, 2026-10-09) | PDR-0019 |
+| Q15 | State of a key whose text before the first `.` is not a valid identifier | *Unreadable*, no claims, no further check (Carl, 2026-10-09) | PDR-0020 |
+| Q16 | What a reissue request may change | Everything except the product and the reference (Carl, 2026-10-09) | PDR-0021 |
+| Q17 | Cost and frequency of evaluation | Per-request use supported: under 1 ms for a typical key, no memory growth per call; one documentation line for vendors who cache (Carl, 2026-10-09) | PDR-0022 |
+| Q18 | Rotation guidance vs perpetual keys | Routine rotation never withdraws; withdraw only on compromise, then reissue (Carl, 2026-10-09) | PDR-0015 |
+| Q19 | Empty trusted set at evaluation setup | Error at setup, as an invalid product ID (Carl, 2026-10-09) | PDR-0018 |
 
 ## Decisions
 

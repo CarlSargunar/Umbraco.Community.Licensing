@@ -1,6 +1,6 @@
 # PDR-0013: Reissue from the presented key
 
-- Status: Decided
+- Status: Amended by PDR-0021
 - Date: 2026-10-09
 - Source: `add-license-core` design.md R3, Q2
 - Personas: vendor (sell add-ons and renewals with no records), site owner (gets one updated

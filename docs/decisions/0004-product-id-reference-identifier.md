@@ -1,6 +1,6 @@
 # PDR-0004: Product ID, license reference and key identifier
 
-- Status: Decided
+- Status: Amended by PDR-0020
 - Date: 2026-10-09
 - Source: `add-license-core` design.md R2
 - Personas: implementor (search settings for the identifier a result names), site owner

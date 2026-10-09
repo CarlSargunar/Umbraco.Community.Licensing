@@ -8,8 +8,8 @@ entitlement from an unverified key.
 
 ### Requirement: Evaluate one key for one product
 A product SHALL set up evaluation once with its product ID, a trusted set of public keys and a
-clock. A product ID that breaks the product ID rule is the product's own configuration error
-and SHALL raise an error at setup. Each evaluation SHALL take zero or one key string and SHALL
+clock. A product ID that breaks the product ID rule, or an empty trusted set, is the product's
+own configuration error and SHALL raise an error at setup. Each evaluation SHALL take zero or one key string and SHALL
 return exactly one result. It SHALL work with no network access. An evaluation SHALL NOT raise
 an error, whatever the key string holds.
 
@@ -20,6 +20,10 @@ an error, whatever the key string holds.
 
 #### Scenario: Invalid product ID
 - **WHEN** a product sets up evaluation with product ID `Acme Commerce`
+- **THEN** an error is raised at setup, before any key is evaluated
+
+#### Scenario: Empty trusted set
+- **WHEN** a product sets up evaluation with a trusted set holding no keys
 - **THEN** an error is raised at setup, before any key is evaluated
 
 ### Requirement: Missing key
@@ -40,7 +44,8 @@ A supplied key SHALL be checked in this order, and the first failing check SHALL
 2. claims another product → *wrong product*
 3. its signing key ID is not in the trusted set → *signing key not recognised*
 4. its signature does not verify → *not verified*
-5. verified, but past its expiry → *expired*
+5. verified, but its contents cannot be read → *not supported*
+6. verified, but past its expiry → *expired*
 
 Otherwise the state SHALL be *valid*. The product SHALL be *licensed* only when the state is
 *valid*. State names SHALL describe what was observed, never a presumed cause such as
@@ -59,16 +64,21 @@ tampering.
 - **WHEN** a valid key's contents are edited to expire in 2099 with `max-orders: 999999`
 - **THEN** the state is *not verified*
 
+#### Scenario: Verified but not readable by this product
+- **WHEN** a key for `acme.commerce` signed by a trusted key holds a field this product does not
+  know
+- **THEN** the state is *not supported*, not *unreadable*
+
 #### Scenario: Valid
 - **WHEN** a trusted, unexpired key for `acme.commerce` is evaluated for `acme.commerce`
 - **THEN** the state is *valid* and the product is licensed
 
 ### Requirement: Reading a supplied string
 All whitespace SHALL be removed before reading, so a key wrapped across lines or with a
-trailing line break reads as the original. The key identifier SHALL be taken from the text
-before the first `.` only when it exactly matches the identifier format
-(`LIC-` + 5 + `-` + 5 + `-` + 4 characters of the reference alphabet, uppercase); otherwise
-the key has no identifier. A string longer than 32,767 characters after whitespace removal
+trailing line break reads as the original. The text before the first `.` SHALL be the key
+identifier and SHALL exactly match the identifier format (`LIC-` + 5 + `-` + 5 + `-` + 4
+characters of the reference alphabet, uppercase). When it does not, the state SHALL be
+*unreadable* with no claimed identifier and no claimed product, and no further check SHALL run. A string longer than 32,767 characters after whitespace removal
 SHALL be *unreadable* without its contents being decoded; its identifier is still reported when
 it matches. A string that is not three non-empty segments of the expected encoding, whose
 signature part is not the expected length, or whose contents do not name a product and a
@@ -86,12 +96,17 @@ signing key ID SHALL be *unreadable*.
 - **WHEN** the key string is `LIC-8F3AK-M7R`, `Hunter2!`, or a valid key lowercased
 - **THEN** the state is *unreadable* with no claimed identifier
 
+#### Scenario: Identifier typo
+- **WHEN** a valid key's identifier is changed to `LIC-8F3AK-M7RXB-7Q2O` and its other parts are
+  left intact
+- **THEN** the state is *unreadable* with no claimed identifier and no claimed product
+
 #### Scenario: Too long
 - **WHEN** the key string is `LIC-8F3AK-M7RXB-7Q2D.` followed by 32,800 further characters
 - **THEN** the state is *unreadable* with claimed identifier `LIC-8F3AK-M7RXB-7Q2D`
 
 ### Requirement: Strict reading of verified contents
-A key that verifies SHALL still be *unreadable* when its contents break any issue rule, have
+A key that verifies SHALL be *not supported* when its contents break any issue rule, have
 an unknown field, repeat a field or a feature name, hold a date and time not in the exact
 signed format, hold a feature value of an unsupported type (`false`, null, a list or a nested
 object), or hold a number outside the number rule. Unknown feature names SHALL be accepted.
@@ -99,15 +114,15 @@ Such a key SHALL report its claimed product and identifier only.
 
 #### Scenario: Faulty vendor tool
 - **WHEN** a key signed by a trusted key holds a repeated feature name
-- **THEN** the state is *unreadable*, with its claimed product and identifier
+- **THEN** the state is *not supported*, with its claimed product and identifier
 
 #### Scenario: Unknown field
 - **WHEN** a key signed by a trusted key holds a field the library does not know
-- **THEN** the state is *unreadable*
+- **THEN** the state is *not supported*
 
 #### Scenario: Over a limit
 - **WHEN** a key signed by a trusted key holds 51 features, or a feature name of 65 characters
-- **THEN** the state is *unreadable*
+- **THEN** the state is *not supported*
 
 ### Requirement: Expiry boundary
 A key SHALL be valid through its stated second and *expired* once the clock is past it. A
@@ -123,7 +138,7 @@ perpetual key SHALL never expire.
 
 ### Requirement: What a result reports
 A *missing* result SHALL report the state only. A result in *unreadable*, *wrong product*,
-*signing key not recognised* or *not verified* SHALL report the state, and the claimed product
+*signing key not recognised*, *not verified* or *not supported* SHALL report the state, and the claimed product
 and claimed key identifier when they could be read, presented as claims. It SHALL NOT report an
 issue time, expiry, display name, vendor tag or features. A *valid* or *expired* result SHALL
 report as facts: product, reference, key identifier, signing key ID, issue time, expiry or
@@ -146,12 +161,14 @@ string other than its identifier.
 - **THEN** the text contains no part of the key string other than its identifier
 
 ### Requirement: Feature lookup
-A feature lookup SHALL answer only when the state is *valid*; in every other state it SHALL
-answer not granted. Names SHALL be matched ignoring the case of `a`-`z` only, the same in every
-culture. A switch SHALL be granted when present. A number SHALL return the value as issued,
-exactly. A text SHALL return the value as issued, exactly, never split or interpreted. An
-absent or unknown name, or a lookup of a different type than the feature holds, SHALL answer
-not granted. Presence of a feature of any type SHALL be queryable.
+A product SHALL look up a feature by name and type: switch, number or text. A lookup SHALL
+answer only when the state is *valid*; in every other state it SHALL answer not granted. Names
+SHALL be matched ignoring the case of `a`-`z` only, the same in every culture. A switch lookup
+SHALL be granted only when the feature holds a switch. A number SHALL return the value as
+issued, exactly. A text SHALL return the value as issued, exactly, never split or interpreted.
+An absent or unknown name, or a lookup of a different type than the feature holds, SHALL answer
+not granted. There SHALL be no lookup that answers for a feature of any type; the features a key
+holds are those reported in the result.
 
 #### Scenario: Switch
 - **WHEN** a valid key has `ecommerce` and the product asks for `Ecommerce`
@@ -169,6 +186,10 @@ not granted. Presence of a feature of any type SHALL be queryable.
 - **WHEN** a valid key has `max-orders: "500"` as text and the product looks up a number
 - **THEN** the number lookup answers not granted
 
+#### Scenario: Switch lookup on text
+- **WHEN** a valid key has `pro: "false"` as text and the product looks up the switch `pro`
+- **THEN** the switch lookup answers not granted
+
 #### Scenario: Expired key grants nothing
 - **WHEN** the key is expired and has `ecommerce`
 - **THEN** the lookup of `ecommerce` answers not granted
@@ -181,3 +202,22 @@ not granted. Presence of a feature of any type SHALL be queryable.
 #### Scenario: Look-alike name
 - **WHEN** the product asks for `licensed-dоmains` written with a Cyrillic `о`
 - **THEN** the lookup answers not granted
+
+### Requirement: Evaluation on every request
+Evaluating on every request SHALL be supported. An evaluation of a typical key (250 to 500
+characters) SHALL complete in under 1 ms. Repeated evaluations SHALL NOT hold memory that grows
+with the number of calls. A result SHALL be a snapshot at the time of evaluation; the vendor
+documentation SHALL state that a cached result does not expire on its own.
+
+#### Scenario: Per-request cost
+- **WHEN** a valid 500-character key is evaluated 10,000 times
+- **THEN** the average evaluation takes under 1 ms
+
+#### Scenario: No memory growth
+- **WHEN** a key is evaluated 100,000 times
+- **THEN** the memory held after the calls does not grow with the number of calls
+
+#### Scenario: A result is a snapshot
+- **WHEN** a product keeps a *valid* result for a key expiring `2027-03-01T12:00:00Z` and reads it
+  at `2027-03-01T12:00:01Z`
+- **THEN** the kept result still reads *valid*, and a new evaluation reads *expired*

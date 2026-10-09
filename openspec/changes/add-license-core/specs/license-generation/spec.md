@@ -237,7 +237,8 @@ identifier, SHALL make it fail evaluation.
 ### Requirement: Build a reissue request from a verified license
 The library SHALL build a request from a verified license holding its product, reference,
 expiry (perpetual stated explicitly), display name, vendor tag and features. The vendor SHALL be
-able to change every field except the product. Building SHALL read no clock and check nothing;
+able to change every field except the product and the reference, which the request keeps; a new
+reference is a new license, started from a fresh request. Building SHALL read no clock and check nothing;
 issuing the request SHALL apply every issue rule. A key that is not verified SHALL offer no
 license to build from.
 
@@ -251,6 +252,11 @@ license to build from.
 - **WHEN** at `2026-10-01T08:00:00Z` a request built from a license that expired
   `2026-09-01T23:59:59Z` is issued unchanged
 - **THEN** it is rejected naming `expires`
+
+#### Scenario: Product and reference kept
+- **WHEN** a vendor builds a request from a verified license for `acme.commerce` with reference
+  `LIC-8F3AK-M7RXB`
+- **THEN** the request's product and reference cannot be changed, and every other field can
 
 #### Scenario: Perpetual carried over
 - **WHEN** a request is built from a perpetual license
