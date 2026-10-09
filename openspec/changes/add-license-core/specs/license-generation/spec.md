@@ -50,14 +50,47 @@ hyphens and starting with a letter, and SHALL be at most 64 characters in total.
 - **WHEN** the product ID is 65 characters, otherwise valid
 - **THEN** the request is rejected naming `product`; at 64 characters it is accepted
 
+### Requirement: Key identifier prefix
+A vendor MAY set a prefix once when setting up issuing; it SHALL apply to every key issued with
+that setup. When no prefix is stated the prefix SHALL be `LIC`. A vendor MAY state that keys
+have no prefix. A prefix SHALL be 1 to 16 characters of uppercase `A`-`Z` and `0`-`9`; a prefix
+breaking this rule is the vendor's configuration error and SHALL raise an error at setup, before
+any request is checked. The prefix is branding only: the vendor documentation SHALL state that it
+grants no protection, and that a license is protected by the private signing key and the
+product's trusted set.
+
+#### Scenario: Default prefix
+- **WHEN** issuing is set up with no prefix stated
+- **THEN** issued key identifiers look like `LIC-8F3AK-M7RXB-7Q2D`
+
+#### Scenario: Vendor prefix
+- **WHEN** issuing is set up with prefix `ACME`
+- **THEN** issued key identifiers look like `ACME-8F3AK-M7RXB-7Q2D` and references like
+  `ACME-8F3AK-M7RXB`
+
+#### Scenario: No prefix
+- **WHEN** issuing is set up stating no prefix
+- **THEN** issued key identifiers look like `8F3AK-M7RXB-7Q2D` and references like `8F3AK-M7RXB`
+
+#### Scenario: Longest prefix
+- **WHEN** issuing is set up with prefix `ACMECOMMERCE2026` (16 characters)
+- **THEN** setup succeeds
+
+#### Scenario: Invalid prefix
+- **WHEN** issuing is set up with prefix `acme`, `ACME_SHOP`, `ACME-SHOP`, an empty prefix or
+  `ACMECOMMERCE20261` (17 characters)
+- **THEN** an error is raised at setup and no request is checked
+
 ### Requirement: License reference and key identifier
 A reference SHALL be 10 characters from the alphabet of uppercase letters and digits without
-`0 O 1 I L`, shown as `LIC-XXXXX-XXXXX`. When the request has no reference the library SHALL
+`0 O 1 I L`, shown as the prefix, `-` and two groups of five (`LIC-XXXXX-XXXXX`), or as the
+two groups alone when there is no prefix. When the request has no reference the library SHALL
 generate a random one. When the request has one, the library SHALL accept it ignoring case,
-hyphens, spaces and a leading `LIC` prefix, and SHALL reject any other deviation. At every issue
-the library SHALL generate a random 4-character key part from the same alphabet; a request
-SHALL have no way to supply it. The key identifier SHALL be `LIC-` + reference in two groups of
-five + `-` + key part.
+hyphens and spaces when what remains is either 10 characters, or the configured prefix followed
+by 10 characters, and SHALL reject anything else naming `reference`. With no prefix configured,
+only the 10-character form SHALL be accepted. At every issue the library SHALL generate a random
+4-character key part from the same alphabet; a request SHALL have no way to supply it. The key
+identifier SHALL be the reference as shown + `-` + key part.
 
 #### Scenario: First issue generates a reference
 - **WHEN** a request has no reference
@@ -69,8 +102,18 @@ five + `-` + key part.
   part
 
 #### Scenario: Reference accepted loosely
-- **WHEN** the reference is given as `lic-8f3ak m7rxb`
+- **WHEN** the reference is given as `lic-8f3ak m7rxb` or `8F3AK-M7RXB`
 - **THEN** it is accepted as `LIC-8F3AK-M7RXB`
+
+#### Scenario: Reference with a vendor prefix
+- **WHEN** issuing is set up with prefix `ACME` and the reference is given as `acme 8f3ak m7rxb`
+  or `8F3AK-M7RXB`
+- **THEN** it is accepted as `ACME-8F3AK-M7RXB`
+
+#### Scenario: Reference with another prefix or a key part
+- **WHEN** issuing is set up with prefix `ACME` and the reference is given as `LIC-8F3AK-M7RXB`
+  or `ACME-8F3AK-M7RXB-7Q2D`
+- **THEN** the request is rejected naming `reference`
 
 #### Scenario: Invalid reference
 - **WHEN** the reference contains `O` or has 9 or 11 characters
@@ -238,7 +281,8 @@ identifier, SHALL make it fail evaluation.
 The library SHALL build a request from a verified license holding its product, reference,
 expiry (perpetual stated explicitly), display name, vendor tag and features. The vendor SHALL be
 able to change every field except the product and the reference, which the request keeps; a new
-reference is a new license, started from a fresh request. Building SHALL read no clock and check nothing;
+reference is a new license, started from a fresh request. The issued key SHALL take the prefix of
+the issuing setup it is issued with, not the prefix of the license it was built from. Building SHALL read no clock and check nothing;
 issuing the request SHALL apply every issue rule. A key that is not verified SHALL offer no
 license to build from.
 
@@ -257,6 +301,11 @@ license to build from.
 - **WHEN** a vendor builds a request from a verified license for `acme.commerce` with reference
   `LIC-8F3AK-M7RXB`
 - **THEN** the request's product and reference cannot be changed, and every other field can
+
+#### Scenario: Prefix changed by the vendor
+- **WHEN** a request is built from a verified license `LIC-8F3AK-M7RXB-7Q2D` and issued with a
+  setup whose prefix is `ACME`
+- **THEN** the new key identifier starts `ACME-8F3AK-M7RXB-`
 
 #### Scenario: Perpetual carried over
 - **WHEN** a request is built from a perpetual license

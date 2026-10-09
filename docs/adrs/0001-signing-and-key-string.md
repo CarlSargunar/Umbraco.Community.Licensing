@@ -2,7 +2,7 @@
 
 - Status: Decided
 - Date: 2026-10-09
-- Source: `add-license-core` design.md R6, R7. Carried from the pre-reset signing ADR
+- Source: `add-license-core` design.md R6, R7, Q15, Q17, Q20. Carried from the pre-reset signing ADR
   (`CLEAN-PROJECT-PROMPT.md` section 4); not reopened.
 
 ## Context
@@ -32,12 +32,16 @@ LIC-8F3AK-M7RXB-7Q2D.eyJzaWduaW5nS2V5SWQiOi...fX0.1AqpE9feDTqwkvVIdd4mRlzJEl...b
   (non-canonical trailing bits) is unreadable.
 - The signing input includes the visible identifier, so editing it (even lowercasing) fails
   verification. Reference and key part live only in the identifier, not in the payload.
+- The identifier starts with the issuer's prefix and `-` (`LIC-` by default), or with no prefix
+  (PDR-0023). The prefix is in the signing input, so a relabelled key is *not verified*;
+  evaluation needs no prefix setting.
 - Reading follows `CLEAN-PROJECT-PROMPT.md` section 4.4: remove every `char.IsWhiteSpace`
-  character; take the identifier only if the text before the first `.` fully matches
-  `^LIC-[2-9A-HJKMNP-Z]{5}-[2-9A-HJKMNP-Z]{5}-[2-9A-HJKMNP-Z]{4}\z`; exactly three non-empty
-  segments; signature decodes to 64 bytes; payload is a JSON object with string `product` and
-  `signingKeyId`; then wrong product, signing key not recognised, not verified; then strict read
-  (ADR-0002).
+  character; the text before the first `.` must fully match
+  `^(?:[A-Z0-9]{1,16}-)?[2-9A-HJKMNP-Z]{5}-[2-9A-HJKMNP-Z]{5}-[2-9A-HJKMNP-Z]{4}\z`, otherwise *unreadable* with
+  no claims and no further check (PDR-0020); exactly three non-empty segments; signature decodes
+  to 64 bytes; payload is a JSON object with string `product` and `signingKeyId`; then wrong
+  product, signing key not recognised, not verified; then strict read (ADR-0002), whose failure
+  is *not supported* (PDR-0018).
 
 **Signing key ID.** First 8 bytes of SHA-256 over the public key's SubjectPublicKeyInfo DER,
 base64url: 11 characters.
@@ -71,6 +75,10 @@ one `ECDsa` and is `IDisposable`; the issuer uses it only within the call.
 - ECDSA malleability: `(r, n−s)` also verifies, so a second valid string exists for every key.
   It carries the same identifier and contents, and a key is a bearer token already; accepted.
 - Typical keys are 250 to 500 characters.
+- Importing an `ECDsa` per call must fit PDR-0022 (under 1 ms per evaluation, no memory growth);
+  each instance is disposed within the call. Measured by the performance tests (ADR-0005). If a
+  platform misses the budget, the fallback is one `ECDsa` per thread per trusted key held by the
+  evaluator: bounded by threads × keys, never by calls.
 
 ## Reversal Cost
 

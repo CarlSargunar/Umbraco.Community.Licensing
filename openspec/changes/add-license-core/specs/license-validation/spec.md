@@ -76,8 +76,10 @@ tampering.
 ### Requirement: Reading a supplied string
 All whitespace SHALL be removed before reading, so a key wrapped across lines or with a
 trailing line break reads as the original. The text before the first `.` SHALL be the key
-identifier and SHALL exactly match the identifier format (`LIC-` + 5 + `-` + 5 + `-` + 4
-characters of the reference alphabet, uppercase). When it does not, the state SHALL be
+identifier and SHALL exactly match the identifier format: 5 + `-` + 5 + `-` + 4 characters of
+the reference alphabet, uppercase, preceded by nothing or by a prefix of 1 to 16 uppercase
+`A`-`Z` and `0`-`9` followed by `-`. Evaluation SHALL accept any prefix fitting this rule and
+SHALL NOT be configured with one. When it does not match, the state SHALL be
 *unreadable* with no claimed identifier and no claimed product, and no further check SHALL run. A string longer than 32,767 characters after whitespace removal
 SHALL be *unreadable* without its contents being decoded; its identifier is still reported when
 it matches. A string that is not three non-empty segments of the expected encoding, whose
@@ -95,6 +97,21 @@ signing key ID SHALL be *unreadable*.
 #### Scenario: No identifier
 - **WHEN** the key string is `LIC-8F3AK-M7R`, `Hunter2!`, or a valid key lowercased
 - **THEN** the state is *unreadable* with no claimed identifier
+
+#### Scenario: Other prefix accepted
+- **WHEN** a key for `acme.commerce` with identifier `ACME-8F3AK-M7RXB-7Q2D`, signed by a trusted
+  key and unexpired, is evaluated for `acme.commerce`
+- **THEN** the state is *valid* and the key identifier is `ACME-8F3AK-M7RXB-7Q2D`
+
+#### Scenario: No prefix
+- **WHEN** a key with identifier `8F3AK-M7RXB-7Q2D`, signed by a trusted key and unexpired, is
+  evaluated for its product
+- **THEN** the state is *valid*
+
+#### Scenario: Relabelled key
+- **WHEN** a valid key `ACME-8F3AK-M7RXB-7Q2D` has its prefix changed to `BETA` and its other
+  parts left intact
+- **THEN** the state is *not verified*, claiming `BETA-8F3AK-M7RXB-7Q2D`
 
 #### Scenario: Identifier typo
 - **WHEN** a valid key's identifier is changed to `LIC-8F3AK-M7RXB-7Q2O` and its other parts are

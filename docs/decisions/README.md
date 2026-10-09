@@ -15,7 +15,7 @@ Deferred. Update this index in the same change as any status line.
 | [PDR-0001](0001-one-key-per-product.md) | One key per product | Decided |
 | [PDR-0002](0002-evaluation-states-and-claims.md) | Evaluation states and what a result reports | Amended by PDR-0018, PDR-0020 |
 | [PDR-0003](0003-empty-key-is-missing.md) | An empty or whitespace-only key is missing | Decided |
-| [PDR-0004](0004-product-id-reference-identifier.md) | Product ID, license reference and key identifier | Amended by PDR-0020 |
+| [PDR-0004](0004-product-id-reference-identifier.md) | Product ID, license reference and key identifier | Amended by PDR-0020, PDR-0023 |
 | [PDR-0005](0005-random-key-part.md) | Random key part at every issue | Decided |
 | [PDR-0006](0006-issue-time-informational.md) | Issue time is informational | Decided |
 | [PDR-0007](0007-expiry-to-the-second.md) | Expiry is a stated UTC date and time to the second | Decided |
@@ -31,9 +31,10 @@ Deferred. Update this index in the same change as any status line.
 | [PDR-0017](0017-length-limits.md) | Length limits | Decided |
 | [PDR-0018](0018-not-supported-state.md) | Not supported state; empty trusted set at setup | Decided |
 | [PDR-0019](0019-typed-lookups-only.md) | Typed feature lookups only | Decided |
-| [PDR-0020](0020-identifier-required.md) | A key without a valid identifier is unreadable | Decided |
+| [PDR-0020](0020-identifier-required.md) | A key without a valid identifier is unreadable | Amended by PDR-0023 |
 | [PDR-0021](0021-reissue-fixes-product-and-reference.md) | A reissue keeps its product and reference | Decided |
 | [PDR-0022](0022-evaluation-per-request.md) | Evaluation on every request | Decided |
+| [PDR-0023](0023-key-identifier-prefix.md) | Vendor-chosen key identifier prefix | Decided |
 
 ## Template
 

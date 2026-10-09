@@ -2,7 +2,7 @@
 
 - Status: Decided
 - Date: 2026-10-09
-- Source: `add-license-core` design.md R8, Q7 (`CLEAN-PROJECT-PROMPT.md` section 10, technology
+- Source: `add-license-core` design.md R8, Q7, Q13, Q17 (`CLEAN-PROJECT-PROMPT.md` section 10, technology
   item 4)
 
 ## Context
@@ -44,18 +44,25 @@ and a fixed clock and assert the documented state and contents. A test asserts e
 key string appears verbatim in `docs/license-examples.md` (repository root found by walking up
 to `Umbraco.Community.Licensing.slnx`).
 
-**Seams.** `internal` interfaces for randomness (reference and key part), exposed to the test
-project with `InternalsVisibleTo`. No public test hooks.
+**Seams.** `internal` interfaces for randomness (reference and key part), and an internal call
+that signs a raw payload (for the *not supported* example: an unknown field signed by a trusted
+key), exposed to the test project with `InternalsVisibleTo`. No public test hooks.
 
 **Test strategy** (bar: production, design.md):
 - Unit tests per component: identifier and alphabet, issue rules, payload writer and strict
   reader, envelope, signing keys, trusted set, evaluator, feature lookup.
 - One or more tests per spec scenario, named after it.
-- Tampering tests: flip each byte of the payload and signature segments of a valid key; every
-  variant evaluates as not verified or unreadable, never valid, and never throws.
+- Tampering tests: flip each byte of the identifier, payload and signature segments of a valid
+  key; no variant evaluates as valid, expired or not supported (each needs a verified signature),
+  and none throws.
 - Garbage tests: a fixed list of hostile strings (empty, 1 MB, control characters, deep JSON,
   wrong padding) never throws.
 - Culture tests run lookups and number writing under `tr-TR` and `de-DE`.
+- Performance tests (PDR-0022): after warm-up, 10,000 evaluations of a 500-character key average
+  under 1 ms (`Stopwatch`). Memory: `GC.GetTotalMemory(true)` after 1,000 calls and after
+  100,000 calls differ by less than a fixed 1 MB. Each logs OS, processor count and runtime
+  through the test output. Trait `Category=Performance` so they can be filtered on a loaded
+  machine.
 - CI on Windows, macOS and Linux is not in this change; cross-platform safety rests on BCL-only
   APIs and no paths in the library.
 

@@ -13,8 +13,9 @@ Carl on 2026-10-09 at the start of this change (design.md Q1 to Q4).
 
 - **License generation** (vendor side): checks a license's contents against the issue rules
   and signs them into a pasteable, one-line key string. Reports every problem with a request at
-  once, each naming its field. Optionally checks features against the vendor's declared
-  feature names and types, catching wrong types and misspelled names before a key ships. Keeps
+  once, each naming its field. An optional prefix chosen at issuing setup (default `LIC`, or
+  none) brands the key identifier; it is branding only. Optionally checks features against the
+  vendor's declared feature names and types, catching wrong types and misspelled names before a key ships. Keeps
   no records. Builds a reissue request from a verified
   license, keeping its product and reference, so a vendor without records can add to the key a
   site owner presents.
@@ -38,7 +39,7 @@ installed key; there is no combining of keys.
 
 ### New Capabilities
 
-- `license-generation`: issue rules for a license's contents (product ID, reference, expiry,
+- `license-generation`: the key identifier prefix, issue rules for a license's contents (product ID, reference, expiry,
   display name, vendor tag, features, length limits), optional feature definitions, the issued
   key string, the all-problems rejection, and building a reissue request from a verified
   license.
@@ -56,7 +57,7 @@ None. No specs exist yet.
 - New library project and test project under `src/` and `tests/`, added to
   `Umbraco.Community.Licensing.slnx`. No existing code.
 - One published package with no Umbraco or host dependency (ADR-0003).
-- New docs: `docs/decisions/` (PDR-0001 to PDR-0022), `docs/adrs/` (ADR-0001 to ADR-0005),
+- New docs: `docs/decisions/` (PDR-0001 to PDR-0023), `docs/adrs/` (ADR-0001 to ADR-0005),
   `docs/license-examples.md`. `README.md` and `CLAUDE.md` status lines updated.
 - Personas served: site owner (what am I licensed for, what lapsed), implementor (which key,
   why, where to fix), vendor (issue without records, gate features). Backoffice editor and site
@@ -65,7 +66,10 @@ None. No specs exist yet.
 
 ### Out of scope
 
-- Issuing add-on (local vendor tool with product definitions and issued-key records).
+- Vendor issuing console tool: a .NET global tool on the vendor's hardware with its own
+  database, product definitions, issued-key records and guided setup (`docs/feature-requests.md`
+  FR-2). It uses this library; the library keeps no records.
+- Example product package (`docs/feature-requests.md` FR-3).
 - Host-side Umbraco package: key sourcing from configuration, environment variables and vault;
   inventory; backoffice screen; package registration; product dependencies.
 - Revocation, online validation, machine or domain binding, clock-rollback protection

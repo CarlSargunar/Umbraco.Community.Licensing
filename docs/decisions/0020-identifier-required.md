@@ -1,6 +1,6 @@
 # PDR-0020: A key without a valid identifier is unreadable
 
-- Status: Decided
+- Status: Amended by PDR-0023
 - Date: 2026-10-09
 - Source: `add-license-core` design.md Q15
 - Personas: implementor (a typo in the identifier gets "paste again"), site owner (a valid key

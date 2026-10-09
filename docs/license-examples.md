@@ -2,8 +2,8 @@
 
 Schema and worked examples. An example that contradicts a PDR is a documentation bug.
 
-Last checked against: PDR-0001 to PDR-0022, ADR-0001 to ADR-0005 (2026-10-09, change
-`add-license-core`, explore review, design.md Q13 to Q19). Key strings are added by `add-license-core` tasks.md
+Last checked against: PDR-0001 to PDR-0023, ADR-0001 to ADR-0005 (2026-10-09, change
+`add-license-core`, explore review, architect pass 2 and prefix explore, design.md Q13 to Q20). Key strings are added by `add-license-core` tasks.md
 section 7 and verified by the example tests (ADR-0005).
 
 > **Example signing key `Nb_sm4Fxh5c` is public** (ADR-0005). It exists so these strings can be
@@ -13,6 +13,7 @@ section 7 and verified by the example tests (ADR-0005).
 
 ```
   LICENSE KEY
+  prefix         issuing setup     LIC by default, own, or none        PDR-0023
   product        required          vendor.product                      PDR-0004
   reference      required          generated at first issue, kept      PDR-0004
   key part       set by the core   new at every issue                  PDR-0005
@@ -140,6 +141,10 @@ problem):
 | `max-orders: "500"` (text) with `max-orders` defined as a number | `features.max-orders` | Feature definitions (PDR-0016) |
 | `max-order: 500` with definitions that do not name `max-order` | `features.max-order` | Feature definitions (PDR-0016) |
 | `licensed-domain: ""`, `" example.com"`, a line break, 257 characters | `features.licensed-domain` | Text rule |
+| reference `LIC-8F3AK-M7RXB` or `ACME-8F3AK-M7RXB-7Q2D` with prefix `ACME` configured | `reference` | Configured prefix + 10 characters, or 10 characters (PDR-0023) |
+
+Rejected at issuing setup, before any request (PDR-0023): prefix `acme`, `ACME_SHOP`,
+`ACME-SHOP`, empty, or `ACMECOMMERCE20261` (17 characters).
 
 Allowed: `expires 2026-10-01` (date alone, today); `expires 2026-10-01T08:00:00Z`;
 `licensed-domains: "a.com,A.com"`; `discount-rate: 0.15`. Not expressible in the API, so not
@@ -154,6 +159,17 @@ the *valid* result. At `12:00:01` the kept result still reads valid; a new evalu
 key B alongside A and issues with B from then on, never withdrawing A. The perpetual key stays
 valid. A is withdrawn only if its private key is compromised, after which every key it signed
 reads *signing key not recognised* until reissued (PDR-0015).
+
+**17. Vendor prefix.** Acme sets prefix `ACME` at issuing setup; Zenith states no prefix.
+```
+  ACME-8F3AK-M7RXB-7Q2D   acme.commerce        reference ACME-8F3AK-M7RXB
+  8F3AK-M7RXB-7Q2D        zenith.commerce-...  reference 8F3AK-M7RXB
+```
+Products evaluate either without being told a prefix. An `ACME-` key pasted into Zenith's
+product reads *wrong product*. A copy of an Acme key relabelled `BETA-8F3AK-M7RXB-7Q2D` reads
+*not verified*: the prefix is signed. A reissue of `LIC-8F3AK-M7RXB-7Q2D` after Acme moves to
+`ACME` starts `ACME-8F3AK-M7RXB-`; the reference part is unchanged. **The prefix is branding
+only:** the private signing key and the product's trusted set protect a license (PDR-0023).
 
 ## Key strings
 
