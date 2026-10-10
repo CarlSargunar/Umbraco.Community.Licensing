@@ -37,6 +37,10 @@ Each folder or file below is created with the first record that needs it.
   same change whenever a PDR is added or its status line changes (amended, superseded,
   deferred, dropped, or given a "to revisit" note), so the index and the status lines never
   disagree. `docs/adrs/README.md` does the same for ADRs.
+- **Feature requests** (`docs/feature-requests.md`, FR-N): requests for a later change, not
+  decided. When a change takes one up, it becomes a design.md Q-number settled by a PDR or ADR,
+  and the FR's status row names the change. Check it when starting `opsx:explore` or
+  `opsx:propose`.
 - When a PDR is added, changed, superseded or deferred, or an open question is settled, update
   `docs/license-examples.md` (schema and examples) in the same change, and its
   "Last checked against" line.
