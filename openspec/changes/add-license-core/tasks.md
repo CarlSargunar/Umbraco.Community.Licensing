@@ -9,9 +9,9 @@ Depends on: none. Shared files assigned in the brief: the two project entries in
 `Umbraco.Community.Licensing.slnx`, package metadata in the library project file, test
 package references (ADR-0003; dependencies approved by Carl, 2026-10-09).
 
-- [ ] 1.1 Create `src/Umbraco.Community.Licensing.Core/` (net10.0 from `Directory.Build.props`, root namespace and PackageId `Umbraco.Community.Licensing.Core`, `GenerateDocumentationFile`, MIT licence expression, description, no package references, `InternalsVisibleTo` the test project) and add it to the solution, and verify `dotnet build` succeeds and `dotnet list package` shows no references
-- [ ] 1.2 Create `tests/Umbraco.Community.Licensing.Core.Tests/` with `xunit.v3`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk` pinned to stable versions at least two weeks old, referencing the library, added to the solution, and verify `dotnet test` runs and reports one passing placeholder-free smoke test (library assembly loads)
-- [ ] 1.3 Add a test `FixedTimeProvider` (settable UTC now) and a culture-scope helper (`tr-TR`, `de-DE`), and verify by tests that `GetUtcNow` returns the set instant and the culture is restored after the scope
+- [x] 1.1 Create `src/Umbraco.Community.Licensing.Core/` (net10.0 from `Directory.Build.props`, root namespace and PackageId `Umbraco.Community.Licensing.Core`, `GenerateDocumentationFile`, MIT licence expression, description, no package references, `InternalsVisibleTo` the test project) and add it to the solution, and verify `dotnet build` succeeds and `dotnet list package` shows no references
+- [x] 1.2 Create `tests/Umbraco.Community.Licensing.Core.Tests/` with `xunit.v3`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk` pinned to stable versions at least two weeks old, referencing the library, added to the solution, and verify `dotnet test` runs and reports one passing placeholder-free smoke test (library assembly loads)
+- [x] 1.3 Add a test `FixedTimeProvider` (settable UTC now) and a culture-scope helper (`tr-TR`, `de-DE`), and verify by tests that `GetUtcNow` returns the set instant and the culture is restored after the scope
 
 ## 2. Content rules and identifiers (internal)
 

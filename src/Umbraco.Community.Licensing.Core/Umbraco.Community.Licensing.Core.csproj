@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Umbraco.Community.Licensing.Core</RootNamespace>
+    <AssemblyName>Umbraco.Community.Licensing.Core</AssemblyName>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <PackageId>Umbraco.Community.Licensing.Core</PackageId>
+    <Description>Offline license key issuing and validation for Umbraco packages. No dependencies beyond the .NET shared framework.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>licensing;license-key;umbraco</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Umbraco.Community.Licensing.Core.Tests" />
+  </ItemGroup>
+
+</Project>
