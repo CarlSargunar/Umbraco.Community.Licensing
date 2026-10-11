@@ -1,17 +1,19 @@
 Owners per CLAUDE.md: sections 1 to 7 worker-backend (`src/**`, `tests/**`); section 8 Architect
 (`docs/`, `README.md`). Validation for every block: `dotnet build Umbraco.Community.Licensing.slnx`
-and `dotnet test Umbraco.Community.Licensing.slnx`. Bar: production (design.md). Test names
+and `dotnet test --solution Umbraco.Community.Licensing.slnx` (ADR-0006). Bar: production (design.md). Test names
 follow spec scenario names.
 
 ## 1. Projects and test harness
 
 Depends on: none. Shared files assigned in the brief: the two project entries in
 `Umbraco.Community.Licensing.slnx`, package metadata in the library project file, test
-package references (ADR-0003; dependencies approved by Carl, 2026-10-09).
+package references, `global.json` test runner setting (ADR-0003, ADR-0006; dependencies approved by Carl, 2026-10-09).
 
 - [x] 1.1 Create `src/Umbraco.Community.Licensing.Core/` (net10.0 from `Directory.Build.props`, root namespace and PackageId `Umbraco.Community.Licensing.Core`, `GenerateDocumentationFile`, MIT licence expression, description, no package references, `InternalsVisibleTo` the test project) and add it to the solution, and verify `dotnet build` succeeds and `dotnet list package` shows no references
 - [x] 1.2 Create `tests/Umbraco.Community.Licensing.Core.Tests/` with `xunit.v3`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk` pinned to stable versions at least two weeks old, referencing the library, added to the solution, and verify `dotnet test` runs and reports one passing placeholder-free smoke test (library assembly loads)
 - [x] 1.3 Add a test `FixedTimeProvider` (settable UTC now) and a culture-scope helper (`tr-TR`, `de-DE`), and verify by tests that `GetUtcNow` returns the set instant and the culture is restored after the scope
+- [x] 1.4 Switch the tests to Microsoft.Testing.Platform per ADR-0006 (`global.json` test runner setting; remove `IsTestingPlatformApplication=false`, `Microsoft.NET.Test.Sdk` and `xunit.runner.visualstudio` from the test project), and verify `dotnet test --solution Umbraco.Community.Licensing.slnx` runs through Microsoft.Testing.Platform with the same passing test count and `dotnet list package` on the test project shows only `xunit.v3`
+- [x] 1.5 Set the library package metadata per ADR-0006 (`Version` `0.1.0-beta.1`, `Authors`, `RepositoryUrl`, `RepositoryType`, `PackageReadmeFile` packing the root `README.md`), and verify `dotnet pack` reports no warnings and the package's nuspec shows the version, author, repository and readme
 
 ## 2. Content rules and identifiers (internal)
 
@@ -19,10 +21,10 @@ Depends on: 1. Spec: license-generation (product ID, reference, expiry, display 
 feature rules, length limits, key identifier prefix). Records: PDR-0004 to PDR-0012, PDR-0017,
 PDR-0023, ADR-0001 (identifier pattern), ADR-0002 (text and lengths).
 
-- [ ] 2.1 Implement the reference alphabet (31 characters, no `0 O 1 I L`), an internal random source seam, reference generation (10), key part generation (4), the prefix rule (1 to 16 of `A`-`Z` `0`-`9`), display forms with a prefix or none, and the identifier pattern with an optional prefix (ADR-0001), and verify by tests that generated values use only the alphabet, the seam fixes values, `LIC-8F3AK-M7RXB-7Q2D`, `ACME-8F3AK-M7RXB-7Q2D`, `ACMECOMMERCE2026-8F3AK-M7RXB-7Q2D` and `8F3AK-M7RXB-7Q2D` match, while lowercase, wrong-length, `acme-` and 17-character-prefix forms do not
-- [ ] 2.2 Implement reference parsing against the configured prefix (ignoring case, hyphens and spaces, accept 10 characters, or the configured prefix followed by 10; with no prefix only 10; anything else rejected naming `reference`), and verify by the "Reference accepted loosely", "Reference with a vendor prefix", "Reference with another prefix or a key part" and "Invalid reference" scenarios
-- [ ] 2.3 Implement the product ID, display name, vendor tag, feature name, number (grammar, 4 decimals, 15 digits, trailing-zero normalisation, invariant culture) and text rules, with the PDR-0017 limits (product ID 64, feature name 64, 50 features), as one internal rule set returning problems with field names, with lengths in Unicode scalar values and unpaired surrogates rejected, and verify by tests covering every valid and invalid input in the license-generation rule scenarios (including "Product ID too long" and "Too many features" at and over each limit) and `docs/license-examples.md` example 14, run also under `tr-TR` and `de-DE`
-- [ ] 2.4 Implement expiry resolution (date alone → 23:59:59Z, any offset → UTC, fraction rejected, earlier than the current second rejected, equal accepted) against a clock, and verify by the "Expiry is stated" scenarios
+- [x] 2.1 Implement the reference alphabet (31 characters, no `0 O 1 I L`), an internal random source seam, reference generation (10), key part generation (4), the prefix rule (1 to 16 of `A`-`Z` `0`-`9`), display forms with a prefix or none, and the identifier pattern with an optional prefix (ADR-0001), and verify by tests that generated values use only the alphabet, the seam fixes values, `LIC-8F3AK-M7RXB-7Q2D`, `ACME-8F3AK-M7RXB-7Q2D`, `ACMECOMMERCE2026-8F3AK-M7RXB-7Q2D` and `8F3AK-M7RXB-7Q2D` match, while lowercase, wrong-length, `acme-` and 17-character-prefix forms do not
+- [x] 2.2 Implement reference parsing against the configured prefix (ignoring case, hyphens and spaces, accept 10 characters, or the configured prefix followed by 10; with no prefix only 10; anything else rejected naming `reference`), and verify by the "Reference accepted loosely", "Reference with a vendor prefix", "Reference with another prefix or a key part" and "Invalid reference" scenarios
+- [x] 2.3 Implement the product ID, display name, vendor tag, feature name, number (grammar, 4 decimals, 15 digits, trailing-zero normalisation, invariant culture) and text rules, with the PDR-0017 limits (product ID 64, feature name 64, 50 features), as one internal rule set returning problems with field names, with lengths in Unicode scalar values and unpaired surrogates rejected, and verify by tests covering every valid and invalid input in the license-generation rule scenarios (including "Product ID too long" and "Too many features" at and over each limit) and `docs/license-examples.md` example 14, run also under `tr-TR` and `de-DE`
+- [x] 2.4 Implement expiry resolution (date alone → 23:59:59Z, any offset → UTC, fraction rejected, earlier than the current second rejected, equal accepted) against a clock, and verify by the "Expiry is stated" scenarios
 
 ## 3. Signing keys
 
@@ -76,4 +78,4 @@ the Architect pastes the strings (8.1).
 Depends on: 6 (8.2), 7 (8.1). Owner: Architect.
 
 - [ ] 8.1 Paste the key strings from 7.1 into the "Key strings" section of `docs/license-examples.md` and update its "Last checked against" line, and verify by the 7.3 test passing
-- [ ] 8.2 Write the `README.md` usage section (create keys, issue, reissue, evaluate, look up features, rotate) and the vendor and implementor notes from `CLEAN-PROJECT-PROMPT.md` section 11 plus PDR-0014 (no personal data), the first action per state including *not supported* (PDR-0018), the one-line caching note (PDR-0022), withdrawal of a signing key only on compromise followed by reissue (PDR-0015), the issuing prefix as branding only, protected by the private signing key and the product's trusted set (PDR-0023), and the inherent offline limits, and verify by Carl's review of the README
+- [ ] 8.2 Write the `README.md` usage section (create keys, issue, reissue, evaluate, look up features, rotate) and the vendor and implementor notes from `CLEAN-PROJECT-PROMPT.md` section 11 plus PDR-0014 (no personal data), the first action per state including *not supported* (PDR-0018), the one-line caching note (PDR-0022), withdrawal of a signing key only on compromise followed by reissue (PDR-0015), the issuing prefix as branding only, protected by the private signing key and the product's trusted set (PDR-0023), the inherent offline limits, and in bold the beta warning (no stability before 1.0; do not issue beta keys to paying customers; reissue at 1.0; PDR-0024), and verify by Carl's review of the README and by checking the README renders in the packed package

@@ -14,6 +14,7 @@ Deferred. Update this index in the same change as any status line.
 |---|---|---|
 | [ADR-0001](0001-signing-and-key-string.md) | Signing algorithm, key string envelope and signing key ID | Decided |
 | [ADR-0002](0002-payload-format-and-strict-read.md) | Payload format and strict read | Decided |
-| [ADR-0003](0003-packaging-naming-and-dependencies.md) | Packaging, naming, clock and dependencies | Decided |
+| [ADR-0003](0003-packaging-naming-and-dependencies.md) | Packaging, naming, clock and dependencies | Amended by ADR-0006 |
 | [ADR-0004](0004-public-api.md) | Public API surface | Decided |
 | [ADR-0005](0005-example-keys-and-test-strategy.md) | Example key strings and test strategy | Decided |
+| [ADR-0006](0006-test-runner-and-package-metadata.md) | Test runner and package metadata | Decided |

@@ -35,6 +35,7 @@ Deferred. Update this index in the same change as any status line.
 | [PDR-0021](0021-reissue-fixes-product-and-reference.md) | A reissue keeps its product and reference | Decided |
 | [PDR-0022](0022-evaluation-per-request.md) | Evaluation on every request | Decided |
 | [PDR-0023](0023-key-identifier-prefix.md) | Vendor-chosen key identifier prefix | Decided |
+| [PDR-0024](0024-beta-without-stability-promise.md) | Beta release with no stability promise | Decided |
 
 ## Template
 

@@ -6,9 +6,18 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageId>Umbraco.Community.Licensing.Core</PackageId>
     <Description>Offline license key issuing and validation for Umbraco packages. No dependencies beyond the .NET shared framework.</Description>
+    <Version>0.1.0-beta.1</Version>
+    <Authors>Carl Sargunar</Authors>
+    <RepositoryUrl>https://github.com/CarlSargunar/Umbraco.Community.Licensing</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>licensing;license-key;umbraco</PackageTags>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Umbraco.Community.Licensing.Core.Tests" />

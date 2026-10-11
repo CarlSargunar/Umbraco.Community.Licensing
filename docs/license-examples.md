@@ -2,8 +2,8 @@
 
 Schema and worked examples. An example that contradicts a PDR is a documentation bug.
 
-Last checked against: PDR-0001 to PDR-0023, ADR-0001 to ADR-0005 (2026-10-09, change
-`add-license-core`, explore review, architect pass 2 and prefix explore, design.md Q13 to Q20). Key strings are added by `add-license-core` tasks.md
+Last checked against: PDR-0001 to PDR-0024, ADR-0001 to ADR-0006 (2026-10-11, change
+`add-license-core`, explore review, architect pass 2, prefix explore and apply decisions, design.md Q13 to Q24). Key strings are added by `add-license-core` tasks.md
 section 7 and verified by the example tests (ADR-0005).
 
 > **Example signing key `Nb_sm4Fxh5c` is public** (ADR-0005). It exists so these strings can be

@@ -2,7 +2,7 @@
 
 - Status: Decided
 - Date: 2026-10-09
-- Source: `add-license-core` design.md R7, Q5, Q12, Q13, Q20 (`CLEAN-PROJECT-PROMPT.md` section 10,
+- Source: `add-license-core` design.md R7, Q5, Q12, Q13, Q20, Q21 (`CLEAN-PROJECT-PROMPT.md` section 10,
   technology item 1)
 
 ## Context
@@ -41,6 +41,8 @@ object, array: not supported.
 at most 15 digits in total; no sign, exponent or leading zero. Issue takes a `decimal`, strips
 trailing fractional zeros and writes the invariant text as a raw JSON value (`2.50` → `2.5`).
 Read checks the raw token bytes against the grammar, then parses `decimal`; never `double`.
+Read does not require the normalised form: a verified `2.50` reads as 2.5. Only a vendor's own
+faulty tool could sign it, the signature protects it, and the value is exact (Carl, 2026-10-11).
 
 **Text and lengths.** Lengths are counted in Unicode scalar values (`Rune`). Strings with
 unpaired surrogates are rejected at issue (they cannot round-trip through UTF-8). "Control
@@ -76,6 +78,7 @@ PDR-0023) and signature about 125, so about 22,425: inside the cap.
 | A version field | Redundant with unknown-field refusal |
 | Expiry as Unix seconds | Not readable when decoded |
 | Lengths in UTF-16 code units | An emoji would count as 2; people count it as 1 |
+| Refuse non-normalised numbers on read (*not supported*) | A key with an exact value would stop working on a formatting detail, with no gain in safety |
 
 ## Consequences
 

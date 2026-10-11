@@ -55,6 +55,10 @@ Persona check: no requirement harms a higher-priority persona. The costs of one 
 | Q18 | Rotation guidance vs perpetual keys | Routine rotation never withdraws; withdraw only on compromise, then reissue (Carl, 2026-10-09) | PDR-0015 |
 | Q19 | Empty trusted set at evaluation setup | Error at setup, as an invalid product ID (Carl, 2026-10-09) | PDR-0018, ADR-0004 |
 | Q20 | Vendor-chosen key identifier prefix (`docs/feature-requests.md` FR-1) | Optional prefix at issuing setup, default `LIC`, or none; 1 to 16 of `A`-`Z` `0`-`9`, error at setup otherwise; evaluation accepts any prefix fitting the rule, no setting; reissue takes the current prefix; typed reference: 10 characters or configured prefix + 10; branding only, stated in vendor documentation (Carl, 2026-10-09) | PDR-0023, ADR-0001, ADR-0002, ADR-0004 |
+| Q21 | Verified number with trailing fractional zeros (`2.50`): accept or refuse on read? | Accept: the grammar allows it, read gives 2.5; issue always writes the normalised form (Carl, 2026-10-11) | ADR-0002 |
+| Q22 | What does the first (beta) release promise vendors? | Nothing stable before 1.0: key format and API may change; beta keys not for paying customers; reissue at 1.0 (Carl, 2026-10-11) | PDR-0024 |
+| Q23 | Test runner | Microsoft.Testing.Platform; VSTest packages removed (Carl, 2026-10-11) | ADR-0006 |
+| Q24 | Package version and metadata | `0.1.0-beta.1`, author Carl Sargunar, GitHub https repository URL, root README packed (Carl, 2026-10-11) | ADR-0006, PDR-0024 |
 
 ## Decisions
 
@@ -72,7 +76,9 @@ Persona check: no requirement harms a higher-priority persona. The costs of one 
 ```
 
 Folders are internal organisation; all public types share the root namespace (ADR-0004).
-Dependency direction: Issuing and Evaluation → Format and Signing; Format → nothing public.
+Dependency direction: Issuing and Evaluation → Format and Signing; Format → nothing public
+except the `LicenseProblem` value record, which the content rules return so the issuer and the
+strict reader share one problem shape.
 The content rules are one internal component used by both the issuer (to reject) and the strict
 reader (to report *not supported*), so issue and read never disagree.
 
@@ -93,8 +99,9 @@ and `signingKeyId` before verification; the strict read runs only on verified pa
 ### Packaging, naming, clock, dependencies — ADR-0003
 
 One package `Umbraco.Community.Licensing.Core`. `TimeProvider` injected. Library: no
-dependencies. Tests: `xunit.v3`, `xunit.runner.visualstudio`, `Microsoft.NET.Test.Sdk`
-(approved by Carl, 2026-10-09).
+dependencies. Tests: `xunit.v3` (approved by Carl, 2026-10-09). Amended by ADR-0006: tests on
+Microsoft.Testing.Platform with the VSTest packages removed; version `0.1.0-beta.1`, author,
+repository URL and packed README set (Q23, Q24).
 
 ### Public API — ADR-0004
 
@@ -150,12 +157,13 @@ Follows from the production bar; detail in ADR-0005.
 | Examples | Committed key strings from `docs/license-examples.md` evaluate as documented |
 | Performance | 10,000 evaluations average under 1 ms; no memory growth over 100,000 calls (PDR-0022) |
 
-Validation command for every block: `dotnet test Umbraco.Community.Licensing.slnx`.
+Validation command for every block: `dotnet test --solution Umbraco.Community.Licensing.slnx`
+(Microsoft.Testing.Platform, ADR-0006).
 
 ## Risks / Trade-offs
 
-- [Format is permanent once keys ship] → ADR-0001 and ADR-0002 reviewed before apply; examples
-  exercise every field type.
+- [Format is permanent once keys ship] → Permanent from 1.0; betas may change it (PDR-0024).
+  ADR-0001 and ADR-0002 reviewed before apply; examples exercise every field type.
 - [ECDSA signature malleability gives a second valid string per key] → Same identifier and
   contents; keys are bearer tokens. Accepted in ADR-0001.
 - [Published example private key] → Trusted only in tests; ADR-0005 and the examples doc say
