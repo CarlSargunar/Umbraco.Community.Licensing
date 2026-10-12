@@ -25,9 +25,9 @@ Minors and nits from reviews. Read at the start of each apply session.
 | Supervisor, section 2 | nit | `tests/.../Format/ContentRulesTests.cs:25,124`: `Kelvin` field unused; case `"aKb"` holds an invisible U+212A; use `"a" + Kelvin + "b"` | Done (section 2 cleanup) |
 | Supervisor, section 2 | nit | `src/.../Format/ReferenceParser.cs:20`, `KeyIdentifierFormat.DisplayReference`: remark that "no prefix" is `null`, never `""` (`KeyPrefix.None.Value` is `""` per ADR-0004) | Done (section 2 cleanup) |
 | Supervisor, section 2 | note | Task 5.1: map `KeyPrefix.None` to `null` before calling Format | Open |
-| Supervisor, section 2 | note | Task 4.3: escaped lone surrogate (`"\uD800"`) can make `Utf8JsonReader.GetString()` throw; strict reader must map it to *not supported* without the outer guard; add a test | Open |
-| Supervisor, section 2 | note | Tasks 5.4, 6.1: add one Format helper to extract the 10-character reference from an identifier, rather than slicing in Issuing and Evaluation | Open |
-| Supervisor, section 2 | note | Task 6.5: keep order whitespace removal → identifier pattern → length cap | Open |
+| Supervisor, section 2 | note | Task 4.3: escaped lone surrogate (`"\uD800"`) can make `Utf8JsonReader.GetString()` throw; strict reader must map it to *not supported* without the outer guard; add a test | Done: `PayloadJson` pre-scan (block 4.2–4.3) |
+| Supervisor, section 2 | note | Tasks 5.4, 6.1: add one Format helper to extract the 10-character reference from an identifier, rather than slicing in Issuing and Evaluation | Done: `KeyIdentifierFormat.ReferenceOf` (block 4.4) |
+| Supervisor, section 2 | note | Task 6.5: keep order whitespace removal → identifier pattern → length cap | Done in `KeyEnvelope.Read` (block 4.4); 6.5 to keep it |
 | Review of section 2 cleanup | nit | `src/.../Format/ContentRules.cs`: `hasSurrogateError` local could inline to `if (!TryScan(...))` | Open |
 | Supervisor, section 1 (re-review) | nit | `src/.../Umbraco.Community.Licensing.Core.csproj:19`: README pack item uses backslashes (`..\..\README.md`, `PackagePath="\"`); works on macOS, optional switch to forward slashes | Open |
 | Supervisor, section 1 (re-review) | note | Do not publish to NuGet before task 8.2: the packed README has no beta warning yet (PDR-0024) | Open |
@@ -46,3 +46,20 @@ Minors and nits from reviews. Read at the start of each apply session.
 | Supervisor, section 3 | note | Task 6.6: Windows CNG per-call `ECDsa` import cost unmeasured (macOS arm64: 0.12 ms import+verify); log platform. Off-curve rejection to confirm when CI runs Windows/Linux | Open |
 | Re-review of section 3 rework | nit | `src/.../Signing/SigningPublicKey.cs` `FromSpki`: `read != length` and canonical re-export comparison effectively unreachable after the 91-byte prefix guard; keep or drop | Open |
 | Re-review of section 3 rework | nit | `src/.../Signing/SigningPrivateKey.cs` `FromPem`: `ArgumentException` catch is broad (limited to the import call) | Open |
+| Review of tasks.md 4.1 | nit | `tests/.../Format/PayloadWriterTests.cs:134-139`: `Write_OffSwitchOrMissingText_Throws` holds two cases in one `[Fact]`; split or `[Theory]` | Open |
+| Review of tasks.md 4.1 | nit | `src/.../Format/PayloadWriter.cs:28,31`: null `SigningKeyId`/`Product` throws `ArgumentNullException` from `WriteString`, not `InvalidOperationException`; doc covers names/text only, issuer validates first | Open |
+| Worker, tasks.md 4.4 | nit | `tests/.../Format/KeyIdentifierFormatTests.cs` holds class `KeyIdentifierReferenceOfTests` (name clash with `KeyIdentifierFormatTests` in `FormatTests.cs`); merge into `FormatTests.cs` or rename the file | Open |
+| Review of tasks.md 4.4 | nit | `src/.../Format/KeyEnvelope.cs:106`: `value.Any(char.IsWhiteSpace)` via LINQ; acceptable | Open |
+| Review of tasks.md 4.2–4.3 | minor | `tests/.../Format/PayloadRoutingTests.cs`: routing `MaxDepth = 16` boundary untested; add depth 16 reads, 17 unreadable | Open |
+| Review of tasks.md 4.2–4.3 | minor | `tests/.../Format/PayloadRoutingTests.cs`: no test for a lone surrogate escape in an ignored field (e.g. `{"\uD800":1,"signingKeyId":"k","product":"a.b"}` → true) | Open |
+| Review of tasks.md 4.2–4.3 | minor | `src/.../Format/PayloadReader.cs`: `signingKeyId` length 11 checked on read but not by `ContentRules`/`PayloadWriter`; task 5.2 issuer must take the ID from the signing key, so issue and read cannot disagree | Open |
+| Review of tasks.md 4.2–4.3 | nit | `src/.../Format/PayloadReader.cs`: `Advance`/`AtEnd` near-duplicates | Open |
+| Review of tasks.md 4.2–4.3 | note | Task 6.1: `PayloadReader` failure text embeds payload-controlled names; evaluator maps failure to *not supported* and must not surface the text as a fact | Open |
+| Worker, tasks.md 4.3 | question | `expires` earlier than `issued` is accepted on read (no rule covers it; issuer cannot produce it). Carl to decide: keep (note in ADR-0002) or refuse (PDR + ADR-0002 amendment) | Open, asked 2026-10-12 |
+| Supervisor, section 4 | minor | `src/.../Format/KeyEnvelope.cs:42-50`: `Compose` accepts any identifier (lowercase, 17-char prefix, non-ASCII silently `?`); throw `InvalidOperationException` when `IdentifierPattern` does not match, add a test. Fold into the 5.2 block | Open |
+| Supervisor, section 4 | nit | `src/.../Format/KeyEnvelope.cs:66-68`: `text[..firstDot]` allocated before the pattern check; match on a span or refuse `firstDot > 33` first. Fold into 6.5 or 6.6 | Open |
+| Supervisor, section 4 | nit | `src/.../Format/PayloadReader.cs:272-299`: repeat set and name check duplicate `ContentRules.CheckFeatures`; keep, or comment it is deliberate | Open |
+| Supervisor, section 4 | note | Task 6.1: use the envelope's *missing* state (no second whitespace check); claims = envelope identifier + routing product only; copy `LicensePayload.Features` into an immutable collection for `VerifiedLicense`; reference fact via `ReferenceOf` | Open |
+| Supervisor, section 4 | note | Tasks 6.1 / 7.2: no test yet runs the whole chain (writer → compose → envelope → routing → verify → strict read); ensure at least one end-to-end test | Open |
+| Supervisor, section 4 | note | Task 6.6: if the 1 ms budget is missed, cheap wins are the re-encode canonical check (test unused trailing bits instead) and building `features.<name>` in `ContentRules.CheckFeatureValue` only on a problem | Open |
+| Supervisor, section 4 | note | Task 6.5: routing and strict read differ on a lone surrogate escape in an ignored property name (unreadable vs *not supported*); neither throws nor is valid | Open |

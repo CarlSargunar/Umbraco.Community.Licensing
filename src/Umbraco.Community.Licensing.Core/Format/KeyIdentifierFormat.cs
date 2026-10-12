@@ -16,6 +16,13 @@ internal static partial class KeyIdentifierFormat
         return prefix is null ? groups : $"{prefix}-{groups}";
     }
 
+    /// <summary>The 10-character reference (no hyphens, no prefix) inside an identifier that matches <see cref="IdentifierPattern"/>.</summary>
+    public static string ReferenceOf(string identifier)
+    {
+        var groups = identifier[^16..];
+        return groups[..5] + groups[6..11];
+    }
+
     /// <summary>Shows the key identifier: the displayed reference, <c>-</c> and the key part.</summary>
     public static string DisplayIdentifier(string? prefix, string reference, string keyPart) =>
         $"{DisplayReference(prefix, reference)}-{keyPart}";
