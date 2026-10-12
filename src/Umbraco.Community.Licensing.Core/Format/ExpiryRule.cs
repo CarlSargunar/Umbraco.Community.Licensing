@@ -34,7 +34,7 @@ internal enum ExpiryKind
     Perpetual,
 }
 
-/// <summary>Resolves a stated expiry to the UTC second it is signed as (ADR-0002), against a clock.</summary>
+/// <summary>Resolves a stated expiry to the UTC second it is signed as (ADR-0002), against the current instant.</summary>
 internal static class ExpiryRule
 {
     private const string Field = "expires";
@@ -44,11 +44,11 @@ internal static class ExpiryRule
     /// second or an instant earlier than the current second is a problem. Equal to the current second is accepted.
     /// </summary>
     /// <param name="statement">The stated expiry.</param>
-    /// <param name="clock">Supplies the current time.</param>
+    /// <param name="now">The current instant, read once by the caller; truncated to the second here.</param>
     /// <param name="problems">Receives the problem, naming <c>expires</c>.</param>
     /// <param name="expires">The UTC instant, or null for perpetual (also null when a problem was added).</param>
     /// <returns>True when no problem was added.</returns>
-    public static bool TryResolve(ExpiryStatement statement, TimeProvider clock, List<LicenseProblem> problems, out DateTimeOffset? expires)
+    public static bool TryResolve(ExpiryStatement statement, DateTimeOffset now, List<LicenseProblem> problems, out DateTimeOffset? expires)
     {
         expires = null;
 
@@ -59,7 +59,7 @@ internal static class ExpiryRule
 
             case ExpiryKind.Date:
                 var endOfDay = new DateTimeOffset(statement.Date.ToDateTime(new TimeOnly(23, 59, 59), DateTimeKind.Utc));
-                return Accept(endOfDay, clock, problems, out expires);
+                return Accept(endOfDay, now, problems, out expires);
 
             case ExpiryKind.Instant:
                 var instant = statement.Instant.ToUniversalTime();
@@ -69,7 +69,7 @@ internal static class ExpiryRule
                     return false;
                 }
 
-                return Accept(instant, clock, problems, out expires);
+                return Accept(instant, now, problems, out expires);
 
             default:
                 problems.Add(new LicenseProblem(Field, "An expiry must be stated: a date, a UTC date and time, or perpetual."));
@@ -77,9 +77,8 @@ internal static class ExpiryRule
         }
     }
 
-    private static bool Accept(DateTimeOffset instant, TimeProvider clock, List<LicenseProblem> problems, out DateTimeOffset? expires)
+    private static bool Accept(DateTimeOffset instant, DateTimeOffset now, List<LicenseProblem> problems, out DateTimeOffset? expires)
     {
-        var now = clock.GetUtcNow();
         var currentSecond = new DateTimeOffset(now.UtcTicks - now.UtcTicks % TimeSpan.TicksPerSecond, TimeSpan.Zero);
 
         if (instant < currentSecond)

@@ -62,21 +62,6 @@ public class SecureRandomSourceTests
         Assert.NotEqual(SecureRandomSource.Instance.NextReference(), SecureRandomSource.Instance.NextReference());
     }
 
-    [Fact]
-    public void Seam_FixesValues()
-    {
-        IRandomSource source = new FixedRandomSource("8F3AKM7RXB", "7Q2D");
-
-        Assert.Equal("8F3AKM7RXB", source.NextReference());
-        Assert.Equal("7Q2D", source.NextKeyPart());
-    }
-
-    private sealed class FixedRandomSource(string reference, string keyPart) : IRandomSource
-    {
-        public string NextReference() => reference;
-
-        public string NextKeyPart() => keyPart;
-    }
 }
 
 public class KeyPrefixRuleTests

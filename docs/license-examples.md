@@ -2,8 +2,8 @@
 
 Schema and worked examples. An example that contradicts a PDR is a documentation bug.
 
-Last checked against: PDR-0001 to PDR-0024, ADR-0001 to ADR-0006 (2026-10-11, change
-`add-license-core`, explore review, architect pass 2, prefix explore and apply decisions, design.md Q13 to Q24). Key strings are added by `add-license-core` tasks.md
+Last checked against: PDR-0001 to PDR-0024, ADR-0001 to ADR-0006 (2026-10-12, change
+`add-license-core`, explore review, architect pass 2, prefix explore and apply decisions, design.md Q13 to Q25). Key strings are added by `add-license-core` tasks.md
 section 7 and verified by the example tests (ADR-0005).
 
 > **Example signing key `Nb_sm4Fxh5c` is public** (ADR-0005). It exists so these strings can be
@@ -150,6 +150,10 @@ Allowed: `expires 2026-10-01` (date alone, today); `expires 2026-10-01T08:00:00Z
 `licensed-domains: "a.com,A.com"`; `discount-rate: 0.15`. Not expressible in the API, so not
 rejectable: supplying `issued` or a key part; stating two expiries. Not detected (PDR-0014):
 a customer name in a display name or text feature — the vendor documentation forbids it.
+
+Not issuable: an expiry earlier than the issue time (the expiry rule rejects it). A verified key
+carrying one, made by another tool with the vendor's key, evaluates as *expired* (ADR-0002,
+design.md Q25).
 
 **15. Cached result.** A product evaluates at 10:00 a key expiring `2027-03-01T12:00:00Z` and keeps
 the *valid* result. At `12:00:01` the kept result still reads valid; a new evaluation reads

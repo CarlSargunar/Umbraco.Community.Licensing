@@ -110,6 +110,11 @@ both optional (Carl, 2026-10-10). Held only in the tool's database, never in a k
 A non-personal order reference may also go in the key's vendor tag (PDR-0009); that is the
 vendor's choice.
 
+**Cross-platform testing (Carl, 2026-10-12).** The change that builds the tool runs the full
+test suite (library and tool) on macOS and Linux, on Carl's machines, before it is archived.
+The library has run only on macOS so far (`add-license-core`); this closes that gap until CI
+exists. Windows is not covered by these machines.
+
 **Personas.** Vendor: issue and reissue from records instead of from the key a site owner
 presents. Site owner: unaffected; keys are the same.
 

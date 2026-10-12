@@ -11,7 +11,7 @@ public class ExpiryRuleTests
     private static (bool Ok, DateTimeOffset? Expires, List<LicenseProblem> Problems) Resolve(ExpiryStatement statement, DateTimeOffset? now = null)
     {
         var problems = new List<LicenseProblem>();
-        var ok = ExpiryRule.TryResolve(statement, new FixedTimeProvider(now ?? Now), problems, out var expires);
+        var ok = ExpiryRule.TryResolve(statement, now ?? Now, problems, out var expires);
         return (ok, expires, problems);
     }
 

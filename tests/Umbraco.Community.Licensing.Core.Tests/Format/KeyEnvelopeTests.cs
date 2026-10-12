@@ -232,6 +232,16 @@ public class KeyEnvelopeTests : IDisposable
     }
 
     [Theory]
+    [InlineData("lic-8F3AK-M7RXB-7Q2D")]
+    [InlineData("LIC-8F3AK-M7RXB")]
+    [InlineData("ABCDEFGHIJKLMNOPQ-8F3AK-M7RXB-7Q2D")]
+    [InlineData("LIC-8F3AK-M7RXB-7Q2\u00C9")]
+    [InlineData("LIC-8F3AK-M7RXB-7Q2D\n")]
+    [InlineData("")]
+    public void Compose_InvalidIdentifier_Throws(string identifier) =>
+        Assert.Throws<InvalidOperationException>(() => KeyEnvelope.Compose(identifier, Payload, _privateKey.Sign));
+
+    [Theory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]

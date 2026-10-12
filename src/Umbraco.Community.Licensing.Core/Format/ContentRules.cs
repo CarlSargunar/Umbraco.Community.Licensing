@@ -139,7 +139,7 @@ internal static class ContentRules
         {
             if (!IsValidFeatureName(feature.Name))
             {
-                problems.Add(new LicenseProblem("features", $"A feature name must be 1 to {MaxFeatureNameLength} characters of lowercase a-z, digits and hyphens, starting with a letter."));
+                problems.Add(new LicenseProblem("features", $"The feature name {Quote(feature.Name)} is not valid: a feature name must be 1 to {MaxFeatureNameLength} characters of lowercase a-z, digits and hyphens, starting with a letter."));
                 continue;
             }
 
@@ -156,6 +156,25 @@ internal static class ContentRules
     /// <summary>1 to 64 characters of lowercase a-z, digits and hyphens, starting with a letter.</summary>
     public static bool IsValidFeatureName(string? name) =>
         name is not null && name.Length <= MaxFeatureNameLength && IsNamePart(name);
+
+    private const int MaxQuotedLength = 32;
+
+    /// <summary>The name for a message: <c>(none)</c> when null or empty, otherwise cut to 32 characters without splitting a surrogate pair.</summary>
+    private static string Quote(string? name)
+    {
+        if (string.IsNullOrEmpty(name))
+        {
+            return "(none)";
+        }
+
+        if (name.Length <= MaxQuotedLength)
+        {
+            return $"\"{name}\"";
+        }
+
+        var length = char.IsHighSurrogate(name[MaxQuotedLength - 1]) ? MaxQuotedLength - 1 : MaxQuotedLength;
+        return $"\"{name[..length]}...\"";
+    }
 
     private static void CheckFeatureValue(FeatureInput feature, List<LicenseProblem> problems)
     {

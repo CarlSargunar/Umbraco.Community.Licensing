@@ -59,6 +59,7 @@ Persona check: no requirement harms a higher-priority persona. The costs of one 
 | Q22 | What does the first (beta) release promise vendors? | Nothing stable before 1.0: key format and API may change; beta keys not for paying customers; reissue at 1.0 (Carl, 2026-10-11) | PDR-0024 |
 | Q23 | Test runner | Microsoft.Testing.Platform; VSTest packages removed (Carl, 2026-10-11) | ADR-0006 |
 | Q24 | Package version and metadata | `0.1.0-beta.1`, author Carl Sargunar, GitHub https repository URL, root README packed (Carl, 2026-10-11) | ADR-0006, PDR-0024 |
+| Q25 | Verified key whose `expires` is earlier than its `issued`: refuse on read? | Accept; evaluates as *expired*. Issue already prevents it (PDR-0006, PDR-0007) (Carl, 2026-10-12) | ADR-0002 |
 
 ## Decisions
 

@@ -187,6 +187,37 @@ public class ContentRulesTests
     }
 
     [Fact]
+    public void InvalidName_MessageNamesTheFeature()
+    {
+        var problem = Assert.Single(Run(p => ContentRules.CheckFeatures([FeatureInput.Switch("Max Orders", true)], p)));
+
+        Assert.Equal("features", problem.Field);
+        Assert.Contains("\"Max Orders\"", problem.Message, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void InvalidName_NullOrEmpty_MessageSaysNone(string? name)
+    {
+        var problem = Assert.Single(Run(p => ContentRules.CheckFeatures([FeatureInput.Switch(name, true)], p)));
+
+        Assert.Contains("(none)", problem.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void InvalidName_LongName_IsTruncatedWithoutSplittingASurrogatePair()
+    {
+        var name = new string('A', 31) + "\U0001F600" + new string('A', 100);
+
+        var problem = Assert.Single(Run(p => ContentRules.CheckFeatures([FeatureInput.Switch(name, true)], p)));
+
+        Assert.DoesNotContain(new string('A', 100), problem.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("\U0001F600", problem.Message, StringComparison.Ordinal);
+        Assert.Contains(new string('A', 31) + "...", problem.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void RepeatedName_NamesFeaturesOncePerName()
     {
         FeatureInput[] features =

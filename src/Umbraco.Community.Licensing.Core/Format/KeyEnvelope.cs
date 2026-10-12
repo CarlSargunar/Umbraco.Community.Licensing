@@ -39,10 +39,15 @@ internal static class KeyEnvelope
     /// Builds <c>identifier.base64url(payload)</c>, signs its ASCII bytes with <paramref name="sign"/>, and returns
     /// <c>identifier.base64url(payload).base64url(signature)</c>.
     /// </summary>
+    /// <exception cref="InvalidOperationException"><paramref name="identifier"/> does not match <see cref="KeyIdentifierFormat.IdentifierPattern"/>; the issuer builds it, so this is a programming error.</exception>
     public static string Compose(string identifier, ReadOnlySpan<byte> payload, Func<ReadOnlySpan<byte>, byte[]> sign)
     {
         ArgumentNullException.ThrowIfNull(identifier);
         ArgumentNullException.ThrowIfNull(sign);
+        if (!KeyIdentifierFormat.IdentifierPattern.IsMatch(identifier))
+        {
+            throw new InvalidOperationException("The key identifier does not match the identifier pattern.");
+        }
 
         var signingInput = $"{identifier}.{Base64Url.EncodeToString(payload)}";
         var signature = sign(Encoding.ASCII.GetBytes(signingInput));

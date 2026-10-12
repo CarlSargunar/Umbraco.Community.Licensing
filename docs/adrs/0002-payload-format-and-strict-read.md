@@ -2,7 +2,7 @@
 
 - Status: Decided
 - Date: 2026-10-09
-- Source: `add-license-core` design.md R7, Q5, Q12, Q13, Q20, Q21 (`CLEAN-PROJECT-PROMPT.md` section 10,
+- Source: `add-license-core` design.md R7, Q5, Q12, Q13, Q20, Q21, Q25 (`CLEAN-PROJECT-PROMPT.md` section 10,
   technology item 1)
 
 ## Context
@@ -54,6 +54,13 @@ A verified payload fails if it has an unknown field; a repeated field
 or feature name (the reader tracks names itself, as `System.Text.Json` does not); a date-time
 not in its exact format; any value breaking an issue rule. Unknown feature *names* are accepted.
 No version field: an unknown field being refused already guards format changes.
+
+**Expiry before issue time** (Q25). Not checked on read. Issue already prevents it: expiry may
+not be earlier than the current second (PDR-0007), and the issue time is that second (PDR-0006).
+A verified key with `expires` earlier than `issued` can come only from another tool signing
+with the vendor's key; it reads, and evaluates as *expired*. That state's first action (a new
+key from the vendor) fits; *not supported* would send the site owner to update the product,
+which cannot help (Carl, 2026-10-12).
 
 **Vendor tag on read.** The decoded string must match `^[A-Za-z0-9_.#/-]{1,64}\z` (ordinal;
 `\z`, not `$`, which matches before a trailing `\n`). Escaped forms of allowed characters are
