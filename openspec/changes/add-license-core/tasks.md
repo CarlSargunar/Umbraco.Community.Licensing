@@ -30,9 +30,9 @@ PDR-0023, ADR-0001 (identifier pattern), ADR-0002 (text and lengths).
 
 Depends on: 1. Spec: signing-key-management. Records: PDR-0015, ADR-0001, ADR-0004.
 
-- [ ] 3.1 Implement `SigningKeyPair.Create`, `SigningPrivateKey` (PKCS#8 PEM export/import, P-256 only, `IDisposable`, exposes its public key and ID) and the derived signing key ID (first 8 bytes of SHA-256 over SPKI DER, base64url), and verify by the "New pair", "Pairs are independent", "Private key knows its ID" and "Private key round trip" scenarios
-- [ ] 3.2 Implement `SigningPublicKey` export `<id>.<base64url SPKI>` and `Parse` (recompute and compare ID, P-256 only, `FormatException` otherwise), and verify by the "Public key round trip", "Carried ID altered", "Not a key" and "Public export holds no private material" scenarios, plus a test that the ADR-0005 example public key parses with ID `Nb_sm4Fxh5c` and matches the example private key
-- [ ] 3.3 Implement immutable `TrustedSigningKeys` (`Empty`, `Create`, `With`, `Without`, `Contains`, `SigningKeyIds`) holding SPKI bytes, and verify by the "Several keys", "Same key twice" and "Different key under a held ID" scenarios (the last using two keys forced to one ID through an internal constructor)
+- [x] 3.1 Implement `SigningKeyPair.Create`, `SigningPrivateKey` (PKCS#8 PEM export/import, P-256 only, `IDisposable`, exposes its public key and ID) and the derived signing key ID (first 8 bytes of SHA-256 over SPKI DER, base64url), and verify by the "New pair", "Pairs are independent", "Private key knows its ID" and "Private key round trip" scenarios
+- [x] 3.2 Implement `SigningPublicKey` export `<id>.<base64url SPKI>` and `Parse` (recompute and compare ID, P-256 only, `FormatException` otherwise), and verify by the "Public key round trip", "Carried ID altered", "Not a key" and "Public export holds no private material" scenarios, plus a test that the ADR-0005 example public key parses with ID `Nb_sm4Fxh5c` and matches the example private key
+- [x] 3.3 Implement immutable `TrustedSigningKeys` (`Empty`, `Create`, `With`, `Without`, `Contains`, `SigningKeyIds`) holding SPKI bytes, and verify by the "Several keys", "Same key twice" and "Different key under a held ID" scenarios (the last using two keys forced to one ID through an internal constructor)
 
 ## 4. Payload and key string envelope (internal)
 
