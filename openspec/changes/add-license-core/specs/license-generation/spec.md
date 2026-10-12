@@ -270,12 +270,25 @@ checked.
 ### Requirement: Key string shape
 A key string SHALL be one line of printable ASCII characters with no whitespace, beginning with
 its key identifier. Editing any character of it, including changing the case of the
-identifier, SHALL make it fail evaluation.
+identifier, SHALL make it fail evaluation. A key string SHALL be at most 32,767 characters.
+When every other rule passes and the key string would be longer, the request SHALL be rejected
+naming `features`, stating how many characters over the limit it is, and no key string SHALL be
+produced. Reissue SHALL be checked the same way.
 
 #### Scenario: Pasteable key
 - **WHEN** a key is issued with a display name containing non-ASCII letters
 - **THEN** the key string still contains only printable ASCII and no whitespace, and starts with
   its key identifier
+
+#### Scenario: Key too long
+- **WHEN** a request is otherwise valid and holds 50 text features, each 256 emoji
+- **THEN** the request is rejected naming `features`, stating how far over 32,767 characters the
+  key would be, and no key is produced
+
+#### Scenario: Large license fits
+- **WHEN** a request has a 64-character product ID, display name and vendor tag, and 50 text
+  features with 64-character names and 256-character values of letters and digits
+- **THEN** a key string of at most 32,767 characters is produced, and it evaluates as *valid*
 
 ### Requirement: Build a reissue request from a verified license
 The library SHALL build a request from a verified license holding its product, reference,

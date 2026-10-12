@@ -2,8 +2,8 @@
 
 Schema and worked examples. An example that contradicts a PDR is a documentation bug.
 
-Last checked against: PDR-0001 to PDR-0024, ADR-0001 to ADR-0006 (2026-10-12, change
-`add-license-core`, explore review, architect pass 2, prefix explore and apply decisions, design.md Q13 to Q25). Key strings are added by `add-license-core` tasks.md
+Last checked against: PDR-0001 to PDR-0025, ADR-0001 to ADR-0007 (2026-10-12, change
+`add-license-core`, explore review, architect pass 2, prefix explore and apply decisions, design.md Q13 to Q26). Key strings are added by `add-license-core` tasks.md
 section 7 and verified by the example tests (ADR-0005).
 
 > **Example signing key `Nb_sm4Fxh5c` is public** (ADR-0005). It exists so these strings can be
@@ -25,16 +25,18 @@ section 7 and verified by the example tests (ADR-0005).
 ```
 
 Limits (PDR-0017): product ID 64 characters, feature name 64, 50 features per key, key string
-32,767 characters. Optional feature definitions at issue (PDR-0016).
+32,767 characters. A license whose key would be longer is refused at issue naming `features`
+(PDR-0025). Optional feature definitions at issue (PDR-0016).
 
 Never in a key: customer name, email, company or any personal data (PDR-0014).
 
-Payload (ADR-0002):
+Payload (ADR-0002, ADR-0007). Labels: `k` signing key ID, `p` product, `i` issued, `e` expires,
+`n` display name, `t` vendor tag, `f` features. `i` and `e` are Unix seconds, UTC
+(`1788249912` is 2026-09-01T08:05:12Z, `1803945599` is 2027-03-01T23:59:59Z):
 
 ```json
-{"signingKeyId":"Nb_sm4Fxh5c","product":"acme.commerce","issued":"2026-09-01T08:05:12Z",
- "expires":"2027-03-01T23:59:59Z","displayName":"Commerce Pro","vendorTag":"CUST-0042",
- "features":{"ecommerce":true,"max-orders":2500,"licensed-domains":"example.com,shop.example.com"}}
+{"k":"Nb_sm4Fxh5c","p":"acme.commerce","i":1788249912,"e":1803945599,"n":"Commerce Pro",
+ "t":"CUST-0042","f":{"ecommerce":true,"max-orders":2500,"licensed-domains":"example.com,shop.example.com"}}
 ```
 
 Key string (ADR-0001): `<key identifier>.<base64url payload>.<base64url signature>`.
@@ -138,6 +140,7 @@ problem):
 | `max-orders: -200`, `storage-gb: 2.12345` | `features.<name>` | Number rule |
 | `max-orders` twice, `Max Orders: 500`, a 65-character name | `features` | Name rule |
 | 51 features | `features` | At most 50 |
+| 50 text features of 256 emoji, every other rule met | `features` | Key would exceed 32,767 characters; the message states by how much (PDR-0025) |
 | `max-orders: "500"` (text) with `max-orders` defined as a number | `features.max-orders` | Feature definitions (PDR-0016) |
 | `max-order: 500` with definitions that do not name `max-order` | `features.max-order` | Feature definitions (PDR-0016) |
 | `licensed-domain: ""`, `" example.com"`, a line break, 257 characters | `features.licensed-domain` | Text rule |

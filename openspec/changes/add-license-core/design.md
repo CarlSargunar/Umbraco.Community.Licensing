@@ -20,12 +20,12 @@ Numbered for decision-record source lines. Behaviour is in specs/.
 | R | Requirement | Spec | Personas | Records |
 |---|---|---|---|---|
 | R1 | Issue a license: request → key string, reference, identifier, issue time; no records | license-generation | Vendor | PDR-0001 |
-| R2 | Contents and issue rules: product ID, reference, key part, issue time, expiry, display name, vendor tag, features, length limits, optional feature definitions; every problem listed | license-generation | Vendor; site owner (no personal data, clear expiry, no feature lost to a typo) | PDR-0004 to PDR-0012, PDR-0014, PDR-0016, PDR-0017, PDR-0023 |
+| R2 | Contents and issue rules: product ID, reference, key part, issue time, expiry, display name, vendor tag, features, length limits, optional feature definitions; every problem listed | license-generation | Vendor; site owner (no personal data, clear expiry, no feature lost to a typo) | PDR-0004 to PDR-0012, PDR-0014, PDR-0016, PDR-0017, PDR-0023, PDR-0025 |
 | R3 | Reissue from a verified license | license-generation | Vendor, site owner | PDR-0013, PDR-0021 |
 | R4 | Evaluate zero or one key for one product: ordered states, claims vs facts, never throws on key content | license-validation | Implementor, site owner, site visitor, backoffice editor | PDR-0001, PDR-0002, PDR-0003, PDR-0018, PDR-0020, PDR-0022, PDR-0023 |
 | R5 | Feature lookup on a valid key | license-validation | Vendor, site owner | PDR-0010, PDR-0019 |
 | R6 | Signing keys: create, derived ID, export/import, trusted set, rotation | signing-key-management | Vendor, implementor, site owner | PDR-0015, PDR-0018, ADR-0001 |
-| R7 | Key string survives email and fits an environment variable; strict read | license-generation, license-validation | Implementor, site owner, site visitor | ADR-0001, ADR-0002, PDR-0017 |
+| R7 | Key string survives email and fits an environment variable; strict read | license-generation, license-validation | Implementor, site owner, site visitor | ADR-0001, ADR-0002, ADR-0007, PDR-0017, PDR-0025 |
 | R8 | Worked examples kept in step with the library | (docs) | All | ADR-0005 |
 
 Persona check: no requirement harms a higher-priority persona. The costs of one key per product
@@ -39,7 +39,7 @@ Persona check: no requirement harms a higher-priority persona. The costs of one 
 | Q2 | Reissue from an old key: is guidance enough? | Guidance only (Carl, 2026-10-09) | PDR-0013 |
 | Q3 | Package and namespace name | `Umbraco.Community.Licensing.Core` (Carl, 2026-10-09) | ADR-0003 |
 | Q4 | Personal data: enforce or guide? | Guidance only; field rules are the only enforcement (Carl, 2026-10-09) | PDR-0014 |
-| Q5 | Payload names and `expires` format | Confirmed as seeded | ADR-0002 |
+| Q5 | Payload names and `expires` format | Confirmed as seeded; replaced by Q26 | ADR-0002, ADR-0007 |
 | Q6 | Public API surface | As ADR-0004 | ADR-0004 |
 | Q7 | Example key strings | From the library, published throwaway key pair, example tests | ADR-0005 |
 | Q8 | Expiry with a fraction of a second | Rejected naming `expires`, not rounded (Carl, 2026-10-09) | PDR-0007 |
@@ -60,6 +60,7 @@ Persona check: no requirement harms a higher-priority persona. The costs of one 
 | Q23 | Test runner | Microsoft.Testing.Platform; VSTest packages removed (Carl, 2026-10-11) | ADR-0006 |
 | Q24 | Package version and metadata | `0.1.0-beta.1`, author Carl Sargunar, GitHub https repository URL, root README packed (Carl, 2026-10-11) | ADR-0006, PDR-0024 |
 | Q25 | Verified key whose `expires` is earlier than its `issued`: refuse on read? | Accept; evaluates as *expired*. Issue already prevents it (PDR-0006, PDR-0007) (Carl, 2026-10-12) | ADR-0002 |
+| Q26 | Issue could return a key over the 32,767 read cap (non-ASCII text escaped 6× to 12×); can keys be shorter? | Issue refuses a key over 32,767, naming `features`, no input restricted; payload written with a minimal-escaping encoder, short field names, dates as Unix seconds; readability of the decoded payload given up (Carl, 2026-10-12) | PDR-0025, ADR-0007 |
 
 ## Decisions
 
@@ -79,7 +80,9 @@ Persona check: no requirement harms a higher-priority persona. The costs of one 
 Folders are internal organisation; all public types share the root namespace (ADR-0004).
 Dependency direction: Issuing and Evaluation → Format and Signing; Format → nothing public
 except the `LicenseProblem` value record, which the content rules return so the issuer and the
-strict reader share one problem shape.
+strict reader share one problem shape. Issuing and Evaluation share public value types both ways
+(`ReissueRequest.From(VerifiedLicense)`; `VerifiedLicense.Features` is a `FeatureList`); neither
+calls the other's behaviour.
 The content rules are one internal component used by both the issuer (to reject) and the strict
 reader (to report *not supported*), so issue and read never disagree.
 
@@ -90,12 +93,14 @@ signing input (optional vendor prefix inside it, PDR-0023), signing key ID from 
 `<id>.<base64url SPKI>`. Verification imports a short-lived `ECDsa` per call for thread safety, within the PDR-0022
 budget; per-thread instances are the fallback.
 
-### Payload and strict read — ADR-0002
+### Payload and strict read — ADR-0002, ADR-0007
 
-`Utf8JsonWriter` / `Utf8JsonReader`, own duplicate-name tracking, raw number grammar, exact
-date-time format, lengths in Unicode scalar values, length limits on both sides (PDR-0017),
-key string length checked before any decoding. A lenient routing read extracts `product`
-and `signingKeyId` before verification; the strict read runs only on verified payloads.
+`Utf8JsonWriter` with an internal encoder escaping only `"`, `\` and control characters /
+`Utf8JsonReader`, one-letter field names, dates as Unix seconds, own duplicate-name tracking, raw
+number and date grammars, lengths in Unicode scalar values, length limits on both sides
+(PDR-0017), key string length checked before any decoding. A lenient routing read extracts the
+product and signing key ID before verification; the strict read runs only on verified payloads.
+Issue composes the key and refuses it when over 32,767 characters (PDR-0025).
 
 ### Packaging, naming, clock, dependencies — ADR-0003
 
