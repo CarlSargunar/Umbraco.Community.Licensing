@@ -5,8 +5,8 @@ using System.Text.Json;
 namespace Umbraco.Community.Licensing.Core;
 
 /// <summary>
-/// The strict read (ADR-0002), run only on a verified payload. Refuses an unknown or repeated field, a repeated
-/// feature name, a date not in the exact format, an unsupported feature token, a number outside the grammar and any
+/// The strict read (ADR-0002 as amended by ADR-0007), run only on a verified payload. Refuses an unknown or repeated field, a repeated
+/// feature name, a date that is not a Unix-second integer in the grammar, an unsupported feature token, a number outside the grammar and any
 /// <see cref="ContentRules"/> breach. A failure is a result (false, with a reason for tests and diagnostics), never an
 /// exception; the evaluator maps it to <i>not supported</i> (PDR-0018). Every bad input has its own check; the only
 /// catch is around <see cref="Utf8JsonReader.Read"/>, which reports malformed JSON by throwing and has no other API.
@@ -18,7 +18,10 @@ namespace Umbraco.Community.Licensing.Core;
 /// </remarks>
 internal static class PayloadReader
 {
-    private const string DateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    // 9999-12-31T23:59:59Z and the digits it needs (ADR-0007).
+    private const long MaxUnixSeconds = 253402300799;
+
+    private const int MaxUnixSecondsDigits = 12;
 
     private const int SigningKeyIdLength = 11;
 
@@ -82,7 +85,7 @@ internal static class PayloadReader
 
             switch (name)
             {
-                case "signingKeyId":
+                case "k":
                     if (!ReadString(ref reader, name, signingKeyId, out signingKeyId, out failure))
                     {
                         return false;
@@ -90,7 +93,7 @@ internal static class PayloadReader
 
                     break;
 
-                case "product":
+                case "p":
                     if (!ReadString(ref reader, name, product, out product, out failure))
                     {
                         return false;
@@ -98,7 +101,7 @@ internal static class PayloadReader
 
                     break;
 
-                case "issued":
+                case "i":
                     if (!ReadDate(ref reader, name, issued is not null, out var issuedValue, out failure))
                     {
                         return false;
@@ -107,7 +110,7 @@ internal static class PayloadReader
                     issued = issuedValue;
                     break;
 
-                case "expires":
+                case "e":
                     if (!ReadDate(ref reader, name, expires is not null, out var expiresValue, out failure))
                     {
                         return false;
@@ -116,7 +119,7 @@ internal static class PayloadReader
                     expires = expiresValue;
                     break;
 
-                case "displayName":
+                case "n":
                     if (!ReadString(ref reader, name, displayName, out displayName, out failure))
                     {
                         return false;
@@ -124,7 +127,7 @@ internal static class PayloadReader
 
                     break;
 
-                case "vendorTag":
+                case "t":
                     if (!ReadString(ref reader, name, vendorTag, out vendorTag, out failure))
                     {
                         return false;
@@ -132,10 +135,10 @@ internal static class PayloadReader
 
                     break;
 
-                case "features":
+                case "f":
                     if (features is not null)
                     {
-                        failure = "The field features is repeated.";
+                        failure = "The field f is repeated.";
                         return false;
                     }
 
@@ -161,13 +164,13 @@ internal static class PayloadReader
 
         if (signingKeyId is null || product is null || issued is null)
         {
-            failure = "The payload lacks signingKeyId, product or issued.";
+            failure = "The payload lacks k, p or i.";
             return false;
         }
 
         if (signingKeyId.Length != SigningKeyIdLength)
         {
-            failure = $"The signingKeyId must be {SigningKeyIdLength} characters.";
+            failure = $"The field k must be {SigningKeyIdLength} characters.";
             return false;
         }
 
@@ -239,24 +242,44 @@ internal static class PayloadReader
             return false;
         }
 
-        if (reader.TokenType != JsonTokenType.String)
+        if (reader.TokenType != JsonTokenType.Number)
         {
-            failure = $"The field {field} must be a string.";
+            failure = $"The field {field} must be a number of Unix seconds.";
             return false;
         }
 
-        if (!DateTimeOffset.TryParseExact(
-                reader.GetString(),
-                DateFormat,
-                CultureInfo.InvariantCulture,
-                DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-                out value))
+        // The raw token, not TryGetInt64: 1.0, 1e3, -1 and 01 can all convert, and none is in the grammar.
+        // A number token is never escaped and the input is one span, so ValueSpan is the whole token.
+        if (!TryReadUnixSeconds(reader.ValueSpan, out var seconds))
         {
-            failure = $"The field {field} must be exactly yyyy-MM-ddTHH:mm:ssZ.";
+            failure = $"The field {field} must be whole Unix seconds, 0 to {MaxUnixSeconds}, with no sign, fraction, exponent or leading zero.";
             return false;
         }
 
+        value = DateTimeOffset.FromUnixTimeSeconds(seconds);
         return true;
+    }
+
+    // 0|[1-9][0-9]{0,11}, at most 253402300799.
+    private static bool TryReadUnixSeconds(ReadOnlySpan<byte> raw, out long seconds)
+    {
+        seconds = 0;
+        if (raw.IsEmpty || raw.Length > MaxUnixSecondsDigits || (raw[0] == (byte)'0' && raw.Length > 1))
+        {
+            return false;
+        }
+
+        foreach (var b in raw)
+        {
+            if (b is < (byte)'0' or > (byte)'9')
+            {
+                return false;
+            }
+
+            seconds = (seconds * 10) + (b - (byte)'0');
+        }
+
+        return seconds <= MaxUnixSeconds;
     }
 
     private static bool ReadFeatures(ref Utf8JsonReader reader, out List<FeatureInput>? features, out string? failure)
@@ -265,7 +288,7 @@ internal static class PayloadReader
         failure = null;
         if (reader.TokenType != JsonTokenType.StartObject)
         {
-            failure = "The field features must be an object.";
+            failure = "The field f must be an object.";
             return false;
         }
 

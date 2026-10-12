@@ -5,9 +5,9 @@ namespace Umbraco.Community.Licensing.Core.Tests.Format;
 
 public class PayloadReaderTests
 {
-    private const string Key = "\"signingKeyId\":\"0F8NSYaNR_Q\"";
-    private const string Product = "\"product\":\"acme.commerce\"";
-    private const string Issued = "\"issued\":\"2026-09-01T08:05:12Z\"";
+    private const string Key = "\"k\":\"0F8NSYaNR_Q\"";
+    private const string Product = "\"p\":\"acme.commerce\"";
+    private const string Issued = "\"i\":1788249912";
 
     private static readonly DateTimeOffset IssuedAt = new(2026, 9, 1, 8, 5, 12, TimeSpan.Zero);
 
@@ -15,7 +15,7 @@ public class PayloadReaderTests
 
     private static string Valid(params string[] extra) => Obj([Key, Product, Issued, .. extra]);
 
-    private static string WithFeatures(string features) => Valid("\"features\":" + features);
+    private static string WithFeatures(string features) => Valid("\"f\":" + features);
 
     private static bool TryRead(string json, out LicensePayload? payload, out string? failure) =>
         PayloadReader.TryRead(Encoding.UTF8.GetBytes(json), out payload, out failure);
@@ -37,14 +37,14 @@ public class PayloadReaderTests
     // Accepted ----------------------------------------------------------------------------------------------
 
     [Fact]
-    public void TryRead_Adr0002Sample_ReadsEveryField()
+    public void TryRead_Adr0007Sample_ReadsEveryField()
     {
         var payload = ReadOk(
-            "{\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":\"acme.commerce\",\"issued\":\"2026-09-01T08:05:12Z\","
-            + "\"expires\":\"2027-03-01T23:59:59Z\",\"displayName\":\"Commerce Pro\",\"vendorTag\":\"CUST-0042\","
-            + "\"features\":{\"ecommerce\":true,\"max-orders\":2500,\"licensed-domains\":\"example.com,shop.example.com\"}}");
+            "{\"k\":\"Nb_sm4Fxh5c\",\"p\":\"acme.commerce\",\"i\":1788249912,"
+            + "\"e\":1803945599,\"n\":\"Commerce Pro\",\"t\":\"CUST-0042\","
+            + "\"f\":{\"ecommerce\":true,\"max-orders\":2500,\"licensed-domains\":\"example.com,shop.example.com\"}}");
 
-        Assert.Equal("0F8NSYaNR_Q", payload.SigningKeyId);
+        Assert.Equal("Nb_sm4Fxh5c", payload.SigningKeyId);
         Assert.Equal("acme.commerce", payload.Product);
         Assert.Equal(IssuedAt, payload.Issued);
         Assert.Equal(new DateTimeOffset(2027, 3, 1, 23, 59, 59, TimeSpan.Zero), payload.Expires);
@@ -77,7 +77,7 @@ public class PayloadReaderTests
     [Fact]
     public void TryRead_FieldOrderIsFree()
     {
-        var payload = ReadOk(Obj("\"features\":{\"a\":true}", Issued, Product, Key));
+        var payload = ReadOk(Obj("\"f\":{\"a\":true}", Issued, Product, Key));
 
         Assert.Equal("acme.commerce", payload.Product);
         Assert.Single(payload.Features);
@@ -85,7 +85,7 @@ public class PayloadReaderTests
 
     [Fact]
     public void TryRead_WhitespaceBetweenTokens_IsAccepted() =>
-        ReadOk(" {\n \"signingKeyId\" : \"0F8NSYaNR_Q\" ,\"product\":\"acme.commerce\",\"issued\":\"2026-09-01T08:05:12Z\"}\n");
+        ReadOk(" {\n \"k\" : \"0F8NSYaNR_Q\" ,\"p\":\"acme.commerce\",\"i\":1788249912}\n");
 
     [Fact]
     public void TryRead_UnknownFeatureName_IsAccepted()
@@ -98,7 +98,7 @@ public class PayloadReaderTests
     [Fact]
     public void TryRead_EscapedAllowedCharacters_AreAccepted()
     {
-        var payload = ReadOk(Valid("\"vendorTag\":\"\\u0041-\\u0030\\/\\u0023\"", "\"displayName\":\"\\u0043af\\u00e9 \\ud83d\\ude00\""));
+        var payload = ReadOk(Valid("\"t\":\"\\u0041-\\u0030\\/\\u0023\"", "\"n\":\"\\u0043af\\u00e9 \\ud83d\\ude00\""));
 
         Assert.Equal("A-0/#", payload.VendorTag);
         Assert.Equal("Caf\u00e9 \U0001F600", payload.DisplayName);
@@ -154,7 +154,7 @@ public class PayloadReaderTests
         var emoji64 = string.Concat(Enumerable.Repeat("\\ud83d\\ude00", 64));
         var emoji256 = string.Concat(Enumerable.Repeat("\\ud83d\\ude00", 256));
 
-        ReadOk(Valid("\"displayName\":\"" + emoji64 + "\""));
+        ReadOk(Valid("\"n\":\"" + emoji64 + "\""));
         ReadOk(WithFeatures("{\"t\":\"" + emoji256 + "\"}"));
     }
 
@@ -166,7 +166,7 @@ public class PayloadReaderTests
     {
         using var scope = new CultureScope(culture);
 
-        var payload = ReadOk(WithFeatures("{\"n\":1234.5,\"i\":1}").Replace(Issued, "\"issued\":\"2026-12-31T23:59:59Z\"", StringComparison.Ordinal));
+        var payload = ReadOk(WithFeatures("{\"n\":1234.5,\"i\":1}").Replace(Issued, "\"i\":1798761599", StringComparison.Ordinal));
 
         Assert.Equal(new DateTimeOffset(2026, 12, 31, 23, 59, 59, TimeSpan.Zero), payload.Issued);
         Assert.Equal(TimeSpan.Zero, payload.Issued.Offset);
@@ -177,7 +177,7 @@ public class PayloadReaderTests
     // Round trip --------------------------------------------------------------------------------------------
 
     [Fact]
-    public void RoundTrip_Adr0002Sample_ReadsBackEqual()
+    public void RoundTrip_Adr0007Sample_ReadsBackEqual()
     {
         var written = new LicensePayload(
             "0F8NSYaNR_Q",
@@ -259,19 +259,19 @@ public class PayloadReaderTests
     public void TryRead_NonObject_IsRefused(string json) => AssertRefused(json);
 
     [Theory]
-    [InlineData("{\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":\"acme.commerce\",\"issued\":\"2026-09-01T08:05:12Z\"")]
-    [InlineData("{\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":\"acme.comm")]
-    [InlineData("{\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":\"acme.commerce\",\"issued\":\"2026-09-01T08:05:12Z\",}")]
-    [InlineData("{\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":\"acme.commerce\",\"issued\":\"2026-09-01T08:05:12Z\"} x")]
-    [InlineData("{\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":\"acme.commerce\",\"issued\":\"2026-09-01T08:05:12Z\"}{}")]
-    [InlineData("{\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":\"acme.commerce\",\"issued\":\"2026-09-01T08:05:12Z\"/*c*/}")]
-    [InlineData("{\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":\"acme.commerce\",\"issued\":\"2026-09-01T08:05:12Z\",\"features\":{\"a\":01}}")]
+    [InlineData("{\"k\":\"0F8NSYaNR_Q\",\"p\":\"acme.commerce\",\"i\":1788249912")]
+    [InlineData("{\"k\":\"0F8NSYaNR_Q\",\"p\":\"acme.comm")]
+    [InlineData("{\"k\":\"0F8NSYaNR_Q\",\"p\":\"acme.commerce\",\"i\":1788249912,}")]
+    [InlineData("{\"k\":\"0F8NSYaNR_Q\",\"p\":\"acme.commerce\",\"i\":1788249912} x")]
+    [InlineData("{\"k\":\"0F8NSYaNR_Q\",\"p\":\"acme.commerce\",\"i\":1788249912}{}")]
+    [InlineData("{\"k\":\"0F8NSYaNR_Q\",\"p\":\"acme.commerce\",\"i\":1788249912/*c*/}")]
+    [InlineData("{\"k\":\"0F8NSYaNR_Q\",\"p\":\"acme.commerce\",\"i\":1788249912,\"f\":{\"a\":01}}")]
     public void TryRead_MalformedOrTruncatedJson_IsRefused(string json) => AssertRefused(json);
 
     [Fact]
     public void TryRead_InvalidUtf8_IsRefused()
     {
-        byte[] bytes = [.. "{\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":\"acme.commerce\",\"issued\":\"2026-09-01T08:05:12Z\",\"displayName\":\"a"u8, 0xC3, 0x28, .. "\"}"u8];
+        byte[] bytes = [.. "{\"k\":\"0F8NSYaNR_Q\",\"p\":\"acme.commerce\",\"i\":1788249912,\"n\":\"a"u8, 0xC3, 0x28, .. "\"}"u8];
 
         Assert.False(PayloadReader.TryRead(bytes, out var payload, out var failure));
         Assert.Null(payload);
@@ -279,14 +279,14 @@ public class PayloadReaderTests
     }
 
     [Theory]
-    [InlineData("\"signingKeyId\":\"0F8NSYaNR_Q\"")]
-    [InlineData("\"product\":\"acme.commerce\"")]
-    [InlineData("\"issued\":\"2026-09-01T08:05:12Z\"")]
-    [InlineData("\"expires\":\"2027-03-01T23:59:59Z\"")]
-    [InlineData("\"displayName\":\"Commerce Pro\"")]
-    [InlineData("\"vendorTag\":\"CUST-0042\"")]
-    [InlineData("\"features\":{\"a\":true}")]
-    [InlineData("\"features\":{}")]
+    [InlineData("\"k\":\"0F8NSYaNR_Q\"")]
+    [InlineData("\"p\":\"acme.commerce\"")]
+    [InlineData("\"i\":1788249912")]
+    [InlineData("\"e\":1803945599")]
+    [InlineData("\"n\":\"Commerce Pro\"")]
+    [InlineData("\"t\":\"CUST-0042\"")]
+    [InlineData("\"f\":{\"a\":true}")]
+    [InlineData("\"f\":{}")]
     public void TryRead_RepeatedField_IsRefused(string field)
     {
         var required = new[] { Key, Product, Issued }.Contains(field);
@@ -298,7 +298,7 @@ public class PayloadReaderTests
 
     [Fact]
     public void TryRead_RepeatedFieldWithDifferentValue_IsRefused() =>
-        AssertRefused(Valid("\"product\":\"other.product\""));
+        AssertRefused(Valid("\"p\":\"other.product\""));
 
     [Fact]
     public void TryRead_RepeatedFieldViaEscapedName_IsRefused() =>
@@ -321,9 +321,9 @@ public class PayloadReaderTests
     }
 
     [Theory]
-    [InlineData("signingKeyId")]
-    [InlineData("product")]
-    [InlineData("issued")]
+    [InlineData("k")]
+    [InlineData("p")]
+    [InlineData("i")]
     public void TryRead_MissingRequiredField_IsRefused(string missing)
     {
         var fields = new[] { Key, Product, Issued }.Where(f => !f.StartsWith($"\"{missing}\"", StringComparison.Ordinal));
@@ -335,11 +335,11 @@ public class PayloadReaderTests
     public void TryRead_EmptyObject_IsRefused() => AssertRefused("{}");
 
     [Theory]
-    [InlineData("\"signingKeyId\":7,\"product\":\"acme.commerce\",\"issued\":\"2026-09-01T08:05:12Z\"")]
-    [InlineData("\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":null,\"issued\":\"2026-09-01T08:05:12Z\"")]
-    [InlineData("\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":[\"a.b\"],\"issued\":\"2026-09-01T08:05:12Z\"")]
-    [InlineData("\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":\"acme.commerce\",\"issued\":20260901")]
-    [InlineData("\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":\"acme.commerce\",\"issued\":null")]
+    [InlineData("\"k\":7,\"p\":\"acme.commerce\",\"i\":1788249912")]
+    [InlineData("\"k\":\"0F8NSYaNR_Q\",\"p\":null,\"i\":1788249912")]
+    [InlineData("\"k\":\"0F8NSYaNR_Q\",\"p\":[\"a.b\"],\"i\":1788249912")]
+    [InlineData("\"k\":\"0F8NSYaNR_Q\",\"p\":\"acme.commerce\",\"i\":\"1788249912\"")]
+    [InlineData("\"k\":\"0F8NSYaNR_Q\",\"p\":\"acme.commerce\",\"i\":null")]
     public void TryRead_WrongTypeForRequiredField_IsRefused(string fields) => AssertRefused("{" + fields + "}");
 
     [Theory]
@@ -347,69 +347,120 @@ public class PayloadReaderTests
     [InlineData("0F8NSYaNR_Qx")]
     [InlineData("")]
     public void TryRead_SigningKeyIdNot11Characters_IsRefused(string keyId) =>
-        AssertRefused(Obj($"\"signingKeyId\":\"{keyId}\"", Product, Issued));
+        AssertRefused(Obj($"\"k\":\"{keyId}\"", Product, Issued));
+
+    // Dates are Unix-second integers (ADR-0007) -------------------------------------------------------------
 
     [Theory]
-    [InlineData("2026-09-01")]
-    [InlineData("2026-09-01T08:05:12")]
-    [InlineData("2026-09-01T08:05:12z")]
-    [InlineData("2026-09-01T08:05:12+00:00")]
-    [InlineData("2026-09-01T08:05:12.000Z")]
-    [InlineData("2026-09-01T08:05:12.5Z")]
-    [InlineData("2026-09-01 08:05:12Z")]
-    [InlineData("2026-09-01t08:05:12Z")]
-    [InlineData("2026-9-1T08:05:12Z")]
-    [InlineData("2026-09-01T8:05:12Z")]
-    [InlineData("26-09-01T08:05:12Z")]
-    [InlineData("2026-09-01T08:05Z")]
-    [InlineData(" 2026-09-01T08:05:12Z")]
-    [InlineData("2026-09-01T08:05:12Z ")]
-    [InlineData("2026-09-01T08:05:12Z\\n")]
-    [InlineData("2026-13-01T08:05:12Z")]
-    [InlineData("2026-02-30T08:05:12Z")]
-    [InlineData("2026-09-01T24:00:00Z")]
-    [InlineData("2026-09-01T08:60:00Z")]
-    [InlineData("2026-09-01T08:05:60Z")]
-    [InlineData("\\uFF12026-09-01T08:05:12Z")]
-    [InlineData("")]
-    [InlineData("tomorrow")]
-    public void TryRead_DateNotInExactFormat_IsRefused(string value)
+    [InlineData("\"2026-09-01T08:05:12Z\"")]
+    [InlineData("\"1788249912\"")]
+    [InlineData("\"\"")]
+    [InlineData("true")]
+    [InlineData("null")]
+    [InlineData("[]")]
+    [InlineData("{}")]
+    public void TryRead_DateNotANumber_IsRefused(string token)
+    {
+        AssertRefused(Obj(Key, Product, "\"i\":" + token));
+        AssertRefused(Valid("\"e\":" + token));
+    }
+
+    [Theory]
+    [InlineData("1.0")]
+    [InlineData("1788249912.0")]
+    [InlineData("1788249912.5")]
+    [InlineData("-1")]
+    [InlineData("-0")]
+    [InlineData("1e3")]
+    [InlineData("1E3")]
+    [InlineData("1e+3")]
+    [InlineData("1.788249912e9")]
+    [InlineData("01")]
+    [InlineData("00")]
+    [InlineData("0123")]
+    [InlineData("253402300800")]
+    [InlineData("999999999999")]
+    [InlineData("1000000000000")]
+    [InlineData("99999999999999999999")]
+    public void TryRead_DateOutsideTheGrammar_IsRefused(string raw)
     {
         foreach (var culture in new[] { "en-US", "tr-TR", "de-DE" })
         {
             using var scope = new CultureScope(culture);
 
-            AssertRefused(Obj(Key, Product, $"\"issued\":\"{value}\""));
-            AssertRefused(Valid($"\"expires\":\"{value}\""));
+            Assert.False(TryRead(Obj(Key, Product, "\"i\":" + raw), out var payload, out _));
+            Assert.Null(payload);
+            AssertRefused(Valid("\"e\":" + raw));
         }
     }
 
     [Theory]
-    [InlineData("en-US")]
-    [InlineData("tr-TR")]
-    [InlineData("de-DE")]
-    public void TryRead_FullwidthDigitsInDate_AreRefused(string culture)
+    [InlineData("0", 0L)]
+    [InlineData("1", 1L)]
+    [InlineData("1788249912", 1788249912L)]
+    [InlineData("253402300799", 253402300799L)]
+    public void TryRead_DateWithinTheGrammar_IsAccepted(string raw, long seconds)
     {
-        using var scope = new CultureScope(culture);
+        var expected = DateTimeOffset.FromUnixTimeSeconds(seconds);
 
-        AssertRefused(Obj(Key, Product, "\"issued\":\"\uFF12026-09-01T08:05:12Z\""));
+        Assert.Equal(expected, ReadOk(Obj(Key, Product, "\"i\":" + raw)).Issued);
+        Assert.Equal(expected, ReadOk(Valid("\"e\":" + raw)).Expires);
+    }
+
+    [Fact]
+    public void TryRead_LatestDate_IsEndOf9999()
+    {
+        var payload = ReadOk(Obj(Key, Product, "\"i\":253402300799"));
+
+        Assert.Equal(new DateTimeOffset(9999, 12, 31, 23, 59, 59, TimeSpan.Zero), payload.Issued);
+        Assert.Equal(TimeSpan.Zero, payload.Issued.Offset);
+    }
+
+    [Theory]
+    [InlineData("signingKeyId")]
+    [InlineData("product")]
+    [InlineData("issued")]
+    [InlineData("expires")]
+    [InlineData("displayName")]
+    [InlineData("vendorTag")]
+    [InlineData("features")]
+    public void TryRead_Adr0002FieldName_IsRefusedAsUnknown(string name)
+    {
+        Assert.False(TryRead(Valid("\"" + name + "\":1"), out var payload, out var failure));
+        Assert.Null(payload);
+        Assert.Contains(name, failure, StringComparison.Ordinal);
+        Assert.Contains("not known", failure, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void TryRead_Adr0002ShapedPayload_IsRefused() =>
+        AssertRefused(
+            "{\"signingKeyId\":\"0F8NSYaNR_Q\",\"product\":\"acme.commerce\",\"issued\":\"2026-09-01T08:05:12Z\","
+            + "\"features\":{\"ecommerce\":true}}");
+
+    [Fact]
+    public void TryRead_EscapedFieldName_IsDecodedBeforeMatching()
+    {
+        var payload = ReadOk(Obj(Key, "\"\\u0070\":\"acme.commerce\"", Issued));
+
+        Assert.Equal("acme.commerce", payload.Product);
     }
 
     [Fact]
     public void TryRead_ExpiresNull_IsRefused()
     {
-        Assert.False(TryRead(Valid("\"expires\":null"), out _, out var failure));
-        Assert.Contains("expires", failure, StringComparison.Ordinal);
+        Assert.False(TryRead(Valid("\"e\":null"), out _, out var failure));
+        Assert.Contains("field e", failure, StringComparison.Ordinal);
     }
 
     [Theory]
-    [InlineData("\"displayName\":null")]
-    [InlineData("\"displayName\":\"\"")]
-    [InlineData("\"vendorTag\":null")]
-    [InlineData("\"vendorTag\":\"\"")]
-    [InlineData("\"displayName\":5")]
-    [InlineData("\"vendorTag\":true")]
-    [InlineData("\"expires\":5")]
+    [InlineData("\"n\":null")]
+    [InlineData("\"n\":\"\"")]
+    [InlineData("\"t\":null")]
+    [InlineData("\"t\":\"\"")]
+    [InlineData("\"n\":5")]
+    [InlineData("\"t\":true")]
+    [InlineData("\"e\":\"5\"")]
     public void TryRead_NullEmptyOrWrongTypeOptionalField_IsRefused(string field) => AssertRefused(Valid(field));
 
     [Theory]
@@ -422,7 +473,7 @@ public class PayloadReaderTests
     public void TryRead_FeaturesNotAnObject_IsRefused(string value)
     {
         Assert.False(TryRead(WithFeatures(value), out _, out var failure));
-        Assert.Contains("features", failure, StringComparison.Ordinal);
+        Assert.Contains("field f", failure, StringComparison.Ordinal);
     }
 
     [Theory]
@@ -477,16 +528,16 @@ public class PayloadReaderTests
     [InlineData("acme_x.commerce")]
     [InlineData("")]
     public void TryRead_ProductNotMatchingRule_IsRefused(string product) =>
-        AssertRefused(Obj(Key, $"\"product\":\"{product}\"", Issued));
+        AssertRefused(Obj(Key, $"\"p\":\"{product}\"", Issued));
 
     [Fact]
     public void TryRead_Product64And65Characters()
     {
         var at64 = "a" + new string('b', 31) + "." + "c" + new string('d', 30);
         Assert.Equal(64, at64.Length);
-        ReadOk(Obj(Key, $"\"product\":\"{at64}\"", Issued));
+        ReadOk(Obj(Key, $"\"p\":\"{at64}\"", Issued));
 
-        AssertRefused(Obj(Key, $"\"product\":\"{at64}x\"", Issued));
+        AssertRefused(Obj(Key, $"\"p\":\"{at64}x\"", Issued));
     }
 
     [Theory]
@@ -501,14 +552,14 @@ public class PayloadReaderTests
     [InlineData("A\\u2029B")]
     [InlineData("\\u00a0Pro")]
     [InlineData("Pro\\u3000")]
-    public void TryRead_DisplayNameBreakingRule_IsRefused(string value) => AssertRefused(Valid($"\"displayName\":\"{value}\""));
+    public void TryRead_DisplayNameBreakingRule_IsRefused(string value) => AssertRefused(Valid($"\"n\":\"{value}\""));
 
     [Fact]
     public void TryRead_DisplayName65Scalars_IsRefused()
     {
-        ReadOk(Valid("\"displayName\":\"" + new string('x', 64) + "\""));
-        AssertRefused(Valid("\"displayName\":\"" + new string('x', 65) + "\""));
-        AssertRefused(Valid("\"displayName\":\"" + string.Concat(Enumerable.Repeat("\\ud83d\\ude00", 65)) + "\""));
+        ReadOk(Valid("\"n\":\"" + new string('x', 64) + "\""));
+        AssertRefused(Valid("\"n\":\"" + new string('x', 65) + "\""));
+        AssertRefused(Valid("\"n\":\"" + string.Concat(Enumerable.Repeat("\\ud83d\\ude00", 65)) + "\""));
     }
 
     [Theory]
@@ -522,13 +573,13 @@ public class PayloadReaderTests
     [InlineData("caf\\u00e9")]
     [InlineData("\\uff21")]
     [InlineData("CUST\\u0000")]
-    public void TryRead_VendorTagOutsideAllowedSet_IsRefused(string value) => AssertRefused(Valid($"\"vendorTag\":\"{value}\""));
+    public void TryRead_VendorTagOutsideAllowedSet_IsRefused(string value) => AssertRefused(Valid($"\"t\":\"{value}\""));
 
     [Fact]
     public void TryRead_VendorTag64And65Characters()
     {
-        ReadOk(Valid("\"vendorTag\":\"" + new string('A', 64) + "\""));
-        AssertRefused(Valid("\"vendorTag\":\"" + new string('A', 65) + "\""));
+        ReadOk(Valid("\"t\":\"" + new string('A', 64) + "\""));
+        AssertRefused(Valid("\"t\":\"" + new string('A', 65) + "\""));
     }
 
     [Theory]
@@ -561,14 +612,14 @@ public class PayloadReaderTests
     // Lone surrogates take their own path ------------------------------------------------------------------
 
     [Theory]
-    [InlineData("\"displayName\":\"a\\uD800b\"")]
-    [InlineData("\"displayName\":\"\\uDC00\"")]
-    [InlineData("\"displayName\":\"\\uD800\"")]
-    [InlineData("\"displayName\":\"\\uD83D\\u0041\"")]
-    [InlineData("\"displayName\":\"\\uDE00\\uD83D\"")]
-    [InlineData("\"vendorTag\":\"\\uD800\"")]
-    [InlineData("\"features\":{\"t\":\"\\uD800\"}")]
-    [InlineData("\"features\":{\"a\\uD800\":true}")]
+    [InlineData("\"n\":\"a\\uD800b\"")]
+    [InlineData("\"n\":\"\\uDC00\"")]
+    [InlineData("\"n\":\"\\uD800\"")]
+    [InlineData("\"n\":\"\\uD83D\\u0041\"")]
+    [InlineData("\"n\":\"\\uDE00\\uD83D\"")]
+    [InlineData("\"t\":\"\\uD800\"")]
+    [InlineData("\"f\":{\"t\":\"\\uD800\"}")]
+    [InlineData("\"f\":{\"a\\uD800\":true}")]
     [InlineData("\"\\uD800\":1")]
     public void TryRead_EscapedLoneSurrogate_IsRefusedByItsOwnCheck(string field)
     {
@@ -581,14 +632,14 @@ public class PayloadReaderTests
     public void TryRead_EscapedBackslashBeforeU_IsNotASurrogateEscape()
     {
         // The JSON text \\uD800 is a backslash followed by "uD800", not an escape.
-        var payload = ReadOk(Valid("\"displayName\":\"a\\\\uD800\""));
+        var payload = ReadOk(Valid("\"n\":\"a\\\\uD800\""));
 
         Assert.Equal("a\\uD800", payload.DisplayName);
     }
 
     [Fact]
     public void TryRead_ValidEscapedSurrogatePair_IsAccepted() =>
-        Assert.Equal("\U0001F600", ReadOk(Valid("\"displayName\":\"\\uD83D\\uDE00\"")).DisplayName);
+        Assert.Equal("\U0001F600", ReadOk(Valid("\"n\":\"\\uD83D\\uDE00\"")).DisplayName);
 
     // Depth -------------------------------------------------------------------------------------------------
 

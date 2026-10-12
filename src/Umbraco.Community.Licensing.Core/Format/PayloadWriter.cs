@@ -1,19 +1,30 @@
-using System.Globalization;
+using System.Buffers;
+using System.Text;
 using System.Text.Json;
 
 namespace Umbraco.Community.Licensing.Core;
 
 /// <summary>
-/// Writes the payload as compact UTF-8 JSON (ADR-0002): fixed field order, optional fields and empty
-/// <c>features</c> omitted, numbers as raw normalised text (never <see cref="double"/>), dates as
-/// <c>yyyy-MM-ddTHH:mm:ssZ</c>, default encoder (non-ASCII escaped). The writer trusts its input: the issuer
-/// validates with <see cref="ContentRules"/> first. Input that cannot be written correctly (a number failing
-/// <see cref="NumberRule.TryNormalise"/>, a date with a fraction of a second, a missing name or text) is a
-/// programming error and throws <see cref="InvalidOperationException"/>.
+/// Writes the payload as compact UTF-8 JSON (ADR-0002 as amended by ADR-0007): fixed field order, field names
+/// <c>k p i e n t f</c>, optional fields and empty <c>f</c> omitted, numbers as raw normalised text (never
+/// <see cref="double"/>), dates as Unix-second integers. Text is written as raw UTF-8 with only <c>"</c>, <c>\</c>
+/// and U+0000 to U+001F escaped. The writer trusts its input: the issuer validates with <see cref="ContentRules"/>
+/// first. Input that cannot be written correctly (a number failing <see cref="NumberRule.TryNormalise"/>, a date with
+/// a fraction of a second or outside 1970-01-01 to 9999-12-31, a missing name or text, text with an unpaired
+/// surrogate) is a programming error and throws <see cref="InvalidOperationException"/>.
 /// </summary>
+/// <remarks>
+/// ADR-0007 names an internal JavaScriptEncoder for the escaping. Its pointer-based members need AllowUnsafeBlocks,
+/// so the escaping is done here and handed to <see cref="Utf8JsonWriter"/> as a raw string token; the bytes are the
+/// same. Field names are fixed ASCII, and feature names hold only a-z, 0-9 and hyphen, which the writer's own
+/// name encoding leaves alone.
+/// </remarks>
 internal static class PayloadWriter
 {
-    private const string DateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    // 9999-12-31T23:59:59Z, the largest instant the reader accepts (ADR-0007).
+    private const long MaxUnixSeconds = 253402300799;
+
+    private static readonly UTF8Encoding StrictUtf8 = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
 
     public static byte[] Write(LicensePayload payload)
     {
@@ -23,27 +34,27 @@ internal static class PayloadWriter
         using (var writer = new Utf8JsonWriter(stream))
         {
             writer.WriteStartObject();
-            writer.WriteString("signingKeyId", payload.SigningKeyId);
-            writer.WriteString("product", payload.Product);
-            writer.WriteString("issued", FormatDate(payload.Issued, "issued"));
+            WriteText(writer, "k", payload.SigningKeyId);
+            WriteText(writer, "p", payload.Product);
+            writer.WriteNumber("i", ToUnixSeconds(payload.Issued, "issued"));
             if (payload.Expires is { } expires)
             {
-                writer.WriteString("expires", FormatDate(expires, "expires"));
+                writer.WriteNumber("e", ToUnixSeconds(expires, "expires"));
             }
 
             if (payload.DisplayName is not null)
             {
-                writer.WriteString("displayName", payload.DisplayName);
+                WriteText(writer, "n", payload.DisplayName);
             }
 
             if (payload.VendorTag is not null)
             {
-                writer.WriteString("vendorTag", payload.VendorTag);
+                WriteText(writer, "t", payload.VendorTag);
             }
 
             if (payload.Features.Count > 0)
             {
-                writer.WriteStartObject("features");
+                writer.WriteStartObject("f");
                 foreach (var feature in payload.Features)
                 {
                     WriteFeature(writer, feature);
@@ -87,20 +98,82 @@ internal static class PayloadWriter
                 break;
 
             default:
-                writer.WriteStringValue(feature.Text
+                WriteTextValue(writer, feature.Text
                     ?? throw new InvalidOperationException($"The text {feature.Name} has no value."));
                 break;
         }
     }
 
-    private static string FormatDate(DateTimeOffset value, string field)
+    private static long ToUnixSeconds(DateTimeOffset value, string field)
     {
-        var utc = value.UtcDateTime;
-        if (utc.Ticks % TimeSpan.TicksPerSecond != 0)
+        if (value.UtcTicks % TimeSpan.TicksPerSecond != 0)
         {
             throw new InvalidOperationException($"The {field} time has a fraction of a second; the payload carries whole seconds.");
         }
 
-        return utc.ToString(DateFormat, CultureInfo.InvariantCulture);
+        var seconds = value.ToUnixTimeSeconds();
+        if (seconds is < 0 or > MaxUnixSeconds)
+        {
+            throw new InvalidOperationException($"The {field} time is outside 1970-01-01 to 9999-12-31; the payload cannot carry it.");
+        }
+
+        return seconds;
+    }
+
+    private static void WriteText(Utf8JsonWriter writer, string name, string value)
+    {
+        writer.WritePropertyName(name);
+        WriteTextValue(writer, value);
+    }
+
+    private static void WriteTextValue(Utf8JsonWriter writer, string value) =>
+        writer.WriteRawValue(EscapeToUtf8(value), skipInputValidation: false);
+
+    // The quoted JSON string token as UTF-8: raw except ", \ and U+0000 to U+001F (ADR-0007).
+    private static byte[] EscapeToUtf8(string value)
+    {
+        var buffer = new ArrayBufferWriter<byte>(value.Length + 2);
+        Append(buffer, "\"");
+
+        var start = 0;
+        for (var i = 0; i < value.Length; i++)
+        {
+            var c = value[i];
+            if (c != '"' && c != '\\' && c >= ' ')
+            {
+                continue;
+            }
+
+            Append(buffer, value.AsSpan(start, i - start));
+            start = i + 1;
+            Append(buffer, c switch
+            {
+                '"' => "\\\"",
+                '\\' => "\\\\",
+                _ => $"\\u{(int)c:X4}",
+            });
+        }
+
+        Append(buffer, value.AsSpan(start));
+        Append(buffer, "\"");
+        return buffer.WrittenSpan.ToArray();
+    }
+
+    private static void Append(ArrayBufferWriter<byte> buffer, ReadOnlySpan<char> text)
+    {
+        if (text.IsEmpty)
+        {
+            return;
+        }
+
+        try
+        {
+            var span = buffer.GetSpan(StrictUtf8.GetMaxByteCount(text.Length));
+            buffer.Advance(StrictUtf8.GetBytes(text, span));
+        }
+        catch (EncoderFallbackException ex)
+        {
+            throw new InvalidOperationException("The text is not valid UTF-16 (it holds an unpaired surrogate).", ex);
+        }
     }
 }

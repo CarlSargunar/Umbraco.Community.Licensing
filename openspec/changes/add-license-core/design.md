@@ -95,7 +95,8 @@ budget; per-thread instances are the fallback.
 
 ### Payload and strict read — ADR-0002, ADR-0007
 
-`Utf8JsonWriter` with an internal encoder escaping only `"`, `\` and control characters /
+`Utf8JsonWriter`, text values escaped by the writer itself (only `"`, `\` and control characters)
+and written raw, no unsafe code /
 `Utf8JsonReader`, one-letter field names, dates as Unix seconds, own duplicate-name tracking, raw
 number and date grammars, lengths in Unicode scalar values, length limits on both sides
 (PDR-0017), key string length checked before any decoding. A lenient routing read extracts the

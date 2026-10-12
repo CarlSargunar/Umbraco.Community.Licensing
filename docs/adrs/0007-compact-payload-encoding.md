@@ -17,10 +17,14 @@ payload for a shorter key (2026-10-12), overriding ADR-0002's "readable when dec
 
 ## Decision
 
-**Encoder.** An internal `JavaScriptEncoder` subclass passed to `Utf8JsonWriter` escapes only
-`"`, `\` and U+0000 to U+001F; every other character is written as raw UTF-8. The content rules
-already refuse control characters, lone surrogates, U+2028 and U+2029, so in practice only `"`
-and `\` are escaped (2 bytes each). The reader is unchanged: it accepts raw and escaped forms.
+**Encoder.** The payload writer escapes text values itself: only `"` (`\"`), `\` (`\\`) and
+U+0000 to U+001F (upper-case `\uXXXX`); every other character is written as raw UTF-8. It writes
+the quoted token with `Utf8JsonWriter.WriteRawValue`, validation on. Field names are fixed ASCII
+and feature names `[a-z0-9-]`, so the writer's own name encoding leaves them unchanged. The
+content rules already refuse control characters, lone surrogates, U+2028 and U+2029, so in
+practice only `"` and `\` are escaped (2 bytes each). The reader is unchanged: it accepts raw
+and escaped forms. (Amended 2026-10-12 during tasks.md 4.5; first written as a
+`JavaScriptEncoder` subclass, same output bytes.)
 
 **Field names.**
 
@@ -75,7 +79,8 @@ about 32,000 bytes, against about 24,400 payload bytes inside the cap. Typical k
 | Option | Why not |
 |---|---|
 | Default encoder (ADR-0002) | 6× to 12× growth for non-ASCII and five ASCII characters; HTML protection irrelevant here |
-| `JavaScriptEncoder.UnsafeRelaxedJsonEscaping` | Believed still to escape characters outside the BMP (not verified); the custom encoder is smallest for every input and depends on no built-in encoder's ranges |
+| `JavaScriptEncoder.UnsafeRelaxedJsonEscaping` | Believed still to escape characters outside the BMP (not verified); the writer's own escaping is smallest for every input and depends on no built-in encoder's ranges |
+| Internal `JavaScriptEncoder` subclass | Its overridable members (`FindFirstCharacterToEncode`, `TryEncodeUnicodeScalar`) take pointers and need `AllowUnsafeBlocks`; no unsafe code in a security library. Same bytes as the writer's own escaping (Carl, 2026-10-12) |
 | Full field names | About 70 characters more per key; Carl preferred shorter keys |
 | ISO 8601 basic dates (`20260901T080512Z`) | Saves about 11 characters against 32 for Unix seconds |
 | Signing key ID 11 → 6 characters | Saves 6; changes ADR-0001 and the public key export products embed |

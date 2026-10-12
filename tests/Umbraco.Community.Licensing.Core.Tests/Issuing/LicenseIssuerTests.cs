@@ -493,6 +493,94 @@ public class LicenseIssuerTests : IDisposable
         Assert.Contains("[product]", ex.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void KeyTooLong_RejectedNamingFeaturesAndTheExcess()
+    {
+        var request = Minimal() with { Features = KeyLengthSupport.TextFeatures(50, KeyLengthSupport.Emoji(256)) };
+        var length = KeyLengthSupport.KeyLength(_key.SigningKeyId, new DateTimeOffset(2026, 10, 1, 8, 0, 0, TimeSpan.Zero), request.Product!, null, null, request.Features);
+
+        var ex = Assert.Throws<LicenseIssueException>(() => Issuer().Issue(request, _key));
+
+        var problem = Assert.Single(ex.Problems);
+        Assert.Equal("features", problem.Field);
+        var over = (length - 32_767).ToString("N0", System.Globalization.CultureInfo.InvariantCulture);
+        Assert.True(length > 32_767);
+        Assert.Contains($"({over} characters over the limit of 32,767)", problem.Message);
+    }
+
+    [Fact]
+    public void KeyTooLong_OtherProblemsReportedWithoutALengthProblem()
+    {
+        var request = Minimal() with
+        {
+            Product = "Not Valid",
+            Features = KeyLengthSupport.TextFeatures(50, KeyLengthSupport.Emoji(256)),
+        };
+
+        var ex = Assert.Throws<LicenseIssueException>(() => Issuer().Issue(request, _key));
+
+        Assert.DoesNotContain(ex.Problems, p => p.Message.Contains("too large for a key"));
+        Assert.Contains(ex.Problems, p => p.Field == "product");
+    }
+
+    [Fact]
+    public void KeyLength_Exactly32767_IsIssued_OneMoreIsRejected()
+    {
+        // Emoji take the key close to the limit; single letters then walk the length to the exact value.
+        var baseValue = KeyLengthSupport.Emoji(256);
+        var features = KeyLengthSupport.TextFeatures(22, baseValue).With("pad", new string('a', 256));
+        var padded = features;
+        var length = 0;
+        for (var letters = 1; letters <= 256; letters++)
+        {
+            padded = features.With("pad2", new string('a', letters));
+            length = KeyLengthSupport.KeyLength(_key.SigningKeyId, new DateTimeOffset(2026, 10, 1, 8, 0, 0, TimeSpan.Zero), "acme.x", null, null, padded);
+            if (length >= 32_767)
+            {
+                break;
+            }
+        }
+
+        Assert.Equal(32_767, length);
+        var issued = Issuer().Issue(new LicenseRequest { Product = "acme.x", Expiry = LicenseExpiry.Perpetual, Features = padded }, _key);
+        Assert.Equal(32_767, issued.KeyString.Length);
+
+        var over = padded.With("pad3", "a");
+        var ex = Assert.Throws<LicenseIssueException>(
+            () => Issuer().Issue(new LicenseRequest { Product = "acme.x", Expiry = LicenseExpiry.Perpetual, Features = over }, _key));
+        Assert.Equal("features", Assert.Single(ex.Problems).Field);
+    }
+
+    [Fact]
+    public void LargeLicenseFits_EveryFieldAtItsLimit_IssuedAndReadBack()
+    {
+        var product = "a" + new string('b', 31) + "." + new string('c', 31);
+        var display = new string('D', 64);
+        var tag = new string('T', 64);
+        var value = string.Concat(Enumerable.Repeat("aB3dE5gH7j", 26))[..256];
+        var features = KeyLengthSupport.TextFeatures(50, value);
+        var request = new LicenseRequest
+        {
+            Product = product,
+            Expiry = LicenseExpiry.On(new DateOnly(2027, 3, 1)),
+            DisplayName = display,
+            VendorTag = tag,
+            Features = features,
+        };
+
+        var issued = Issuer().Issue(request, _key);
+
+        Assert.True(issued.KeyString.Length <= 32_767);
+        Assert.Equal(22_199, issued.KeyString.Length);
+        var envelope = KeyEnvelope.Read(issued.KeyString);
+        Assert.Equal(KeyEnvelopeState.Read, envelope.State);
+        var payload = ReadPayload(issued.KeyString);
+        Assert.Equal(product, payload.Product);
+        Assert.Equal(display, payload.DisplayName);
+        Assert.Equal(tag, payload.VendorTag);
+        Assert.Equal(features.ToInputs(), payload.Features);
+    }
+
     private sealed class FixedRandomSource(string reference, params string[] keyParts) : IRandomSource
     {
         private int _next;

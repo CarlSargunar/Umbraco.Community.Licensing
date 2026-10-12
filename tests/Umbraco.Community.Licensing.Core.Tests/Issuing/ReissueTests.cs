@@ -247,6 +247,22 @@ public class ReissueTests : IDisposable
         Assert.Equal("8F3AKM7RXB", KeyIdentifierFormat.ReferenceOf(envelope.Identifier!));
     }
 
+    [Fact]
+    public void KeyTooLong_ReissueWithAddedTextFeatures_IsRejectedNamingFeatures()
+    {
+        var license = License(FutureExpiry, features: KeyLengthSupport.TextFeatures(10, "short"));
+        var request = ReissueRequest.From(license) with
+        {
+            Features = KeyLengthSupport.TextFeatures(50, KeyLengthSupport.Emoji(256)),
+        };
+
+        var ex = Assert.Throws<LicenseIssueException>(() => Issuer().Issue(request, _key));
+
+        var problem = Assert.Single(ex.Problems);
+        Assert.Equal("features", problem.Field);
+        Assert.Contains("characters over the limit of 32,767", problem.Message);
+    }
+
     private sealed class FixedRandomSource(string reference, string keyPart) : IRandomSource
     {
         public string NextReference() => reference;

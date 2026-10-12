@@ -3,8 +3,8 @@ using System.Text.Json;
 namespace Umbraco.Community.Licensing.Core;
 
 /// <summary>
-/// The lenient routing read (ADR-0002), run before verification: extracts only <c>product</c> and
-/// <c>signingKeyId</c> from a top-level JSON object and ignores everything else. No content rules apply here.
+/// The lenient routing read (ADR-0001 as amended by ADR-0007), run before verification: extracts only <c>p</c> (product)
+/// and <c>k</c> (signing key ID) from a top-level JSON object and ignores everything else. No content rules apply here.
 /// Anything it cannot read (non-object, a missing or non-string field, a field that repeats, invalid UTF-8,
 /// truncated or malformed JSON, trailing content, nesting deeper than <see cref="MaxDepth"/>) is unreadable
 /// and never throws.
@@ -51,8 +51,10 @@ internal static class PayloadRouting
                 }
 
                 // Inside an object the next token is a property name.
-                var isProduct = reader.ValueTextEquals("product"u8);
-                var isKeyId = reader.ValueTextEquals("signingKeyId"u8);
+                // A name holding a lone surrogate escape cannot be p or k, and comparing it would throw.
+                var comparable = !(reader.ValueIsEscaped && PayloadJson.HasUnpairedSurrogateEscape(reader.ValueSpan));
+                var isProduct = comparable && reader.ValueTextEquals("p"u8);
+                var isKeyId = comparable && reader.ValueTextEquals("k"u8);
                 if (!reader.Read())
                 {
                     return false;

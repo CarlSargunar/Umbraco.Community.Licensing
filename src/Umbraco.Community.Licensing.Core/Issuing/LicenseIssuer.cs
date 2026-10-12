@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Umbraco.Community.Licensing.Core;
 
 /// <summary>
@@ -32,7 +34,7 @@ public sealed class LicenseIssuer
     /// <param name="definitions">The features the product has; null skips the check, <see cref="FeatureDefinitions.None"/> rejects every feature.</param>
     /// <returns>The key string, reference, key identifier and issue time.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="request"/>, its <see cref="LicenseRequest.Features"/> or <paramref name="signingKey"/> is null.</exception>
-    /// <exception cref="LicenseIssueException">The request breaks an issue rule; nothing was generated or signed.</exception>
+    /// <exception cref="LicenseIssueException">The request breaks an issue rule, or the key would be longer than 32,767 characters; nothing was generated or signed.</exception>
     /// <exception cref="InvalidOperationException">A <see cref="LicenseFeature"/> has a null <see cref="LicenseFeature.Value"/>: a programming error, not a request problem.</exception>
     public IssuedLicense Issue(LicenseRequest request, SigningPrivateKey signingKey, FeatureDefinitions? definitions = null)
     {
@@ -75,7 +77,7 @@ public sealed class LicenseIssuer
     /// <param name="definitions">The features the product has; null skips the check, <see cref="FeatureDefinitions.None"/> rejects every feature.</param>
     /// <returns>The key string, reference, key identifier and issue time.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="request"/>, its <see cref="ReissueRequest.Features"/> or <paramref name="signingKey"/> is null.</exception>
-    /// <exception cref="LicenseIssueException">The request breaks an issue rule, including a reference that is not a displayed reference; nothing was generated or signed.</exception>
+    /// <exception cref="LicenseIssueException">The request breaks an issue rule, including a reference that is not a displayed reference, or the key would be longer than 32,767 characters; no key is returned.</exception>
     /// <exception cref="InvalidOperationException">A <see cref="LicenseFeature"/> has a null <see cref="LicenseFeature.Value"/>: a programming error, not a request problem.</exception>
     public IssuedLicense Issue(ReissueRequest request, SigningPrivateKey signingKey, FeatureDefinitions? definitions = null)
     {
@@ -149,6 +151,14 @@ public sealed class LicenseIssuer
 
         var payload = PayloadWriter.Write(new LicensePayload(signingKey.SigningKeyId, product!, issued, expires, displayName, vendorTag, inputs));
         var keyString = KeyEnvelope.Compose(identifier, payload, signingKey.Sign);
+
+        if (keyString.Length > KeyEnvelope.MaxLength)
+        {
+            var over = keyString.Length - KeyEnvelope.MaxLength;
+            throw new LicenseIssueException([new LicenseProblem(
+                "features",
+                $"The license is too large for a key ({over.ToString("N0", CultureInfo.InvariantCulture)} characters over the limit of {KeyEnvelope.MaxLength.ToString("N0", CultureInfo.InvariantCulture)}). Shorten or remove text features.")]);
+        }
 
         return new IssuedLicense(keyString, KeyIdentifierFormat.DisplayReference(prefix, reference), identifier, issued);
     }
