@@ -4,7 +4,7 @@ namespace Umbraco.Community.Licensing.Core.Tests.Examples;
 
 /// <summary>
 /// Issues every key string of docs/license-examples.md and prints it (ADR-0005). Explicit: never part of a default run.
-/// Run: <c>dotnet build</c>, then <c>tests/Umbraco.Community.Licensing.Core.Tests/bin/Debug/net10.0/Umbraco.Community.Licensing.Core.Tests -explicit only -method "*ExampleKeyGenerator*" -showLiveOutput</c>.
+/// Run from the repository root (any OS): <c>dotnet run --project tests/Umbraco.Community.Licensing.Core.Tests -- -explicit only -method "*ExampleKeyGenerator*" -showLiveOutput</c>.
 /// Paste the C# block into <see cref="ExampleKeyStrings"/> and the doc block into docs/license-examples.md.
 /// </summary>
 public class ExampleKeyGenerator(ITestOutputHelper output)

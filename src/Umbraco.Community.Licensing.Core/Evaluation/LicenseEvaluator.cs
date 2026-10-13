@@ -76,14 +76,20 @@ public sealed class LicenseEvaluator
         }
 
         // The claimed product is reported only when it meets the product ID rule (PDR-0026); the state is unaffected, as a
-        // product that breaks the rule cannot equal this evaluator's own.
-        var claimedProblems = new List<LicenseProblem>();
-        ContentRules.CheckProduct(product, claimedProblems);
-        var claimedProduct = claimedProblems.Count == 0 ? product : null;
+        // product that breaks the rule cannot equal this evaluator's own. This evaluator's own ID passed the rule at
+        // construction, so a match needs no check and the common valid path allocates nothing here.
+        var isOwnProduct = string.Equals(product, ProductId, StringComparison.Ordinal);
+        string? claimedProduct = product;
+        if (!isOwnProduct)
+        {
+            var claimedProblems = new List<LicenseProblem>();
+            ContentRules.CheckProduct(product, claimedProblems);
+            claimedProduct = claimedProblems.Count == 0 ? product : null;
+        }
 
         LicenseResult Failed(LicenseState state) => LicenseResult.Failed(state, claimedProduct, identifier);
 
-        if (!string.Equals(product, ProductId, StringComparison.Ordinal))
+        if (!isOwnProduct)
         {
             return Failed(LicenseState.WrongProduct);
         }

@@ -71,7 +71,8 @@ LIC-8F3AK-M7RXB-7Q2D.eyJrIjoiTmJfc200RnhoNWMiLCJwIjoiYWNtZS5jb21tZXJjZSIs....qp3
 
 - **Key identifier:** readable and safe to show, log and quote in support emails.
   - `LIC` is the default prefix. A vendor can set its own prefix, such as `ACME`, or none.
-  - `8F3AK-M7RXB` is the reference. It stays the same when the license is reissued.
+  - `8F3AK-M7RXB` is the reference part; with the prefix it forms the reference
+    (`LIC-8F3AK-M7RXB`). It stays the same when the license is reissued.
   - `7Q2D` is the key part. It is new at every issue.
 - **Payload:** the signing key ID, the product, issue time, expiry, an optional display name and
   vendor tag, and the features. No personal data: no customer name, email or company.
@@ -219,7 +220,7 @@ IssuedLicense replacement = issuer.Issue(reissue, signingKey);   // LIC-8F3AK-M7
 ```
 
 The reissued key takes the issuer's prefix, so a vendor who moves from `LIC` to `ACME` gets
-`ACME-8F3AK-M7RXB-...` with the same reference.
+`ACME-8F3AK-M7RXB-...` with the same reference part.
 
 ### Rotate a signing key (vendor)
 

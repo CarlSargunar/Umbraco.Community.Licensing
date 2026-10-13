@@ -22,11 +22,15 @@ public sealed class SigningPrivateKey : IDisposable
     /// <summary>The signing key ID, the same as <see cref="PublicKey"/> reports.</summary>
     public string SigningKeyId => PublicKey.SigningKeyId;
 
-    /// <summary>Imports a private key from an unencrypted PKCS#8 PEM (<c>BEGIN PRIVATE KEY</c>).</summary>
+    /// <summary>
+    /// Imports a private key from an unencrypted PKCS#8 PEM (<c>BEGIN PRIVATE KEY</c>). The text must hold exactly one PEM
+    /// block; text around that block (whitespace, comments) is ignored, but a second <c>-----BEGIN</c> block anywhere
+    /// after the first is rejected.
+    /// </summary>
     /// <param name="pem">The PEM text.</param>
     /// <returns>The imported key.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="pem"/> is <see langword="null"/>.</exception>
-    /// <exception cref="FormatException">The text is not an ECDSA P-256 private key in PKCS#8 PEM.</exception>
+    /// <exception cref="FormatException">The text is not an ECDSA P-256 private key in PKCS#8 PEM, or holds more than one PEM block.</exception>
     public static SigningPrivateKey FromPem(string pem)
     {
         ArgumentNullException.ThrowIfNull(pem);
@@ -34,6 +38,11 @@ public sealed class SigningPrivateKey : IDisposable
         if (!PemEncoding.TryFind(pem, out var fields) || !pem.AsSpan()[fields.Label].SequenceEqual("PRIVATE KEY"))
         {
             throw new FormatException("The text is not a PKCS#8 PEM private key ('-----BEGIN PRIVATE KEY-----').");
+        }
+
+        if (pem.AsSpan(fields.Location.End.Value).Contains("-----BEGIN", StringComparison.Ordinal))
+        {
+            throw new FormatException("The text holds more than one PEM block; expected exactly one private key.");
         }
 
         byte[] der;

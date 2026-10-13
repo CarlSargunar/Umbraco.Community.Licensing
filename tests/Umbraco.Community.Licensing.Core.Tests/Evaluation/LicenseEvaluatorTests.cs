@@ -196,6 +196,23 @@ public class LicenseEvaluatorTests
         Assert.Null(result.ClaimedProduct);
     }
 
+    [Theory]
+    [InlineData(64, true)]
+    [InlineData(65, false)]
+    public void ClaimedProductAtTheLengthLimit_IsReportedAt64AndNotAt65(int length, bool reported)
+    {
+        // A well-formed two-part ID (dot included in the count): only its length decides, per PDR-0026.
+        var product = new string('a', 31) + "." + new string('b', length - 32);
+        var key = KeyEnvelope.Compose(Identifier, Encoding.UTF8.GetBytes(RawPayload(product: product)), Key.Sign);
+
+        var result = Evaluator().Evaluate(key);
+
+        Assert.Equal(length, product.Length);
+        Assert.Equal(LicenseState.WrongProduct, result.State);
+        Assert.Equal(reported ? product : null, result.ClaimedProduct);
+        Assert.Equal(Identifier, result.ClaimedKeyIdentifier);
+    }
+
     [Fact]
     public void ClaimedProductMeetingTheProductIdRule_IsStillReported()
     {

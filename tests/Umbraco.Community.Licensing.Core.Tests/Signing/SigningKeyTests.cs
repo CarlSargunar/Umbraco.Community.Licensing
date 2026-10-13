@@ -211,6 +211,75 @@ public class SigningKeyTests
         }
     }
 
+    private const string Base64UrlAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+    // Pins Base64Url.DecodeFromChars behaviour (follow-ups: several texts may import to one key). Observed on .NET 10:
+    // embedded whitespace in the key part is skipped, so the text imports to the same key.
+    [Theory]
+    [InlineData(" ")]
+    [InlineData("\n")]
+    [InlineData("\t")]
+    public void PublicKeyParse_WhitespaceInsideTheKeyPart_IsToleratedAndYieldsTheSameKey(string whitespace)
+    {
+        using var pair = SigningKeyPair.Create();
+        var text = pair.PublicKey.Export();
+        var dot = text.IndexOf('.', StringComparison.Ordinal);
+        var spaced = text[..(dot + 11)] + whitespace + text[(dot + 11)..];
+
+        var parsed = SigningPublicKey.Parse(spaced);
+
+        Assert.Equal(pair.PublicKey, parsed);
+        Assert.Equal(pair.SigningKeyId, parsed.SigningKeyId);
+        Assert.Equal(text, parsed.Export());
+    }
+
+    // Observed on .NET 10: the 4 unused bits of the final character must be zero, so a non-canonical last character is
+    // rejected and only one text imports to a given key.
+    [Fact]
+    public void PublicKeyParse_NonCanonicalTrailingBitsInTheLastCharacter_AreRejected()
+    {
+        using var pair = SigningKeyPair.Create();
+        var text = pair.PublicKey.Export();
+        var last = Base64UrlAlphabet.IndexOf(text[^1]);
+        Assert.Equal(0, last & 0b1111);
+        var altered = text[..^1] + Base64UrlAlphabet[last | 0b1111];
+
+        Assert.NotEqual(text, altered);
+        Assert.Throws<FormatException>(() => SigningPublicKey.Parse(altered));
+    }
+
+    [Fact]
+    public void PrivateKeyFromPem_SurroundingWhitespaceAndOtherText_StillImports()
+    {
+        using var pair = SigningKeyPair.Create();
+
+        using var imported = SigningPrivateKey.FromPem("\n  \r\n" + pair.PrivateKey.ExportPem() + "\n\n  ");
+        using var commented = SigningPrivateKey.FromPem("my signing key\n" + pair.PrivateKey.ExportPem() + "\nend of file\n");
+
+        Assert.Equal(pair.PublicKey, imported.PublicKey);
+        Assert.Equal(pair.PublicKey, commented.PublicKey);
+    }
+
+    [Fact]
+    public void PrivateKeyFromPem_TwoPrivateKeyBlocks_ThrowsFormatException()
+    {
+        using var a = SigningKeyPair.Create();
+        using var b = SigningKeyPair.Create();
+
+        Assert.Throws<FormatException>(() => SigningPrivateKey.FromPem(a.PrivateKey.ExportPem() + b.PrivateKey.ExportPem()));
+        Assert.Throws<FormatException>(() => SigningPrivateKey.FromPem(a.PrivateKey.ExportPem() + "\n\n" + a.PrivateKey.ExportPem()));
+    }
+
+    [Fact]
+    public void PrivateKeyFromPem_PrivateKeyFollowedByPublicKeyBlock_ThrowsFormatException()
+    {
+        using var pair = SigningKeyPair.Create();
+        using var p256 = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+
+        Assert.Throws<FormatException>(() => SigningPrivateKey.FromPem(
+            pair.PrivateKey.ExportPem() + "\n" + p256.ExportSubjectPublicKeyInfoPem()));
+    }
+
     [Fact]
     public void PublicKeyParse_RejectsPointNotOnCurve()
     {

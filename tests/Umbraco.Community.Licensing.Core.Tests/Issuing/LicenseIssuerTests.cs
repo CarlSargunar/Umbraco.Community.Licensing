@@ -551,8 +551,12 @@ public class LicenseIssuerTests : IDisposable
         Assert.Equal("features", Assert.Single(ex.Problems).Field);
     }
 
-    [Fact]
-    public void LargeLicenseFits_EveryFieldAtItsLimit_IssuedAndReadBack()
+    // ADR-0007 worst case: 22,212 characters with a 16-character prefix. The default LIC prefix is 13 characters shorter, so
+    // the same license measures 22,199.
+    [Theory]
+    [InlineData(null, 22_199)]
+    [InlineData("ACMECOMMERCE2026", 22_212)]
+    public void LargeLicenseFits_EveryFieldAtItsLimit_IssuedAndReadBack(string? prefix, int expectedLength)
     {
         var product = "a" + new string('b', 31) + "." + new string('c', 31);
         var display = new string('D', 64);
@@ -568,10 +572,10 @@ public class LicenseIssuerTests : IDisposable
             Features = features,
         };
 
-        var issued = Issuer().Issue(request, _key);
+        var issued = Issuer(prefix is null ? null : KeyPrefix.Of(prefix)).Issue(request, _key);
 
         Assert.True(issued.KeyString.Length <= 32_767);
-        Assert.Equal(22_199, issued.KeyString.Length);
+        Assert.Equal(expectedLength, issued.KeyString.Length);
         var envelope = KeyEnvelope.Read(issued.KeyString);
         Assert.Equal(KeyEnvelopeState.Read, envelope.State);
         var payload = ReadPayload(issued.KeyString);
