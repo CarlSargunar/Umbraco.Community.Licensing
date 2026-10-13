@@ -13,7 +13,7 @@ Deferred. Update this index in the same change as any status line.
 | PDR | Title | Status |
 |---|---|---|
 | [PDR-0001](0001-one-key-per-product.md) | One key per product | Decided |
-| [PDR-0002](0002-evaluation-states-and-claims.md) | Evaluation states and what a result reports | Amended by PDR-0018, PDR-0020 |
+| [PDR-0002](0002-evaluation-states-and-claims.md) | Evaluation states and what a result reports | Amended by PDR-0018, PDR-0020, PDR-0026 |
 | [PDR-0003](0003-empty-key-is-missing.md) | An empty or whitespace-only key is missing | Decided |
 | [PDR-0004](0004-product-id-reference-identifier.md) | Product ID, license reference and key identifier | Amended by PDR-0020, PDR-0023 |
 | [PDR-0005](0005-random-key-part.md) | Random key part at every issue | Decided |
@@ -37,6 +37,7 @@ Deferred. Update this index in the same change as any status line.
 | [PDR-0023](0023-key-identifier-prefix.md) | Vendor-chosen key identifier prefix | Decided |
 | [PDR-0024](0024-beta-without-stability-promise.md) | Beta release with no stability promise | Decided |
 | [PDR-0025](0025-issue-refuses-oversized-key.md) | Issue refuses a key too long to deploy | Decided |
+| [PDR-0026](0026-claimed-product-meets-product-id-rule.md) | A claimed product is reported only when it is a valid product ID | Decided |
 
 ## Template
 

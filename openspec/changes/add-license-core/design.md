@@ -22,7 +22,7 @@ Numbered for decision-record source lines. Behaviour is in specs/.
 | R1 | Issue a license: request → key string, reference, identifier, issue time; no records | license-generation | Vendor | PDR-0001 |
 | R2 | Contents and issue rules: product ID, reference, key part, issue time, expiry, display name, vendor tag, features, length limits, optional feature definitions; every problem listed | license-generation | Vendor; site owner (no personal data, clear expiry, no feature lost to a typo) | PDR-0004 to PDR-0012, PDR-0014, PDR-0016, PDR-0017, PDR-0023, PDR-0025 |
 | R3 | Reissue from a verified license | license-generation | Vendor, site owner | PDR-0013, PDR-0021 |
-| R4 | Evaluate zero or one key for one product: ordered states, claims vs facts, never throws on key content | license-validation | Implementor, site owner, site visitor, backoffice editor | PDR-0001, PDR-0002, PDR-0003, PDR-0018, PDR-0020, PDR-0022, PDR-0023 |
+| R4 | Evaluate zero or one key for one product: ordered states, claims vs facts, never throws on key content | license-validation | Implementor, site owner, site visitor, backoffice editor | PDR-0001, PDR-0002, PDR-0003, PDR-0018, PDR-0020, PDR-0022, PDR-0023, PDR-0026 |
 | R5 | Feature lookup on a valid key | license-validation | Vendor, site owner | PDR-0010, PDR-0019 |
 | R6 | Signing keys: create, derived ID, export/import, trusted set, rotation | signing-key-management | Vendor, implementor, site owner | PDR-0015, PDR-0018, ADR-0001 |
 | R7 | Key string survives email and fits an environment variable; strict read | license-generation, license-validation | Implementor, site owner, site visitor | ADR-0001, ADR-0002, ADR-0007, PDR-0017, PDR-0025 |
@@ -61,6 +61,7 @@ Persona check: no requirement harms a higher-priority persona. The costs of one 
 | Q24 | Package version and metadata | `0.1.0-beta.1`, author Carl Sargunar, GitHub https repository URL, root README packed (Carl, 2026-10-11) | ADR-0006, PDR-0024 |
 | Q25 | Verified key whose `expires` is earlier than its `issued`: refuse on read? | Accept; evaluates as *expired*. Issue already prevents it (PDR-0006, PDR-0007) (Carl, 2026-10-12) | ADR-0002 |
 | Q26 | Issue could return a key over the 32,767 read cap (non-ASCII text escaped 6× to 12×); can keys be shorter? | Issue refuses a key over 32,767, naming `features`, no input restricted; payload written with a minimal-escaping encoder, short field names, dates as Unix seconds; readability of the decoded payload given up (Carl, 2026-10-12) | PDR-0025, ADR-0007 |
+| Q27 | Claimed product that breaks the product ID rule (any text, read before verification) | Not reported; state unchanged (Carl, 2026-10-13) | PDR-0026 |
 
 ## Decisions
 

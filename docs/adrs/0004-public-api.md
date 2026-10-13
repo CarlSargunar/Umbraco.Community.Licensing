@@ -83,7 +83,7 @@ public sealed record SwitchFeature(bool IsOn) : FeatureValue; // read side alway
 public sealed record NumberFeature(decimal Value) : FeatureValue;
 public sealed record TextFeature(string Value) : FeatureValue;
 public sealed record LicenseFeature(string Name, FeatureValue Value);
-public sealed class FeatureList : IReadOnlyList<LicenseFeature>   // immutable, keeps order
+public sealed class FeatureList : IReadOnlyList<LicenseFeature>, IEquatable<FeatureList>   // immutable, keeps order
 {
     public static FeatureList Empty { get; }
     public static FeatureList Of(IEnumerable<LicenseFeature> features); // keeps duplicates, so issue reports them
@@ -91,6 +91,10 @@ public sealed class FeatureList : IReadOnlyList<LicenseFeature>   // immutable, 
     public FeatureList With(string name, decimal value);
     public FeatureList With(string name, string text);
     public FeatureList Without(string name);
+    public bool Equals(FeatureList? other);               // same features, same order; names compared exactly
+    public override bool Equals(object? obj);
+    public override int GetHashCode();
+    public override string ToString();                    // "FeatureList(n)": count only, never values
 }
 public enum FeatureType { Switch, Number, Text }
 public sealed class FeatureDefinitions : IReadOnlyCollection<KeyValuePair<string, FeatureType>>  // immutable
@@ -127,6 +131,11 @@ public sealed record LicenseProblem(string Field, string Message);
 `Reference` and `KeyIdentifier` are returned in display form with the issuer's prefix
 (`LIC-8F3AK-M7RXB`, `LIC-8F3AK-M7RXB-7Q2D`; `8F3AK-M7RXB` with `KeyPrefix.None`). `With`/`Without` match names with the lookup rule (ignore `a`-`z` case).
 
+`FeatureList` equality compares names exactly, while `With`, `Without` and the lookups ignore
+`a`-`z` case: two request lists differing only in name case are unequal. A verified list holds
+lowercase names only, so verified licenses compare as expected. (Amended 2026-10-13 during
+`add-license-core` section 6.)
+
 `ReissueRequest` keeps the product and reference of the verified license (PDR-0021): neither has
 a setter, so a changed reference cannot be expressed. A new reference is a fresh `LicenseRequest`.
 `ReissueRequest.Reference` is the reference as read from the license, with its prefix
@@ -158,7 +167,7 @@ public sealed class LicenseResult
 {
     public LicenseState State { get; }
     public bool IsLicensed { get; }                       // State == Valid
-    public string? ClaimedProduct { get; }                // failed states only, when readable
+    public string? ClaimedProduct { get; }                // failed states only, when readable and a valid product ID (PDR-0026)
     public string? ClaimedKeyIdentifier { get; }          // failed states only, when readable
     public VerifiedLicense? License { get; }              // Valid and Expired only
     public bool HasSwitch(string name);                   // false unless Valid and a switch

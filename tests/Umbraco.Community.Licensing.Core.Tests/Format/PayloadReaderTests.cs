@@ -206,6 +206,22 @@ public class PayloadReaderTests
         AssertEqual(written, read!);
     }
 
+    [Fact]
+    public void RoundTrip_QuotesAndBackslashes_ReadsBackEqual()
+    {
+        var written = new LicensePayload(
+            "0F8NSYaNR_Q",
+            "acme.commerce",
+            IssuedAt,
+            null,
+            "say \"hi\" \\o/",
+            "A/#",
+            [FeatureInput.OfText("note", "\\uD800 \" \\")]);
+
+        Assert.True(PayloadReader.TryRead(PayloadWriter.Write(written), out var read));
+        AssertEqual(written, read!);
+    }
+
     private static void AssertEqual(LicensePayload expected, LicensePayload actual)
     {
         Assert.Equal(expected.SigningKeyId, actual.SigningKeyId);

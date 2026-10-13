@@ -133,7 +133,7 @@ public class PayloadWriterTests
     [Fact]
     public void Write_ControlCharacters_AreEscapedAsUpperCaseUnicodeEscapes()
     {
-        // The content rules refuse control characters, so the issuer never passes one; the encoder still escapes them.
+        // The content rules refuse control characters, so the issuer never passes one; the writer still escapes them.
         var json = Json(Minimal(FeatureInput.OfText("note", "a\u0000b\nc\u001Fd")));
 
         Assert.Contains("\"note\":\"a\\u0000b\\u000Ac\\u001Fd\"", json, StringComparison.Ordinal);

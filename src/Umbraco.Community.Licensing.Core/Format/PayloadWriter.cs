@@ -14,9 +14,8 @@ namespace Umbraco.Community.Licensing.Core;
 /// surrogate) is a programming error and throws <see cref="InvalidOperationException"/>.
 /// </summary>
 /// <remarks>
-/// ADR-0007 names an internal JavaScriptEncoder for the escaping. Its pointer-based members need AllowUnsafeBlocks,
-/// so the escaping is done here and handed to <see cref="Utf8JsonWriter"/> as a raw string token; the bytes are the
-/// same. Field names are fixed ASCII, and feature names hold only a-z, 0-9 and hyphen, which the writer's own
+/// The writer escapes text itself (ADR-0007 as amended) and hands it to <see cref="Utf8JsonWriter"/> with
+/// <c>WriteRawValue</c>. An encoder subclass was rejected because it needs AllowUnsafeBlocks. Field names are fixed ASCII, and feature names hold only a-z, 0-9 and hyphen, which the writer's own
 /// name encoding leaves alone.
 /// </remarks>
 internal static class PayloadWriter

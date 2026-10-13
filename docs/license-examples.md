@@ -2,8 +2,8 @@
 
 Schema and worked examples. An example that contradicts a PDR is a documentation bug.
 
-Last checked against: PDR-0001 to PDR-0025, ADR-0001 to ADR-0007 (2026-10-12, change
-`add-license-core`, explore review, architect pass 2, prefix explore and apply decisions, design.md Q13 to Q26). Key strings are added by `add-license-core` tasks.md
+Last checked against: PDR-0001 to PDR-0026, ADR-0001 to ADR-0007 (2026-10-13, change
+`add-license-core`, explore review, architect pass 2, prefix explore and apply decisions, design.md Q13 to Q27). Key strings are added by `add-license-core` tasks.md
 section 7 and verified by the example tests (ADR-0005).
 
 > **Example signing key `Nb_sm4Fxh5c` is public** (ADR-0005). It exists so these strings can be
@@ -112,7 +112,8 @@ keeps product `acme.commerce` and reference `LIC-8F3AK-M7RXB`; neither can be ch
   typo     unreadable                  no claims                                             (identifier hand-edited to ...-7Q2O)
   old      not supported               claims to be LIC-8F3AK-M7RXB-W4TN for acme.commerce   (key from a newer vendor tool, product not updated)
 ```
-Only prod is licensed. The edited key's claims appear nowhere. *Not supported* means the key is
+Only prod is licensed. The edited key's claims appear nowhere. A claimed product that is not a
+valid product ID is not reported either (PDR-0026). *Not supported* means the key is
 intact and signed by a trusted key; the first action is to update the product, not to paste
 again. A product shipped with no trusted keys fails when evaluation is set up, before any key is
 read (PDR-0018). A key wrapped across lines or with

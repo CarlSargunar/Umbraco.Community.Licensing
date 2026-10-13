@@ -3,7 +3,7 @@ using System.Collections;
 namespace Umbraco.Community.Licensing.Core;
 
 /// <summary>An immutable list of features that keeps order. Names are matched ignoring <c>a</c>-<c>z</c> case only (ordinal, culture-free).</summary>
-public sealed class FeatureList : IReadOnlyList<LicenseFeature>
+public sealed class FeatureList : IReadOnlyList<LicenseFeature>, IEquatable<FeatureList>
 {
     private readonly LicenseFeature[] _items;
 
@@ -67,15 +67,82 @@ public sealed class FeatureList : IReadOnlyList<LicenseFeature>
         return kept.Length == _items.Length ? this : kept.Length == 0 ? Empty : new FeatureList(kept);
     }
 
+    /// <summary>True when <paramref name="other"/> holds equal features in the same order.</summary>
+    /// <param name="other">The list to compare with.</param>
+    /// <returns>True when the lists are equal.</returns>
+    public bool Equals(FeatureList? other) =>
+        other is not null && (ReferenceEquals(this, other) || _items.AsSpan().SequenceEqual(other._items));
+
+    /// <inheritdoc/>
+    public override bool Equals(object? obj) => obj is FeatureList other && Equals(other);
+
+    /// <inheritdoc/>
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        foreach (var item in _items)
+        {
+            hash.Add(item);
+        }
+
+        return hash.ToHashCode();
+    }
+
+    /// <summary>The number of features only, so logging a list or a record holding one never prints feature values.</summary>
+    /// <returns>For example <c>FeatureList(3)</c>.</returns>
+    public override string ToString() => $"FeatureList({_items.Length})";
+
     /// <inheritdoc/>
     public IEnumerator<LicenseFeature> GetEnumerator() => ((IEnumerable<LicenseFeature>)_items).GetEnumerator();
 
     /// <inheritdoc/>
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
+    /// <summary>
+    /// The value of the first feature whose name matches <paramref name="name"/>, or null when none does. The first match
+    /// is safe because a verified list holds only <c>[a-z0-9-]</c> names with ordinal duplicate tracking, so it has no
+    /// case-variant duplicates; <c>Find</c> is reached only through verified features.
+    /// </summary>
+    internal FeatureValue? Find(string name)
+    {
+        foreach (var item in _items)
+        {
+            if (NameMatches(item.Name, name))
+            {
+                return item.Value;
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>The features as the content rules take them, in order, duplicates kept.</summary>
     /// <exception cref="InvalidOperationException">A feature has a null value: a programming error, not a request problem.</exception>
     internal IReadOnlyList<FeatureInput> ToInputs() => _items.Select(ToInput).ToArray();
+
+    /// <summary>The reverse of <see cref="ToInputs"/>, for a payload read back from a verified key.</summary>
+    internal static FeatureList FromInputs(IReadOnlyList<FeatureInput> inputs)
+    {
+        if (inputs.Count == 0)
+        {
+            return Empty;
+        }
+
+        var items = new LicenseFeature[inputs.Count];
+        for (var i = 0; i < items.Length; i++)
+        {
+            var input = inputs[i];
+            FeatureValue value = input.Kind switch
+            {
+                FeatureKind.Switch => new SwitchFeature(input.IsOn),
+                FeatureKind.Number => new NumberFeature(input.Number),
+                _ => new TextFeature(input.Text ?? string.Empty),
+            };
+            items[i] = new LicenseFeature(input.Name ?? string.Empty, value);
+        }
+
+        return new FeatureList(items);
+    }
 
     private static FeatureInput ToInput(LicenseFeature feature) => feature.Value switch
     {
@@ -101,7 +168,7 @@ public sealed class FeatureList : IReadOnlyList<LicenseFeature>
     }
 
     /// <summary>Ordinal comparison that folds only <c>A</c>-<c>Z</c> to <c>a</c>-<c>z</c>; a null name matches nothing.</summary>
-    private static bool NameMatches(string? existing, string name)
+    internal static bool NameMatches(string? existing, string name)
     {
         if (existing is null || existing.Length != name.Length)
         {

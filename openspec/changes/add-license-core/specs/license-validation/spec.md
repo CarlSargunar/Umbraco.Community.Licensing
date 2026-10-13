@@ -156,7 +156,8 @@ perpetual key SHALL never expire.
 ### Requirement: What a result reports
 A *missing* result SHALL report the state only. A result in *unreadable*, *wrong product*,
 *signing key not recognised*, *not verified* or *not supported* SHALL report the state, and the claimed product
-and claimed key identifier when they could be read, presented as claims. It SHALL NOT report an
+when it could be read and meets the product ID rule, and the claimed key identifier when it
+could be read, presented as claims. It SHALL NOT report an
 issue time, expiry, display name, vendor tag or features. A *valid* or *expired* result SHALL
 report as facts: product, reference, key identifier, signing key ID, issue time, expiry or
 perpetual, display name, vendor tag and features. No result SHALL contain any part of the key
@@ -167,6 +168,12 @@ string other than its identifier.
   `max-orders: 999999` is evaluated
 - **THEN** the result is *not verified*, reports the claimed product and identifier, and reports
   no expiry and no features
+
+#### Scenario: Claimed product breaking the product ID rule
+- **WHEN** a key with a valid identifier, not signed by a trusted key, claims a product of 5,000
+  characters including a line break
+- **THEN** the state is *wrong product*, there is no claimed product, and the claimed identifier
+  is reported
 
 #### Scenario: Expired reports what lapsed
 - **WHEN** an expired key with `ecommerce` and `max-orders: 500` is evaluated

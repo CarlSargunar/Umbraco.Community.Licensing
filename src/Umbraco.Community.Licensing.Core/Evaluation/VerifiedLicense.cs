@@ -26,4 +26,8 @@ public sealed record VerifiedLicense(
 {
     /// <summary>True when the license has no expiry.</summary>
     public bool IsPerpetual => Expires is null;
+
+    /// <summary>The key identifier only, so logging a license never prints other values or any part of the key string.</summary>
+    /// <returns>For example <c>VerifiedLicense LIC-8F3AK-M7RXB-7Q2D</c>.</returns>
+    public override string ToString() => $"VerifiedLicense {KeyIdentifier}";
 }

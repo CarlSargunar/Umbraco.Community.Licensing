@@ -168,4 +168,60 @@ public class FeatureListTests
         Assert.Same(FeatureList.Empty, request.Features);
         Assert.Equal(string.Empty, new LicenseRequest { DisplayName = "" }.DisplayName);
     }
+
+    [Fact]
+    public void Equals_SameFeaturesInSameOrder_AreEqualWithEqualHashCodes()
+    {
+        var a = FeatureList.Empty.With("one", true).With("two", 2.5m).With("three", "x");
+        var b = FeatureList.Empty.With("one", true).With("two", 2.5m).With("three", "x");
+
+        Assert.Equal(a, b);
+        Assert.True(a.Equals((object)b));
+        Assert.Equal(a.GetHashCode(), b.GetHashCode());
+    }
+
+    [Fact]
+    public void Equals_DifferentOrderValueOrLength_AreNotEqual()
+    {
+        var a = FeatureList.Empty.With("one", true).With("two", 2m);
+
+        Assert.NotEqual(a, FeatureList.Empty.With("two", 2m).With("one", true));
+        Assert.NotEqual(a, FeatureList.Empty.With("one", true).With("two", 3m));
+        Assert.NotEqual(a, FeatureList.Empty.With("one", true));
+        Assert.False(a.Equals(null));
+        Assert.False(a.Equals("not a list"));
+        Assert.Equal(FeatureList.Empty, FeatureList.Of([]));
+    }
+
+    [Fact]
+    public void RecordsHoldingFeatureLists_CompareByContent()
+    {
+        var a = new LicenseRequest { Product = "p", Features = FeatureList.Empty.With("one", true) };
+        var b = new LicenseRequest { Product = "p", Features = FeatureList.Empty.With("one", true) };
+
+        Assert.Equal(a, b);
+    }
+
+    [Fact]
+    public void ToString_ShowsTheCountOnly()
+    {
+        var list = FeatureList.Empty.With("secret-name", "secret-value").With("two", 1m);
+
+        Assert.Equal("FeatureList(2)", list.ToString());
+        Assert.Equal("FeatureList(0)", FeatureList.Empty.ToString());
+    }
+
+    [Fact]
+    public void FromInputs_IsTheReverseOfToInputs()
+    {
+        var list = FeatureList.Of([
+            new("s", new SwitchFeature(true)),
+            new("n", new NumberFeature(2.5m)),
+            new("t", new TextFeature("hi")),
+            new("n", new NumberFeature(1m)),
+        ]);
+
+        Assert.Equal(list, FeatureList.FromInputs(list.ToInputs()));
+        Assert.Same(FeatureList.Empty, FeatureList.FromInputs([]));
+    }
 }

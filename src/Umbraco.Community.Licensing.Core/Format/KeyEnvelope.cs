@@ -69,11 +69,13 @@ internal static class KeyEnvelope
         }
 
         var firstDot = text.IndexOf('.');
-        var identifier = firstDot < 0 ? text : text[..firstDot];
-        if (!KeyIdentifierFormat.IdentifierPattern.IsMatch(identifier))
+        var identifierText = firstDot < 0 ? text.AsSpan() : text.AsSpan(0, firstDot);
+        if (!KeyIdentifierFormat.IdentifierPattern.IsMatch(identifierText))
         {
             return new(KeyEnvelopeState.UnreadableWithoutIdentifier);
         }
+
+        var identifier = identifierText.ToString();
 
         KeyEnvelopeReadResult Unreadable() => new(KeyEnvelopeState.UnreadableWithIdentifier, identifier);
 
