@@ -31,9 +31,9 @@ Minors and nits from reviews. Read at the start of each apply session.
 | Review of section 2 cleanup | nit | `src/.../Format/ContentRules.cs`: `hasSurrogateError` local could inline to `if (!TryScan(...))` | Accepted (Carl, 2026-10-13) |
 | Supervisor, section 1 (re-review) | nit | `src/.../Umbraco.Community.Licensing.Core.csproj:19`: README pack item uses backslashes (`..\..\README.md`, `PackagePath="\"`); works on macOS, optional switch to forward slashes | Accepted (Carl, 2026-10-13) |
 | Supervisor, section 1 (re-review) | note | Do not publish to NuGet before task 8.2: the packed README has no beta warning yet (PDR-0024) | Done: task 8.2 |
-| Supervisor, section 1 (re-review) | note | `Version` is hard-coded; add a release checklist item or CI-supplied version when CI is added (ADR-0006) | Open |
-| Supervisor, section 1 (re-review) | note | nuspec records HEAD commit; pack only from a clean commit | Open |
-| Supervisor, section 1 (re-review) | note | CI must support Microsoft.Testing.Platform and call `dotnet test --solution` (ADR-0006) | Open |
+| Supervisor, section 1 (re-review) | note | `Version` is hard-coded; add a release checklist item or CI-supplied version when CI is added (ADR-0006) | Moved to FR-6 |
+| Supervisor, section 1 (re-review) | note | nuspec records HEAD commit; pack only from a clean commit | Moved to FR-6 |
+| Supervisor, section 1 (re-review) | note | CI must support Microsoft.Testing.Platform and call `dotnet test --solution` (ADR-0006) | Moved to FR-6 |
 | Review of tasks.md 3.1–3.3 | minor | `tests/.../Signing/SigningKeyTests.cs`: worker deviations untested: `SigningPublicKey.Parse` whitespace trim (leading/trailing newline on a valid export) and `FromSpki` rejection of trailing bytes / non-canonical SPKI (`SigningPublicKey.cs:105-115`); add tests | Done (section 3 rework) |
 | Review of tasks.md 3.1–3.3 | minor | `src/.../Signing/SigningPublicKey.cs:54`: `Base64Url.DecodeFromChars` may accept embedded whitespace or non-canonical trailing bits, so several texts import to one key (no security impact; SPKI re-export check holds). Accept or pin by test | Done (cleanup block): pinned by tests; whitespace tolerated, non-canonical bits rejected |
 | Review of tasks.md 3.1–3.3 | minor | `src/.../Signing/SigningPrivateKey.cs:34`: `PemEncoding.TryFind` takes the first PEM block and ignores trailing text; document or reject | Done (cleanup block): second PEM block rejected |
