@@ -38,6 +38,8 @@ Deferred. Update this index in the same change as any status line.
 | [PDR-0024](0024-beta-without-stability-promise.md) | Beta release with no stability promise | Decided |
 | [PDR-0025](0025-issue-refuses-oversized-key.md) | Issue refuses a key too long to deploy | Decided |
 | [PDR-0026](0026-claimed-product-meets-product-id-rule.md) | A claimed product is reported only when it is a valid product ID | Decided |
+| [PDR-0027](0027-release-versioning-and-log.md) | Release versioning and release log | Decided |
+| [PDR-0028](0028-test-coverage-per-release.md) | Test coverage per release | Decided |
 
 ## Template
 
