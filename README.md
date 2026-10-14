@@ -7,7 +7,7 @@ product, and manage the signing keys behind them.
 > or both. A key issued under a beta may read as `NotSupported` or `Unreadable` under a later
 > version. **Do not issue beta keys to paying customers. Reissue every key when moving to 1.0.**
 > From 1.0 the key format is permanent.
-> ([PDR-0024](https://github.com/CarlSargunar/Umbraco.Community.Licensing/blob/main/docs/decisions/0024-beta-without-stability-promise.md))
+> ([PDR-0024](https://github.com/carlcod-es/Umbraco.Community.Licensing/blob/main/docs/decisions/0024-beta-without-stability-promise.md))
 
 ## Why
 
@@ -19,7 +19,7 @@ different one per product. This library gives every package the same scheme:
   network call, nothing to go down.
 - **Signed.** A key cannot be edited or forged without the vendor's private signing key.
 - **One key per product.** Each key names the product it unlocks
-  ([PDR-0001](https://github.com/CarlSargunar/Umbraco.Community.Licensing/blob/main/docs/decisions/0001-one-key-per-product.md)).
+  ([PDR-0001](https://github.com/carlcod-es/Umbraco.Community.Licensing/blob/main/docs/decisions/0001-one-key-per-product.md)).
 - **Same answers everywhere.** Every product reports the same set of states with the same first
   action, so a site owner holding keys from several vendors fixes them all the same way.
 - **Never breaks a page.** Checking a key never throws on key content. A bad key is a state, not
@@ -27,7 +27,7 @@ different one per product. This library gives every package the same scheme:
 
 Built first for the **site owner** who buys licenses, then the implementor who installs them,
 then the vendor who issues them
-([personas](https://github.com/CarlSargunar/Umbraco.Community.Licensing/blob/main/docs/personas.md)).
+([personas](https://github.com/carlcod-es/Umbraco.Community.Licensing/blob/main/docs/personas.md)).
 
 The package is called `Umbraco.Community.Licensing.Core` because its audience is Umbraco
 package vendors. It has no Umbraco or host dependency and uses only the .NET base class library.
@@ -83,7 +83,7 @@ is removed before the key is read, including Unicode whitespace such as non-brea
 (U+00A0) and line separators (U+2028, U+0085) that editors and mail clients insert.
 
 Full schema and worked examples, with real key strings:
-[`docs/license-examples.md`](https://github.com/CarlSargunar/Umbraco.Community.Licensing/blob/main/docs/license-examples.md).
+[`docs/license-examples.md`](https://github.com/carlcod-es/Umbraco.Community.Licensing/blob/main/docs/license-examples.md).
 
 ### Features
 
@@ -235,7 +235,7 @@ Keep the old public key trusted after routine rotation; it costs nothing while i
 safe, and perpetual keys signed with it depend on it for good. Remove it
 (`trusted.Without(oldKeyId)`) only if its private key is compromised. Every key it signed then
 reports `SigningKeyNotRecognised`, including perpetual ones, and has to be reissued with the new
-key ([PDR-0015](https://github.com/CarlSargunar/Umbraco.Community.Licensing/blob/main/docs/decisions/0015-signing-keys-and-rotation.md)).
+key ([PDR-0015](https://github.com/carlcod-es/Umbraco.Community.Licensing/blob/main/docs/decisions/0015-signing-keys-and-rotation.md)).
 
 ## Vendor notes
 
@@ -243,7 +243,7 @@ key ([PDR-0015](https://github.com/CarlSargunar/Umbraco.Community.Licensing/blob
   anyone can decode them. Keep customer names, emails and company names out of the display name
   and text features; the library cannot detect them. Use the vendor tag for your own customer ID
   (it refuses `@` and spaces) and keep the customer details in your own records
-  ([PDR-0014](https://github.com/CarlSargunar/Umbraco.Community.Licensing/blob/main/docs/decisions/0014-personal-data-by-guidance.md)).
+  ([PDR-0014](https://github.com/carlcod-es/Umbraco.Community.Licensing/blob/main/docs/decisions/0014-personal-data-by-guidance.md)).
 - **One key per product.** Sell every change (add-on, capacity, upgrade, renewal, refund) as a
   reissue of that key. Merge a duplicate purchase into one key and refund the other.
 - **An add-on sold separately** (for example through a channel that cannot reissue) is its own
@@ -260,7 +260,7 @@ key ([PDR-0015](https://github.com/CarlSargunar/Umbraco.Community.Licensing/blob
 - **The prefix is branding only.** `ACME-` grants and protects nothing. A license is protected by
   your private signing key and the trusted set shipped in your product; an edited prefix reads
   `NotVerified`
-  ([PDR-0023](https://github.com/CarlSargunar/Umbraco.Community.Licensing/blob/main/docs/decisions/0023-key-identifier-prefix.md)).
+  ([PDR-0023](https://github.com/carlcod-es/Umbraco.Community.Licensing/blob/main/docs/decisions/0023-key-identifier-prefix.md)).
 - **Evaluate on every request; no cache is needed.** A result is a snapshot: a cached result does
   not expire on its own, so a product that caches must re-evaluate once the clock passes the
   reported expiry.
@@ -299,12 +299,12 @@ These come with checking keys entirely on the site:
 
 | Path | Contents |
 |---|---|
-| [`docs/license-examples.md`](https://github.com/CarlSargunar/Umbraco.Community.Licensing/blob/main/docs/license-examples.md) | Key schema and worked examples |
-| [`docs/personas.md`](https://github.com/CarlSargunar/Umbraco.Community.Licensing/blob/main/docs/personas.md) | Who the library serves, in priority order |
-| [`docs/decisions/`](https://github.com/CarlSargunar/Umbraco.Community.Licensing/tree/main/docs/decisions) | Product decision records (PDR) |
-| [`docs/adrs/`](https://github.com/CarlSargunar/Umbraco.Community.Licensing/tree/main/docs/adrs) | Architecture decision records (ADR) |
-| [`openspec/`](https://github.com/CarlSargunar/Umbraco.Community.Licensing/tree/main/openspec) | Specifications and changes (source of truth for behaviour) |
+| [`docs/license-examples.md`](https://github.com/carlcod-es/Umbraco.Community.Licensing/blob/main/docs/license-examples.md) | Key schema and worked examples |
+| [`docs/personas.md`](https://github.com/carlcod-es/Umbraco.Community.Licensing/blob/main/docs/personas.md) | Who the library serves, in priority order |
+| [`docs/decisions/`](https://github.com/carlcod-es/Umbraco.Community.Licensing/tree/main/docs/decisions) | Product decision records (PDR) |
+| [`docs/adrs/`](https://github.com/carlcod-es/Umbraco.Community.Licensing/tree/main/docs/adrs) | Architecture decision records (ADR) |
+| [`openspec/`](https://github.com/carlcod-es/Umbraco.Community.Licensing/tree/main/openspec) | Specifications and changes (source of truth for behaviour) |
 
 ## License
 
-MIT. See [`LICENSE`](https://github.com/CarlSargunar/Umbraco.Community.Licensing/blob/main/LICENSE).
+MIT. See [`LICENSE`](https://github.com/carlcod-es/Umbraco.Community.Licensing/blob/main/LICENSE).

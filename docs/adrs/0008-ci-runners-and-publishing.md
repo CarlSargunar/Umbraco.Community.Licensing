@@ -2,23 +2,20 @@
 
 - Status: Decided
 - Date: 2026-10-14
-- Source: `add-release-pipeline` design.md Q3, Q4, Q6, Q9. Amends ADR-0006 (repository URL).
+- Source: `add-release-pipeline` design.md Q3, Q4, Q6, Q9
 
 ## Context
 
-The repository is public on GitHub, under Carl's personal account `CarlSargunar`, and moves
-to Carl's organisation `carlcod-es` before the first release (Carl, 2026-10-14). PDR-0027 publishes from a `release-yyyymmdd` tag on `main`;
+The repository is public on GitHub, in Carl's organisation `carlcod-es` (transferred from his
+personal account by Carl, 2026-10-14, before the first release). PDR-0027 publishes from a `release-yyyymmdd` tag on `main`;
 PDR-0028 tests each release once on whichever test machine is available, and the full suite on
 Windows, Linux and macOS once before 1.0. Pull requests may come from anyone. Tests run on
 Microsoft.Testing.Platform and need `dotnet test --solution` (ADR-0006).
 
 ## Decision
 
-- **Repository location**: `https://github.com/carlcod-es/Umbraco.Community.Licensing`. Carl
-  transfers the repository before any runner, policy or variable below is set up, and before the
-  first release, so the first package already names the final URL. The library project's
-  `RepositoryUrl` and the README's absolute links use this URL (replaces ADR-0006's
-  `CarlSargunar` URL).
+- **Repository location**: `https://github.com/carlcod-es/Umbraco.Community.Licensing`. Runners,
+  policy and variables below are set up on it, and the first package names it.
 - **CI host**: GitHub Actions. Three workflows under `.github/workflows/`:
 
   | Workflow | Trigger | Runner | Does |
@@ -73,7 +70,7 @@ Microsoft.Testing.Platform and need `dotnet test --solution` (ADR-0006).
 | All-platform matrix on every release | PDR-0028 chose one test run per release |
 | Leave the all-platform check to the 1.0 change | Carl chose to build it now; it also closes the `add-license-core` Windows/Linux follow-ups |
 | Actions pinned by tag | A moved tag changes the code the release runs |
-| Keep the repository under `CarlSargunar` | Carl chose his organisation |
+| Keep the repository under Carl's personal account | Carl chose his organisation |
 | Move after the first release | The first package would name the old URL, kept only by GitHub's redirect |
 
 ## Consequences
@@ -86,9 +83,8 @@ Microsoft.Testing.Platform and need `dotnet test --solution` (ADR-0006).
   the working copy.
 - Trusted Publishing policies on nuget.org are set by Carl outside the repository.
   Renaming `release.yml` breaks publishing until the policy is updated.
-- GitHub redirects the old URL after the transfer; local clones switch their remote to the new
-  URL. Runners, settings and variables are set up after the transfer, on the organisation's
-  repository.
+- GitHub redirects the old URL; other clones of the repository switch their remote to the new
+  URL.
 - SourceLink in the .NET SDK records the repository and commit in the package;
   `ContinuousIntegrationBuild` makes paths deterministic.
 

@@ -8,7 +8,7 @@
     <Description>Offline license key issuing and validation for Umbraco packages. No dependencies beyond the .NET shared framework.</Description>
     <Version>0.1.0-beta.1</Version>
     <Authors>Carl Sargunar</Authors>
-    <RepositoryUrl>https://github.com/CarlSargunar/Umbraco.Community.Licensing</RepositoryUrl>
+    <RepositoryUrl>https://github.com/carlcod-es/Umbraco.Community.Licensing</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

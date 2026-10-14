@@ -32,8 +32,6 @@ rules (PDR-0027, PDR-0028); this change builds them.
   `add-license-core` follow-ups left open for Windows and Linux.
 - **README** states which operating systems each release is tested on (PDR-0028).
 - **Releasing guide** for Carl: one-time setup and the release steps.
-- **Repository move**: Carl moves the repository to his organisation `carlcod-es` before the
-  first release; the package and README name the new address.
 - **First release**: `0.1.0-beta.1`, started by Carl after the change is built.
 
 ## Capabilities
@@ -53,12 +51,11 @@ None. The library's behaviour does not change.
 - New: release command and its tests, version file, release log, three automated workflows
   (change checks, release, all-platform check), releasing guide.
 - Changed: the library project takes its version from the version file instead of a hand-typed
-  value and names the new repository address; README gains the per-release testing line and
-  its links point at the new address.
+  value; README gains the per-release testing line.
 - Records: PDR-0029 (new, amends PDR-0027); ADR-0008 and ADR-0009 (new); ADR-0006 amended by
-  ADR-0008 and ADR-0009. PDR-0027 and PDR-0028 source lines name this change's design.md Q-numbers.
+  ADR-0009. PDR-0027 and PDR-0028 source lines name this change's design.md Q-numbers.
   `docs/feature-requests.md` FR-6 is taken into this change.
-- Outside the repository, done by Carl: move the repository to `carlcod-es`, register his test machines for releases, allow the
+- Outside the repository, done by Carl: register his test machines for releases, allow the
   release run to publish to the package feed, and require approval before workflows run for
   outside contributors.
 - Personas: vendor (published package matches tested code, each release says what changed);

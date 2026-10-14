@@ -1,6 +1,6 @@
 # ADR-0006: Test runner and package metadata
 
-- Status: Amended by ADR-0008, ADR-0009
+- Status: Amended by ADR-0009
 - Date: 2026-10-11
 - Source: `add-license-core` design.md Q23, Q24. Amends ADR-0003.
 
@@ -21,7 +21,7 @@ release is a beta (PDR-0024), and the version, author, repository and package RE
 - **Package metadata** in the library project (Carl, 2026-10-11):
   - `Version` `0.1.0-beta.1` (PDR-0024: 0.x, prerelease).
   - `Authors` `Carl Sargunar`.
-  - `RepositoryUrl` `https://github.com/CarlSargunar/Umbraco.Community.Licensing`,
+  - `RepositoryUrl` `https://github.com/carlcod-es/Umbraco.Community.Licensing`,
     `RepositoryType` `git`. The https form, since package consumers cannot use the SSH remote.
   - `PackageReadmeFile` `README.md`, packed from the repository root.
 

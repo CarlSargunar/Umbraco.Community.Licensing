@@ -3,9 +3,8 @@
 See proposal.md (Why). Current state: no CI, no `.github/`; `Version` `0.1.0-beta.1` typed in
 `src/Umbraco.Community.Licensing.Core/Umbraco.Community.Licensing.Core.csproj` (ADR-0006); tests
 on Microsoft.Testing.Platform, run with `dotnet test --solution Umbraco.Community.Licensing.slnx`;
-library tested only on macOS. The repository is public on GitHub under `CarlSargunar`; Carl
-moves it to his organisation `carlcod-es` before the first release (Q9). `RepositoryUrl` in the
-project file and 13 absolute links in `README.md` name the old URL. Nothing is published yet.
+library tested only on macOS. The repository is public on GitHub in Carl's organisation
+`carlcod-es` (Q9); `RepositoryUrl` and the README links already name it. Nothing is published yet.
 Product rules: PDR-0027, PDR-0028, PDR-0029. Behaviour: `specs/release-process/spec.md`.
 
 ## Bar
@@ -52,7 +51,7 @@ the beta-status refusal (PDR-0024 stays visible on every beta).
 | Q6 | Means for PDR-0028's pre-1.0 check on all three OSes | Manually started all-platform workflow, built now (Carl, 2026-10-14) | ADR-0008 |
 | Q7 | Release command language, version file and log format | Node.js `tools/release/`, `Version.props`, `RELEASES.md` table (Architect; Node.js by project constraint) | ADR-0009 |
 | Q8 | Release command guards PDR-0027 leaves open | Refuses with no TTY, off `main`, out of step with `origin/main`, or uncommitted edits to its two files; asks for confirmation before writing; rehearsal run without a tag (Architect, for Carl's review of this change) | ADR-0009, ADR-0008 |
-| Q9 | Where the repository lives when the first package is published | `https://github.com/carlcod-es/Umbraco.Community.Licensing`, transferred by Carl before setup and first release; `RepositoryUrl` and README links updated (Carl, 2026-10-14) | ADR-0008 |
+| Q9 | Where the repository lives when the first package is published | `https://github.com/carlcod-es/Umbraco.Community.Licensing`; transferred by Carl, remote, `RepositoryUrl` and README links updated (Carl, 2026-10-14) | ADR-0008 |
 
 ## Decisions
 
@@ -130,17 +129,14 @@ Validation commands for every block: `node --test "tools/release/*.test.mjs"`,
 - [Push of `main` succeeds, tag push fails] → Command stops and prints the exact `git push`
   command for the tag; the release has not started, nothing is published.
 - [Carl's shared release-tag command used here] → Refused by PDR-0029 before the build.
-- [Setup done before the transfer is lost or points at the old owner] → Transfer first; runner,
-  approval setting, `NUGET_USER` and the Trusted Publishing policy after (tasks.md 7.1).
 - [Self-hosted runner state between jobs] → Clean checkout per job; caches only.
 
 ## Migration Plan
 
 1. Merge this change to `main` after its blocks pass review.
-2. Carl transfers the repository to `carlcod-es` and points local clones at the new URL.
-3. Carl does the one-time setup in `docs/releasing.md`: runner, approval setting, Trusted
+2. Carl does the one-time setup in `docs/releasing.md`: runner, approval setting, Trusted
    Publishing policy, `NUGET_USER` variable.
-4. Rehearsal on the runner, then `node tools/release/release.mjs` → `0.1.0-beta.1`.
+3. Rehearsal on the runner, then `node tools/release/release.mjs` → `0.1.0-beta.1`.
 
 Rollback: delete the workflows; restore `Version` in the project file. An already published
 version cannot be removed from nuget.org, only unlisted.
