@@ -53,6 +53,7 @@ the beta-status refusal (PDR-0024 stays visible on every beta).
 | Q8 | Release command guards PDR-0027 leaves open | Refuses with no TTY, off `main`, out of step with `origin/main`, or uncommitted edits to its two files; asks for confirmation before writing; rehearsal run without a tag (Architect, for Carl's review of this change) | ADR-0009, ADR-0008 |
 | Q9 | Where the repository lives when the first package is published | `https://github.com/carlcod-es/Umbraco.Community.Licensing`; transferred by Carl, remote, `RepositoryUrl` and README links updated (Carl, 2026-10-14) | ADR-0008 |
 | Q10 | Which nuget.org account owns the package | nuget.org organisation `Carlcod-es`; policy created by Carl's user `CarlCod_es`, which is `NUGET_USER` (Carl, 2026-10-14) | ADR-0008 |
+| Q11 | A tag whose version has no release log row | Refused, as a row naming a different tag (Carl, 2026-10-14) | PDR-0029 |
 
 ## Decisions
 

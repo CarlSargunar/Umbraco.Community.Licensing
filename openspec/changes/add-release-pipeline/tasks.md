@@ -29,7 +29,7 @@ numbering from the version line, Release tag, Release log, Release refusals.
 - [ ] 3.2 Implement the tag format check (`release-yyyymmdd`, optional `-N`, N ≥ 2) and next tag from a local date and existing tag names, and verify by the "First release of the day", "Third release of the day" and "Malformed tag" scenarios
 - [ ] 3.3 Implement release log parsing (rows of the first table, newest first), row insert at the top with `|` escaped and single-line notes enforced, version occurrence count and row lookup by version, and verify by the "Row added", "Failed release keeps its row", "Version already in the log" and "Duplicate version in the log" scenarios, and a test that the repository's `RELEASES.md` parses with zero rows
 - [ ] 3.4 Implement `Version.props` read (line, version) and version write that leaves every other byte unchanged, and verify by tests including a round trip of the repository's `Version.props`
-- [ ] 3.5 Implement the release check over tag, version file and log (PDR-0027 refusals 1, 3, 4; PDR-0029) returning every reason, and verify by the "Malformed tag", "Duplicate version in the log", "Beta status disagrees" and "Tag pushed without the release command" scenarios, plus a passing case
+- [ ] 3.5 Implement the release check over tag, version file and log (PDR-0027 refusals 1, 3, 4; PDR-0029) returning every reason, and verify by the "Malformed tag", "Duplicate version in the log", "Beta status disagrees" and "Tag pushed without the release command" and "Tag with no log row" scenarios, plus a passing case
 
 ## 4. Release command and release-run check
 
@@ -53,7 +53,7 @@ only tested packages, Release refusals, Test coverage per release.
 
 - [ ] 5.1 Add `ci.yml` per ADR-0008 (pull requests to `main` and pushes to `main`; `ubuntu-latest`; `contents: read`; platform line; tool tests; Release build; `dotnet test --solution`), and verify by Carl's observation that this change's pull request shows the check passing (deferred to PO until pushed)
 - [ ] 5.2 Add `release.yml` per ADR-0008 (tag `release-*` and `workflow_dispatch`; runs-on `self-hosted`, `licensing-release`; full-history checkout; `check.mjs` and publish only on a tag push; tool tests; Release build with `ContinuousIntegrationBuild`; test; pack; `NuGet/login` with `vars.NUGET_USER`; `dotnet nuget push` without `--skip-duplicate`; `contents: read`, `id-token: write`; `concurrency: release`), and verify by Carl's observation of a rehearsal run on his runner: tests pass, the platform line names his machine, a package is produced and nothing is published (deferred to PO)
-- [ ] 5.3 Add `all-platforms.yml` per ADR-0008 (`workflow_dispatch`; matrix `windows-latest`, `ubuntu-latest`, `macos-latest`, `fail-fast: false`; platform line; build; test; `contents: read`), and verify by Carl's observation of one run with a result per OS; failures and the Windows/Linux performance figures from the test output are recorded in `follow-ups.md` (deferred to PO)
+- [ ] 5.3 Add `all-platforms.yml` per ADR-0008 (`workflow_dispatch`; matrix `windows-latest`, `ubuntu-latest`, `macos-latest`, `fail-fast: false`; platform line; tool tests; build; test; `contents: read`), and verify by Carl's observation of one run with a result per OS for tool and library tests; failures and the Windows/Linux performance figures from the test output are recorded in `follow-ups.md` (deferred to PO)
 
 ## 6. Documentation
 

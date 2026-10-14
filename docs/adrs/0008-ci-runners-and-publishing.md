@@ -22,7 +22,7 @@ Microsoft.Testing.Platform and need `dotnet test --solution` (ADR-0006).
   |---|---|---|---|
   | `ci.yml` | `pull_request` to `main`, `push` to `main` | GitHub-hosted `ubuntu-latest` | Tool tests, build, test |
   | `release.yml` | `push` of tags `release-*`; `workflow_dispatch` (rehearsal) | Self-hosted, labels `self-hosted`, `licensing-release` | Checks, tool tests, build, test, pack, publish (tag only) |
-  | `all-platforms.yml` | `workflow_dispatch` | GitHub-hosted matrix `windows-latest`, `ubuntu-latest`, `macos-latest`, `fail-fast: false` | Build, test; publishes nothing |
+  | `all-platforms.yml` | `workflow_dispatch` | GitHub-hosted matrix `windows-latest`, `ubuntu-latest`, `macos-latest`, `fail-fast: false` | Tool tests, build, test; publishes nothing |
 
 - **Runners** (Carl, 2026-10-14): pull requests and the all-platform check on GitHub-hosted
   runners; releases on Carl's own machines registered as self-hosted runners with the label
@@ -78,6 +78,9 @@ Microsoft.Testing.Platform and need `dotnet test --solution` (ADR-0006).
 
 ## Consequences
 
+- The release tooling's tests (ADR-0009), which drive real Git in temporary repositories, run on
+  Windows, Linux and macOS in `all-platforms.yml`; `ci.yml` runs them on Linux only (Carl,
+  2026-10-14).
 - A release needs one of Carl's runner machines online. A queued job waits and GitHub fails it
   after 24 hours. Re-running a release run that never reached its tests is allowed (same tag,
   same version); a run that failed its tests is a failed release (PDR-0027), and the next release

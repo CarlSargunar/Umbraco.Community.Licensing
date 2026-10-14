@@ -23,8 +23,8 @@ rules (PDR-0027, PDR-0028); this change builds them.
   the public package feed only if every check passes (PDR-0027, PDR-0028).
 - **Refusals**: nothing is published when the tagged commit is not on `main`, the build or tests
   fail, the version appears more than once in the log, the version and the line disagree on beta
-  status, the tag does not match the format, or the log row for the version names a different
-  tag (PDR-0027, PDR-0029).
+  status, the tag does not match the format, or the log has no row for the version, or its row
+  names a different tag (PDR-0027, PDR-0029).
 - **Change checks**: every pull request to `main` and every push to `main` is built and tested.
   Pull requests from anyone are checked without running on Carl's machines.
 - **All-platform check on demand**: Carl can run the full test suite on Windows, Linux and macOS

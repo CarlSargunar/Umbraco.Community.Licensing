@@ -144,7 +144,7 @@ A release run SHALL refuse, publishing nothing and naming the reason, when any o
 3. the version appears more than once in the release log;
 4. the version and the line disagree on beta status: a version below 1.0 is not a prerelease, or
    a version of 1.0 or above is a prerelease, or the version does not belong to the line;
-5. the release log row for the version names a different tag;
+5. the release log has no row for the version, or its row names a different tag;
 6. the build or tests fail.
 
 Checks 1 to 5 SHALL run before the build.
@@ -170,6 +170,11 @@ Checks 1 to 5 SHALL run before the build.
 - **WHEN** tag `release-20261021` is pushed on a commit whose log row for its version names
   `release-20261020`
 - **THEN** the run refuses, naming both tags
+
+#### Scenario: Tag with no log row
+- **WHEN** tag `release-20261015` is pushed on a commit whose version file holds
+  `0.1.0-beta.1` and whose release log has no row for `0.1.0-beta.1`
+- **THEN** the run refuses, naming the version and saying a release starts with the release command
 
 ### Requirement: Change checks
 Every pull request to `main`, and every push to `main`, SHALL be built and fully tested, and the
