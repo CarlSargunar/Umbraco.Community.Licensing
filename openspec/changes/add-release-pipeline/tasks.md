@@ -25,11 +25,11 @@ Depends on: 1, 2. Owner: worker-backend. Path: `tools/release/release-rules.mjs`
 `node:test` file. Node 22+, ES modules, no npm packages (ADR-0009). Spec requirements: Version
 numbering from the version line, Release tag, Release log, Release refusals.
 
-- [ ] 3.1 Implement line parsing (`0.M-beta`, M ≥ 1; `X`, X ≥ 1; no leading zeros), next version from line and log versions, and the beta-status/belongs-to-line check, and verify by tests for every "Version numbering from the version line" scenario and the "Beta status disagrees" scenario
-- [ ] 3.2 Implement the tag format check (`release-yyyymmdd`, optional `-N`, N ≥ 2) and next tag from a local date and existing tag names, and verify by the "First release of the day", "Third release of the day" and "Malformed tag" scenarios
-- [ ] 3.3 Implement release log parsing (rows of the first table, newest first), row insert at the top with `|` escaped and single-line notes enforced, version occurrence count and row lookup by version, and verify by the "Row added", "Failed release keeps its row", "Version already in the log" and "Duplicate version in the log" scenarios, and a test that the repository's `RELEASES.md` parses with zero rows
-- [ ] 3.4 Implement `Version.props` read (line, version) and version write that leaves every other byte unchanged, and verify by tests including a round trip of the repository's `Version.props`
-- [ ] 3.5 Implement the release check over tag, version file and log (PDR-0027 refusals 1, 3, 4; PDR-0029) returning every reason, and verify by the "Malformed tag", "Duplicate version in the log", "Beta status disagrees" and "Tag pushed without the release command" and "Tag with no log row" scenarios, plus a passing case
+- [x] 3.1 Implement line parsing (`0.M-beta`, M ≥ 1; `X`, X ≥ 1; no leading zeros), next version from line and log versions, and the beta-status/belongs-to-line check, and verify by tests for every "Version numbering from the version line" scenario and the "Beta status disagrees" scenario
+- [x] 3.2 Implement the tag format check (`release-yyyymmdd`, optional `-N`, N ≥ 2) and next tag from a local date and existing tag names, and verify by the "First release of the day", "Third release of the day" and "Malformed tag" scenarios
+- [x] 3.3 Implement release log parsing (rows of the first table, newest first), row insert at the top with `|` escaped and single-line notes enforced, version occurrence count and row lookup by version, and verify by the "Row added", "Failed release keeps its row", "Version already in the log" and "Duplicate version in the log" scenarios, and a test that the repository's `RELEASES.md` parses with zero rows
+- [x] 3.4 Implement `Version.props` read (line, version) and version write that leaves every other byte unchanged, and verify by tests including a round trip of the repository's `Version.props`
+- [x] 3.5 Implement the release check over tag, version file and log (PDR-0027 refusals 1, 3, 4; PDR-0029) returning every reason, and verify by the "Malformed tag", "Duplicate version in the log", "Beta status disagrees" and "Tag pushed without the release command" and "Tag with no log row" scenarios, plus a passing case
 
 ## 4. Release command and release-run check
 
