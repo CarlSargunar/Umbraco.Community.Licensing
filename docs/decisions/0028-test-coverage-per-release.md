@@ -2,8 +2,7 @@
 
 - Status: Decided
 - Date: 2026-10-14
-- Source: FR-6 explore (Carl, 2026-10-14); design.md Q-number to be assigned in the change that
-  takes up FR-6
+- Source: FR-6 explore (Carl, 2026-10-14); `add-release-pipeline` design.md Q2
 - Personas: vendor (told plainly what each release was tested on). Implementor: may develop on
   one operating system and deploy to another, and is told the same. Site owner protected: betas
   are not for paying customers (PDR-0024), and all three operating systems are checked before

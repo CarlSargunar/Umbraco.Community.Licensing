@@ -12,7 +12,7 @@ Cite as FR-N.
 | FR-3 | Example product package | Carl, 2026-10-09 | Open; possible later change |
 | FR-4 | Standby signing key | Carl, 2026-10-10 | Open; with or after FR-2 |
 | FR-5 | Responding to a compromised signing key | Carl, 2026-10-10 | Open; after FR-2 |
-| FR-6 | CI and release pipeline | Carl, 2026-10-14 | Open |
+| FR-6 | CI and release pipeline | Carl, 2026-10-14 | Taken into `add-release-pipeline` (design.md Q1 to Q9; PDR-0027, PDR-0028, PDR-0029, ADR-0008, ADR-0009) |
 
 ## FR-1: Vendor-chosen key identifier prefix
 

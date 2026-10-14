@@ -1,9 +1,8 @@
 # PDR-0027: Release versioning and release log
 
-- Status: Decided
+- Status: Amended by PDR-0029
 - Date: 2026-10-14
-- Source: FR-6 explore (Carl, 2026-10-14); design.md Q-number to be assigned in the change that
-  takes up FR-6
+- Source: FR-6 explore (Carl, 2026-10-14); `add-release-pipeline` design.md Q1
 - Personas: vendor (a published version always matches what was tested, and each release says
   what changed). Site owner protected: betas stay marked as prereleases, so PDR-0024's guidance
   against issuing beta keys to paying customers stays visible.

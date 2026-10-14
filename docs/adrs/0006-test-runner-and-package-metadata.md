@@ -1,6 +1,6 @@
 # ADR-0006: Test runner and package metadata
 
-- Status: Decided
+- Status: Amended by ADR-0008, ADR-0009
 - Date: 2026-10-11
 - Source: `add-license-core` design.md Q23, Q24. Amends ADR-0003.
 
