@@ -2,7 +2,7 @@
 
 - Status: Decided
 - Date: 2026-10-14
-- Source: `add-release-pipeline` design.md Q3, Q4, Q6, Q9
+- Source: `add-release-pipeline` design.md Q3, Q4, Q6, Q9, Q10
 
 ## Context
 
@@ -37,10 +37,12 @@ Microsoft.Testing.Platform and need `dotnet test --solution` (ADR-0006).
 - **Publishing**: nuget.org Trusted Publishing (Carl, 2026-10-14). `release.yml` has
   `permissions: { contents: read, id-token: write }`; the `NuGet/login` action exchanges the
   run's OIDC token for a short-lived API key, used once by `dotnet nuget push` to
-  `https://api.nuget.org/v3/index.json`. The nuget.org profile name is the repository variable
-  `NUGET_USER`. The nuget.org policy names owner `carlcod-es`, repository
-  `Umbraco.Community.Licensing`, workflow `release.yml`. No `--skip-duplicate`: a duplicate
-  must fail the run.
+  `https://api.nuget.org/v3/index.json`. No `--skip-duplicate`: a duplicate must fail the run.
+- **Package owner on nuget.org** (Carl, 2026-10-14): the nuget.org organisation `Carlcod-es`,
+  created for this purpose. Carl signs in as his nuget.org user `CarlCod_es` and creates the
+  Trusted Publishing policy with owner `Carlcod-es`, GitHub repository owner `carlcod-es`,
+  repository `Umbraco.Community.Licensing`, workflow `release.yml`. The repository variable
+  `NUGET_USER` holds `CarlCod_es`, the user who created the policy.
 - **Release job order**: checkout with full history and tags; release checks (PDR-0027 refusals
   1, 3, 4, PDR-0029, and "on `main`" by `git merge-base --is-ancestor` against `origin/main`);
   tool tests; `dotnet build -c Release -p:ContinuousIntegrationBuild=true`;
@@ -70,6 +72,7 @@ Microsoft.Testing.Platform and need `dotnet test --solution` (ADR-0006).
 | All-platform matrix on every release | PDR-0028 chose one test run per release |
 | Leave the all-platform check to the 1.0 change | Carl chose to build it now; it also closes the `add-license-core` Windows/Linux follow-ups |
 | Actions pinned by tag | A moved tag changes the code the release runs |
+| Package owned by Carl's nuget.org user `CarlCod_es` | Carl created the organisation `Carlcod-es` to own it |
 | Keep the repository under Carl's personal account | Carl chose his organisation |
 | Move after the first release | The first package would name the old URL, kept only by GitHub's redirect |
 

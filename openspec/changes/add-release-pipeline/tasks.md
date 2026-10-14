@@ -9,15 +9,15 @@ PDR-0028, PDR-0029, ADR-0008, ADR-0009.
 
 Depends on: none. Owner: Architect.
 
-- [ ] 1.1 Add the design.md Ownership rows (`tools/**`, `.github/**`, `Version.props`, `RELEASES.md`) to the CLAUDE.md ownership table, and verify the four rows are present and match design.md
-- [ ] 1.2 Create `RELEASES.md` with a heading, one sentence on what the log holds (every release attempt, newest first, failed attempts kept) and the empty table header from ADR-0009, and verify by reading it against the ADR-0009 format (parsed by tests in 3.3)
+- [x] 1.1 Add the design.md Ownership rows (`tools/**`, `.github/**`, `Version.props`, `RELEASES.md`) to the CLAUDE.md ownership table, and verify the four rows are present and match design.md
+- [x] 1.2 Create `RELEASES.md` with a heading, one sentence on what the log holds (every release attempt, newest first, failed attempts kept) and the empty table header from ADR-0009, and verify by reading it against the ADR-0009 format (parsed by tests in 3.3)
 
 ## 2. Version file
 
 Depends on: 1. Owner: worker-backend. Shared files assigned in the brief: `Version.props`, the
 library project file. Records: ADR-0009, ADR-0006.
 
-- [ ] 2.1 Create `Version.props` (`VersionLine` `0.1-beta`, `Version` `0.1.0-beta.1`, per ADR-0009), import it in `src/Umbraco.Community.Licensing.Core/Umbraco.Community.Licensing.Core.csproj` with a forward-slash path and remove the project's own `Version`, and verify `dotnet pack` reports no warnings, the nuspec shows version `0.1.0-beta.1` and repository `https://github.com/carlcod-es/Umbraco.Community.Licensing`, and the test project is unaffected
+- [x] 2.1 Create `Version.props` (`VersionLine` `0.1-beta`, `Version` `0.1.0-beta.1`, per ADR-0009), import it in `src/Umbraco.Community.Licensing.Core/Umbraco.Community.Licensing.Core.csproj` with a forward-slash path and remove the project's own `Version`, and verify `dotnet pack` reports no warnings, the nuspec shows version `0.1.0-beta.1` and repository `https://github.com/carlcod-es/Umbraco.Community.Licensing`, and the test project is unaffected
 
 ## 3. Release rules module
 
@@ -60,7 +60,7 @@ only tested packages, Release refusals, Test coverage per release.
 Depends on: 4, 5. Owner: Architect.
 
 - [ ] 6.1 Add the PDR-0028 pre-1.0 line to `README.md` verbatim, and a link to `RELEASES.md`, and verify the line matches PDR-0028 character for character
-- [ ] 6.2 Write `docs/releasing.md`: one-time setup (register a runner with label `licensing-release` and its prerequisites; "Require approval for all external contributors"; nuget.org Trusted Publishing policy for `release.yml`; `NUGET_USER` repository variable), rehearsal, the release command, changing the line, what each refusal means, failed releases and when a re-run is allowed, the pre-1.0 all-platform step; link it from the README Documentation table, and verify by Carl following it in 7.1
+- [ ] 6.2 Write `docs/releasing.md`: one-time setup (register a runner with label `licensing-release` and its prerequisites; "Require approval for all external contributors"; nuget.org Trusted Publishing policy owned by the nuget.org organisation `Carlcod-es` for `release.yml`; `NUGET_USER` repository variable `CarlCod_es`, per ADR-0008), rehearsal, the release command, changing the line, what each refusal means, failed releases and when a re-run is allowed, the pre-1.0 all-platform step; link it from the README Documentation table, and verify by Carl following it in 7.1
 - [ ] 6.3 Update `docs/feature-requests.md` FR-6 status to closed by this change once 7.2 passes, and verify the row names the change and the first published version
 
 ## 7. First release
@@ -68,4 +68,4 @@ Depends on: 4, 5. Owner: Architect.
 Depends on: 5, 6, and this change merged to `main`. Owner: Carl.
 
 - [ ] 7.1 Carl completes the `docs/releasing.md` one-time setup and runs a rehearsal on `main`, and verify by Carl's observation that it passes on his runner
-- [ ] 7.2 Carl runs `node tools/release/release.mjs` with note "First beta", and verify by Carl's observation that `RELEASES.md` has the `0.1.0-beta.1` row, the release run passes, and nuget.org lists `Umbraco.Community.Licensing.Core` `0.1.0-beta.1` as a prerelease whose repository commit is the tagged commit
+- [ ] 7.2 Carl runs `node tools/release/release.mjs` with note "First beta", and verify by Carl's observation that `RELEASES.md` has the `0.1.0-beta.1` row, the release run passes, and nuget.org lists `Umbraco.Community.Licensing.Core` `0.1.0-beta.1` as a prerelease owned by `Carlcod-es`, whose repository commit is the tagged commit

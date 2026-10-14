@@ -52,6 +52,7 @@ the beta-status refusal (PDR-0024 stays visible on every beta).
 | Q7 | Release command language, version file and log format | Node.js `tools/release/`, `Version.props`, `RELEASES.md` table (Architect; Node.js by project constraint) | ADR-0009 |
 | Q8 | Release command guards PDR-0027 leaves open | Refuses with no TTY, off `main`, out of step with `origin/main`, or uncommitted edits to its two files; asks for confirmation before writing; rehearsal run without a tag (Architect, for Carl's review of this change) | ADR-0009, ADR-0008 |
 | Q9 | Where the repository lives when the first package is published | `https://github.com/carlcod-es/Umbraco.Community.Licensing`; transferred by Carl, remote, `RepositoryUrl` and README links updated (Carl, 2026-10-14) | ADR-0008 |
+| Q10 | Which nuget.org account owns the package | nuget.org organisation `Carlcod-es`; policy created by Carl's user `CarlCod_es`, which is `NUGET_USER` (Carl, 2026-10-14) | ADR-0008 |
 
 ## Decisions
 
@@ -135,7 +136,7 @@ Validation commands for every block: `node --test "tools/release/*.test.mjs"`,
 
 1. Merge this change to `main` after its blocks pass review.
 2. Carl does the one-time setup in `docs/releasing.md`: runner, approval setting, Trusted
-   Publishing policy, `NUGET_USER` variable.
+   Publishing policy owned by `Carlcod-es`, `NUGET_USER` variable `CarlCod_es`.
 3. Rehearsal on the runner, then `node tools/release/release.mjs` → `0.1.0-beta.1`.
 
 Rollback: delete the workflows; restore `Version` in the project file. An already published
