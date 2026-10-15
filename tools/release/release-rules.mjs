@@ -95,9 +95,15 @@ export function tagFormatMessage(tag) {
   return `Tag '${tag}' does not match 'release-yyyymmdd' (a real date) with an optional '-N' suffix where N is 2 or more.`;
 }
 
+const pad = (n, w) => String(n).padStart(w, '0');
+
+// yyyy-mm-dd from the Date's local fields; the tag and the log row both use it.
+export function localDate(date) {
+  return `${pad(date.getFullYear(), 4)}-${pad(date.getMonth() + 1, 2)}-${pad(date.getDate(), 2)}`;
+}
+
 export function nextTag(date, existingTags) {
-  const pad = (n, w) => String(n).padStart(w, '0');
-  const base = `release-${pad(date.getFullYear(), 4)}${pad(date.getMonth() + 1, 2)}${pad(date.getDate(), 2)}`;
+  const base = `release-${localDate(date).replaceAll('-', '')}`;
   const used = new Set();
   let baseUsed = false;
   for (const tag of existingTags) {
@@ -206,6 +212,10 @@ export function findRow(rows, version) {
 
 export function versionInLogMessage(version) {
   return `Version '${version}' is already in the release log.`;
+}
+
+export function assertVersionNotInLog(rows, version) {
+  if (countVersion(rows, version) > 0) throw new Error(versionInLogMessage(version));
 }
 
 // ---- Version file ----

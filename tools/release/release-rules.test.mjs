@@ -5,8 +5,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   parseLine, invalidLineMessage, nextVersion, checkVersionAgainstLine,
-  isValidTag, tagFormatMessage, nextTag,
-  parseLog, insertRow, countVersion, findRow, versionInLogMessage,
+  isValidTag, tagFormatMessage, nextTag, localDate,
+  parseLog, insertRow, countVersion, findRow, versionInLogMessage, assertVersionNotInLog,
   readVersionFile, writeVersion, checkRelease,
 } from './release-rules.mjs';
 
@@ -148,6 +148,14 @@ test('nextTag uses the local date and zero pads', () => {
   assert.equal(nextTag(new Date(2026, 11, 31, 0, 0, 0), []), 'release-20261231');
 });
 
+test('localDate uses local fields, not UTC', () => {
+  assert.equal(localDate(new Date(2026, 9, 20, 23, 59, 59)), '2026-10-20');
+  assert.equal(localDate(new Date(2026, 9, 20, 0, 0, 1)), '2026-10-20');
+  assert.equal(localDate(new Date(2026, 0, 5, 0, 0, 1)), '2026-01-05');
+  assert.equal(nextTag(new Date(2026, 9, 20, 23, 59, 59), []), 'release-20261020');
+  assert.equal(nextTag(new Date(2026, 9, 21, 0, 0, 1), []), 'release-20261021');
+});
+
 // ---- 3.3 ----
 
 test('Scenario: Row added', () => {
@@ -221,7 +229,14 @@ test('Scenario: Version already in the log', () => {
   assert.ok(versionInLogMessage('0.1.0-beta.1').includes('0.1.0-beta.1'));
 });
 
-test('Scenario: Duplicate version in the log', () => {
+test('Scenario: Version already in the log (guard)', () => {
+  const rows = parseLog(logText([row('0.1.0-beta.1')])).rows;
+  assert.throws(() => assertVersionNotInLog(rows, '0.1.0-beta.1'), { message: versionInLogMessage('0.1.0-beta.1') });
+  assert.doesNotThrow(() => assertVersionNotInLog(rows, '0.1.0-beta.2'));
+  assert.doesNotThrow(() => assertVersionNotInLog([], '0.1.0-beta.1'));
+});
+
+test('Scenario: Duplicate version in the log (rule)', () => {
   const rows = parseLog(logText([row('0.1.0-beta.2', 'release-20261021'), row('0.1.0-beta.2', 'release-20261020'), row('0.1.0-beta.1')])).rows;
   assert.equal(countVersion(rows, '0.1.0-beta.2'), 2);
   assert.equal(findRow(rows, '0.1.0-beta.2').tag, 'release-20261021');
@@ -328,14 +343,14 @@ test('checkRelease passes a consistent tag, version file and log (LF and CRLF)',
   assert.deepEqual(checkRelease(passing('\r\n')), []);
 });
 
-test('Scenario: Malformed tag', () => {
+test('Scenario: Malformed tag (check)', () => {
   for (const tag of ['release-2026-10-20', 'release-20261020-1']) {
     const r = checkRelease({ ...passing('\n'), tag });
     assert.ok(r.includes(tagFormatMessage(tag)), tag);
   }
 });
 
-test('Scenario: Duplicate version in the log', () => {
+test('Scenario: Duplicate version in the log (check)', () => {
   for (const eol of ['\n', '\r\n']) {
     const r = checkRelease({ ...passing(eol), logText: logText([row('0.1.0-beta.1'), row('0.1.0-beta.1')], eol) });
     assert.equal(r.length, 1);
